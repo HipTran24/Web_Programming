@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Study – Xác thực OTP</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg-deep: #07101a;
+        --card-bg: #111c28;
+        --card-border: rgba(255, 255, 255, 0.07);
+        --accent: #3b7ff5;
+        --accent-glow: rgba(59, 127, 245, 0.35);
+        --text-primary: #e8edf2;
+        --text-muted: #6b7f93;
+        --input-bg: #1a2636;
+        --input-border: rgba(255, 255, 255, 0.1);
+      }
+
+      html,
+      body {
+        height: 100%;
+        font-family: "Be Vietnam Pro", sans-serif;
+        background: var(--bg-deep);
+        color: var(--text-primary);
+      }
+
+      body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow-x: hidden;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background:
+          radial-gradient(
+            ellipse 70% 55% at 15% 20%,
+            rgba(0, 80, 120, 0.28) 0%,
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse 50% 45% at 85% 75%,
+            rgba(80, 20, 120, 0.22) 0%,
+            transparent 55%
+          ),
+          radial-gradient(
+            ellipse 40% 35% at 50% 50%,
+            rgba(20, 50, 100, 0.15) 0%,
+            transparent 60%
+          );
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      /* HEADER */
+      header {
+        position: relative;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 48px;
+        height: 72px;
+        background: #0b1622;
+        border-top: 3px solid #2dd4c8;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .logo {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-primary);
+        letter-spacing: 0.01em;
+      }
+
+      .btn-login {
+        padding: 10px 28px;
+        font-size: 15px;
+        font-weight: 600;
+        font-family: inherit;
+        color: var(--text-primary);
+        background: transparent;
+        border: 1.5px solid rgba(255, 255, 255, 0.55);
+        border-radius: 6px;
+        cursor: pointer;
+        transition:
+          border-color 0.2s,
+          background 0.2s;
+      }
+      .btn-login:hover {
+        border-color: #fff;
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      /* MAIN */
+      main {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 16px;
+        position: relative;
+        z-index: 1;
+      }
+
+      /* CARD */
+      .card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 18px;
+        padding: 44px 48px 40px;
+        width: 100%;
+        max-width: 420px;
+        text-align: center;
+        box-shadow:
+          0 24px 60px rgba(0, 0, 0, 0.55),
+          0 0 80px rgba(59, 127, 245, 0.06);
+        animation: cardIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+
+      @keyframes cardIn {
+        from {
+          opacity: 0;
+          transform: translateY(22px) scale(0.97);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      .card h1 {
+        font-size: 22px;
+        font-weight: 700;
+        margin-bottom: 10px;
+      }
+
+      .card > p {
+        font-size: 13.5px;
+        color: var(--text-muted);
+        margin-bottom: 32px;
+      }
+
+      /* OTP */
+      .otp-row {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 28px;
+      }
+
+      .otp-input {
+        width: 52px;
+        height: 58px;
+        background: var(--input-bg);
+        border: 1.5px solid var(--input-border);
+        border-radius: 12px;
+        font-size: 22px;
+        font-weight: 600;
+        color: var(--text-primary);
+        text-align: center;
+        outline: none;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s,
+          transform 0.15s;
+        font-family: inherit;
+        /* prevent browser from doing anything with the value */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+
+      .otp-input:focus {
+        border-color: var(--accent);
+        background: #1e2f44;
+        box-shadow: 0 0 0 3px var(--accent-glow);
+        transform: translateY(-2px) scale(1.04);
+      }
+
+      .otp-input.has-value {
+        border-color: rgba(59, 127, 245, 0.5);
+      }
+
+      /* BUTTON */
+      .btn-confirm {
+        width: 100%;
+        padding: 14px;
+        font-size: 15px;
+        font-weight: 600;
+        font-family: inherit;
+        color: #fff;
+        background: var(--accent);
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition:
+          background 0.2s,
+          box-shadow 0.2s,
+          transform 0.15s;
+        margin-bottom: 22px;
+      }
+
+      .btn-confirm:hover:not(:disabled) {
+        background: #5090f7;
+        box-shadow: 0 6px 24px var(--accent-glow);
+        transform: translateY(-1px);
+      }
+
+      .btn-confirm:disabled {
+        background: #1e3258;
+        color: #4a6080;
+        cursor: not-allowed;
+      }
+
+      /* RESEND */
+      .resend {
+        font-size: 13px;
+        color: var(--text-muted);
+      }
+
+      .resend a {
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      .resend a:hover {
+        color: #7ab0ff;
+      }
+
+      /* FOOTER */
+      footer {
+        position: relative;
+        z-index: 10;
+        text-align: center;
+        padding: 28px 48px;
+        font-size: 14px;
+        color: var(--text-muted);
+        border-top: 1px solid rgba(255, 255, 255, 0.07);
+        background: #0b1622;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <span class="logo">AI Study</span>
+      <a href="login.html" class="btn-login">Đăng nhập</a>
+    </header>
+
+    <main>
+      <div class="card">
+        <h1>Xác thực OTP</h1>
+        <p>Nhập mã 6 số vừa được gửi đến email của bạn</p>
+
+        <div class="otp-row" id="otpRow"></div>
+
+        <button class="btn-confirm" id="confirmBtn" disabled>Xác nhận</button>
+
+        <p class="resend">
+          <span id="resendText">Chưa nhận được mã? </span
+          ><a href="#" id="resendLink">Gửi lại ngay</a>
+        </p>
+      </div>
+    </main>
+
+    <footer>© 2026 AI Study</footer>
+
+    <script>
+      // ── Build 6 read-only display boxes + hidden real input ──
+      const LENGTH = 6;
+      const row = document.getElementById("otpRow");
+      const confirmBtn = document.getElementById("confirmBtn");
+
+      // We use a hidden <input> to capture real keyboard events,
+      // and render digits into visible display boxes ourselves.
+      const boxes = [];
+      for (let i = 0; i < LENGTH; i++) {
+        const box = document.createElement("div");
+        box.className = "otp-input";
+        box.setAttribute("tabindex", "0");
+        box.setAttribute("role", "textbox");
+        box.setAttribute("aria-label", `Số ${i + 1}`);
+        row.appendChild(box);
+        boxes.push(box);
+      }
+
+      // Internal digit store
+      const digits = Array(LENGTH).fill("");
+      let activeIndex = 0;
+
+      function render() {
+        boxes.forEach((box, i) => {
+          box.textContent = digits[i];
+          box.classList.toggle("has-value", digits[i] !== "");
+          box.classList.toggle("focused", i === activeIndex);
+        });
+        // Sync focus styling
+        boxes.forEach((b) => b.style.removeProperty("border-color"));
+        if (boxes[activeIndex]) {
+          boxes[activeIndex].style.borderColor = "var(--accent)";
+          boxes[activeIndex].style.background = "#1e2f44";
+          boxes[activeIndex].style.boxShadow = "0 0 0 3px var(--accent-glow)";
+          boxes[activeIndex].style.transform = "translateY(-2px) scale(1.04)";
+        }
+        // reset non-active
+        boxes.forEach((b, i) => {
+          if (i !== activeIndex) {
+            b.style.removeProperty("background");
+            b.style.removeProperty("box-shadow");
+            b.style.removeProperty("transform");
+            if (digits[i]) b.style.borderColor = "rgba(59,127,245,0.5)";
+            else b.style.removeProperty("border-color");
+          }
+        });
+        confirmBtn.disabled = digits.some((d) => d === "");
+      }
+
+      function focusBox(i) {
+        activeIndex = Math.max(0, Math.min(LENGTH - 1, i));
+        render();
+        // keep keyboard listener on the container
+        row.focus({ preventScroll: true });
+      }
+
+      // Click a box → focus it
+      boxes.forEach((box, i) => {
+        box.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          focusBox(i);
+        });
+      });
+
+      // All keyboard input goes to the row div
+      row.setAttribute("tabindex", "0");
+      row.style.outline = "none";
+
+      row.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowLeft") {
+          e.preventDefault();
+          focusBox(activeIndex - 1);
+          return;
+        }
+        if (e.key === "ArrowRight") {
+          e.preventDefault();
+          focusBox(activeIndex + 1);
+          return;
+        }
+        if (e.key === "Tab") return;
+
+        if (e.key === "Backspace") {
+          e.preventDefault();
+          if (digits[activeIndex] !== "") {
+            // clear current
+            digits[activeIndex] = "";
+          } else if (activeIndex > 0) {
+            // go back and clear
+            activeIndex--;
+            digits[activeIndex] = "";
+          }
+          render();
+          return;
+        }
+
+        if (e.key === "Delete") {
+          e.preventDefault();
+          digits[activeIndex] = "";
+          render();
+          return;
+        }
+
+        // Digit input
+        if (/^\d$/.test(e.key)) {
+          e.preventDefault();
+          digits[activeIndex] = e.key;
+          if (activeIndex < LENGTH - 1) activeIndex++;
+          render();
+          return;
+        }
+
+        e.preventDefault();
+      });
+
+      // Paste support
+      row.addEventListener("paste", (e) => {
+        e.preventDefault();
+        const text = (e.clipboardData || window.clipboardData)
+          .getData("text")
+          .replace(/\D/g, "");
+        if (!text) return;
+        for (let i = 0; i < LENGTH; i++) {
+          digits[i] = text[i] || "";
+        }
+        activeIndex = Math.min(text.length, LENGTH - 1);
+        render();
+      });
+
+      // Focus first box on load
+      window.addEventListener("load", () => {
+        focusBox(0);
+        row.focus();
+      });
+
+      // Also re-focus when clicking anywhere on card
+      document.querySelector(".card").addEventListener("click", () => {
+        row.focus();
+      });
+
+      render();
+
+      // ── Resend countdown ──
+      const resendLink = document.getElementById("resendLink");
+      const resendText = document.getElementById("resendText");
+      let timer = null;
+
+      function startCountdown() {
+        let sec = 60;
+        resendLink.style.pointerEvents = "none";
+        resendLink.style.color = "var(--text-muted)";
+        resendText.textContent = "";
+        resendLink.textContent = `Gửi lại sau ${sec}s`;
+
+        timer = setInterval(() => {
+          sec--;
+          if (sec <= 0) {
+            clearInterval(timer);
+            timer = null;
+            resendLink.textContent = "Gửi lại ngay";
+            resendLink.style.pointerEvents = "";
+            resendLink.style.color = "";
+            resendText.textContent = "Chưa nhận được mã? ";
+          } else {
+            resendLink.textContent = `Gửi lại sau ${sec}s`;
+          }
+        }, 1000);
+      }
+
+      startCountdown();
+
+      resendLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        if (timer) return;
+        digits.fill("");
+        activeIndex = 0;
+        render();
+        row.focus();
+        startCountdown();
+      });
+    </script>
+  </body>
+</html>
