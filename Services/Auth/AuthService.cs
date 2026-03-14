@@ -5,11 +5,11 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Wed_Project.Models;
-using Wed_Project.Security;
-using Wed_Project.Services.Otp;
+using Web_Project.Models;
+using Web_Project.Security;
+using Web_Project.Services.Otp;
 
-namespace Wed_Project.Services.Auth
+namespace Web_Project.Services.Auth
 {
     public class AuthService : IAuthService
     {

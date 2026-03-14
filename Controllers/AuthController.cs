@@ -1,10 +1,10 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Wed_Project.Models;
-using Wed_Project.Services.Auth;
+using Web_Project.Models;
+using Web_Project.Services.Auth;
 
-namespace Wed_Project.Controllers
+namespace Web_Project.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

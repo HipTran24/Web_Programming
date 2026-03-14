@@ -1,6 +1,6 @@
-namespace Web_Project.Models
+namespace Web_Project.Models.Dtos.User
 {
-    public class LoginResponse
+    public class ProfileResponse
     {
         public int UserId { get; set; }
 
@@ -10,10 +10,10 @@ namespace Web_Project.Models
 
         public string Email { get; set; } = string.Empty;
 
-        public string Role { get; set; } = string.Empty;
+        public bool IsLocked { get; set; }
 
-        public string AccessToken { get; set; } = string.Empty;
+        public bool IsEmailVerified { get; set; }
 
-        public DateTime ExpiresAt { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 }

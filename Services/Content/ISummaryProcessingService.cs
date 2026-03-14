@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Http;
-using Wed_Project.Models;
+using Web_Project.Models;
 
-namespace Wed_Project.Services.Content
+namespace Web_Project.Services.Content
 {
     public interface ISummaryProcessingService
     {

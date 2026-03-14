@@ -1,9 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Web_Project.Models
+namespace Web_Project.Models.Dtos.User
 {
-    public class ResendEmailOtpRequest
+    public class UpdateProfileRequest
     {
+        [Required]
+        [MaxLength(128)]
+        public string FullName { get; set; } = string.Empty;
+
         [Required]
         [EmailAddress]
         [MaxLength(256)]

@@ -1,4 +1,4 @@
-namespace Wed_Project.Services.AI
+namespace Web_Project.Services.AI
 {
     public interface IGeminiSummaryService
     {

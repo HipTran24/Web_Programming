@@ -1,7 +1,7 @@
 ﻿(function () {
   const tokenStorageKey = "auth.accessToken";
   const userStorageKey = "auth.currentUser";
-  const loginPage = "/home/login.html";
+  const loginPage = "login.html";
 
   const readFromStorages = (key) => {
     const localValue = window.localStorage.getItem(key);
@@ -99,7 +99,8 @@
   const requireAuth = async (options) => {
     const opts = options || {};
     const requiredRoles = Array.isArray(opts.roles) ? opts.roles : [];
-    const onForbidden = typeof opts.onForbidden === "function" ? opts.onForbidden : null;
+    const onForbidden =
+      typeof opts.onForbidden === "function" ? opts.onForbidden : null;
 
     if (!isAuthenticated()) {
       redirectToLogin("Vui lòng đăng nhập để tiếp tục.");

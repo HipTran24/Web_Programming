@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Wed_Project.Models;
+using Web_Project.Models;
 
 #nullable disable
 
-namespace Wed_Project.Migrations
+namespace Web_Project.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     [Migration("20260309162101_AddUrlSourceFieldsToContents")]
@@ -25,7 +25,7 @@ namespace Wed_Project.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Wed_Project.Models.AIProcess", b =>
+            modelBuilder.Entity("Web_Project.Models.AIProcess", b =>
                 {
                     b.Property<int>("ProcessId")
                         .ValueGeneratedOnAdd()
@@ -58,7 +58,7 @@ namespace Wed_Project.Migrations
                     b.ToTable("AIProcesses");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.AISystemLog", b =>
+            modelBuilder.Entity("Web_Project.Models.AISystemLog", b =>
                 {
                     b.Property<int>("LogId")
                         .ValueGeneratedOnAdd()
@@ -92,7 +92,7 @@ namespace Wed_Project.Migrations
                     b.ToTable("AISystemLogs");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.AdminAuditLog", b =>
+            modelBuilder.Entity("Web_Project.Models.AdminAuditLog", b =>
                 {
                     b.Property<int>("AuditId")
                         .ValueGeneratedOnAdd()
@@ -137,7 +137,7 @@ namespace Wed_Project.Migrations
                     b.ToTable("AdminAuditLogs");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.Content", b =>
+            modelBuilder.Entity("Web_Project.Models.Content", b =>
                 {
                     b.Property<int>("ContentId")
                         .ValueGeneratedOnAdd()
@@ -207,7 +207,7 @@ namespace Wed_Project.Migrations
                     b.ToTable("Contents");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.ContentModeration", b =>
+            modelBuilder.Entity("Web_Project.Models.ContentModeration", b =>
                 {
                     b.Property<int>("ModerationId")
                         .ValueGeneratedOnAdd()
@@ -252,7 +252,7 @@ namespace Wed_Project.Migrations
                     b.ToTable("ContentModerations");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.DailyUsageCounter", b =>
+            modelBuilder.Entity("Web_Project.Models.DailyUsageCounter", b =>
                 {
                     b.Property<int>("CounterId")
                         .ValueGeneratedOnAdd()
@@ -304,7 +304,7 @@ namespace Wed_Project.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.GuestSession", b =>
+            modelBuilder.Entity("Web_Project.Models.GuestSession", b =>
                 {
                     b.Property<int>("GuestSessionId")
                         .ValueGeneratedOnAdd()
@@ -352,7 +352,7 @@ namespace Wed_Project.Migrations
                     b.ToTable("GuestSessions");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.Question", b =>
+            modelBuilder.Entity("Web_Project.Models.Question", b =>
                 {
                     b.Property<int>("QuestionId")
                         .ValueGeneratedOnAdd()
@@ -398,7 +398,7 @@ namespace Wed_Project.Migrations
                     b.ToTable("Questions");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.Quiz", b =>
+            modelBuilder.Entity("Web_Project.Models.Quiz", b =>
                 {
                     b.Property<int>("QuizId")
                         .ValueGeneratedOnAdd()
@@ -438,7 +438,7 @@ namespace Wed_Project.Migrations
                     b.ToTable("Quizzes");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.QuizAttempt", b =>
+            modelBuilder.Entity("Web_Project.Models.QuizAttempt", b =>
                 {
                     b.Property<int>("AttemptId")
                         .ValueGeneratedOnAdd()
@@ -470,7 +470,7 @@ namespace Wed_Project.Migrations
                     b.ToTable("QuizAttempts");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.Role", b =>
+            modelBuilder.Entity("Web_Project.Models.Role", b =>
                 {
                     b.Property<int>("RoleId")
                         .ValueGeneratedOnAdd()
@@ -487,7 +487,7 @@ namespace Wed_Project.Migrations
                     b.ToTable("Roles");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.StudyStatistic", b =>
+            modelBuilder.Entity("Web_Project.Models.StudyStatistic", b =>
                 {
                     b.Property<int>("StatId")
                         .ValueGeneratedOnAdd()
@@ -519,7 +519,7 @@ namespace Wed_Project.Migrations
                     b.ToTable("StudyStatistics");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.SystemSetting", b =>
+            modelBuilder.Entity("Web_Project.Models.SystemSetting", b =>
                 {
                     b.Property<int>("SettingId")
                         .ValueGeneratedOnAdd()
@@ -560,7 +560,7 @@ namespace Wed_Project.Migrations
                     b.ToTable("SystemSettings");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.User", b =>
+            modelBuilder.Entity("Web_Project.Models.User", b =>
                 {
                     b.Property<int>("UserId")
                         .ValueGeneratedOnAdd()
@@ -600,7 +600,7 @@ namespace Wed_Project.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.UserAnswer", b =>
+            modelBuilder.Entity("Web_Project.Models.UserAnswer", b =>
                 {
                     b.Property<int>("AnswerId")
                         .ValueGeneratedOnAdd()
@@ -630,20 +630,20 @@ namespace Wed_Project.Migrations
                     b.ToTable("UserAnswers");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.AIProcess", b =>
+            modelBuilder.Entity("Web_Project.Models.AIProcess", b =>
                 {
-                    b.HasOne("Wed_Project.Models.Content", "Content")
+                    b.HasOne("Web_Project.Models.Content", "Content")
                         .WithOne("AIProcess")
-                        .HasForeignKey("Wed_Project.Models.AIProcess", "ContentId")
+                        .HasForeignKey("Web_Project.Models.AIProcess", "ContentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Content");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.AISystemLog", b =>
+            modelBuilder.Entity("Web_Project.Models.AISystemLog", b =>
                 {
-                    b.HasOne("Wed_Project.Models.User", "User")
+                    b.HasOne("Web_Project.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -651,9 +651,9 @@ namespace Wed_Project.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.AdminAuditLog", b =>
+            modelBuilder.Entity("Web_Project.Models.AdminAuditLog", b =>
                 {
-                    b.HasOne("Wed_Project.Models.User", "AdminUser")
+                    b.HasOne("Web_Project.Models.User", "AdminUser")
                         .WithMany("AdminAuditLogs")
                         .HasForeignKey("AdminUserId")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -662,9 +662,9 @@ namespace Wed_Project.Migrations
                     b.Navigation("AdminUser");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.Content", b =>
+            modelBuilder.Entity("Web_Project.Models.Content", b =>
                 {
-                    b.HasOne("Wed_Project.Models.User", "User")
+                    b.HasOne("Web_Project.Models.User", "User")
                         .WithMany("Contents")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -672,15 +672,15 @@ namespace Wed_Project.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.ContentModeration", b =>
+            modelBuilder.Entity("Web_Project.Models.ContentModeration", b =>
                 {
-                    b.HasOne("Wed_Project.Models.Content", "Content")
+                    b.HasOne("Web_Project.Models.Content", "Content")
                         .WithOne("ContentModeration")
-                        .HasForeignKey("Wed_Project.Models.ContentModeration", "ContentId")
+                        .HasForeignKey("Web_Project.Models.ContentModeration", "ContentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Wed_Project.Models.User", "ReviewedBy")
+                    b.HasOne("Web_Project.Models.User", "ReviewedBy")
                         .WithMany("ReviewedContentModerations")
                         .HasForeignKey("ReviewedByUserId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -690,14 +690,14 @@ namespace Wed_Project.Migrations
                     b.Navigation("ReviewedBy");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.DailyUsageCounter", b =>
+            modelBuilder.Entity("Web_Project.Models.DailyUsageCounter", b =>
                 {
-                    b.HasOne("Wed_Project.Models.GuestSession", "GuestSession")
+                    b.HasOne("Web_Project.Models.GuestSession", "GuestSession")
                         .WithMany("DailyUsageCounters")
                         .HasForeignKey("GuestSessionId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("Wed_Project.Models.User", "User")
+                    b.HasOne("Web_Project.Models.User", "User")
                         .WithMany("DailyUsageCounters")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade);
@@ -707,9 +707,9 @@ namespace Wed_Project.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.Question", b =>
+            modelBuilder.Entity("Web_Project.Models.Question", b =>
                 {
-                    b.HasOne("Wed_Project.Models.Quiz", "Quiz")
+                    b.HasOne("Web_Project.Models.Quiz", "Quiz")
                         .WithMany("Questions")
                         .HasForeignKey("QuizId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -718,15 +718,15 @@ namespace Wed_Project.Migrations
                     b.Navigation("Quiz");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.Quiz", b =>
+            modelBuilder.Entity("Web_Project.Models.Quiz", b =>
                 {
-                    b.HasOne("Wed_Project.Models.Content", "Content")
+                    b.HasOne("Web_Project.Models.Content", "Content")
                         .WithMany("Quizzes")
                         .HasForeignKey("ContentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Wed_Project.Models.User", "User")
+                    b.HasOne("Web_Project.Models.User", "User")
                         .WithMany("Quizzes")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -736,15 +736,15 @@ namespace Wed_Project.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.QuizAttempt", b =>
+            modelBuilder.Entity("Web_Project.Models.QuizAttempt", b =>
                 {
-                    b.HasOne("Wed_Project.Models.Quiz", "Quiz")
+                    b.HasOne("Web_Project.Models.Quiz", "Quiz")
                         .WithMany("QuizAttempts")
                         .HasForeignKey("QuizId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Wed_Project.Models.User", "User")
+                    b.HasOne("Web_Project.Models.User", "User")
                         .WithMany("QuizAttempts")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -754,20 +754,20 @@ namespace Wed_Project.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.StudyStatistic", b =>
+            modelBuilder.Entity("Web_Project.Models.StudyStatistic", b =>
                 {
-                    b.HasOne("Wed_Project.Models.User", "User")
+                    b.HasOne("Web_Project.Models.User", "User")
                         .WithOne("StudyStatistic")
-                        .HasForeignKey("Wed_Project.Models.StudyStatistic", "UserId")
+                        .HasForeignKey("Web_Project.Models.StudyStatistic", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.SystemSetting", b =>
+            modelBuilder.Entity("Web_Project.Models.SystemSetting", b =>
                 {
-                    b.HasOne("Wed_Project.Models.User", "UpdatedBy")
+                    b.HasOne("Web_Project.Models.User", "UpdatedBy")
                         .WithMany("UpdatedSystemSettings")
                         .HasForeignKey("UpdatedByUserId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -775,9 +775,9 @@ namespace Wed_Project.Migrations
                     b.Navigation("UpdatedBy");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.User", b =>
+            modelBuilder.Entity("Web_Project.Models.User", b =>
                 {
-                    b.HasOne("Wed_Project.Models.Role", "Role")
+                    b.HasOne("Web_Project.Models.Role", "Role")
                         .WithMany("Users")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -786,15 +786,15 @@ namespace Wed_Project.Migrations
                     b.Navigation("Role");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.UserAnswer", b =>
+            modelBuilder.Entity("Web_Project.Models.UserAnswer", b =>
                 {
-                    b.HasOne("Wed_Project.Models.QuizAttempt", "QuizAttempt")
+                    b.HasOne("Web_Project.Models.QuizAttempt", "QuizAttempt")
                         .WithMany("UserAnswers")
                         .HasForeignKey("AttemptId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Wed_Project.Models.Question", "Question")
+                    b.HasOne("Web_Project.Models.Question", "Question")
                         .WithMany("UserAnswers")
                         .HasForeignKey("QuestionId")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -805,7 +805,7 @@ namespace Wed_Project.Migrations
                     b.Navigation("QuizAttempt");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.Content", b =>
+            modelBuilder.Entity("Web_Project.Models.Content", b =>
                 {
                     b.Navigation("AIProcess");
 
@@ -814,34 +814,34 @@ namespace Wed_Project.Migrations
                     b.Navigation("Quizzes");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.GuestSession", b =>
+            modelBuilder.Entity("Web_Project.Models.GuestSession", b =>
                 {
                     b.Navigation("DailyUsageCounters");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.Question", b =>
+            modelBuilder.Entity("Web_Project.Models.Question", b =>
                 {
                     b.Navigation("UserAnswers");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.Quiz", b =>
+            modelBuilder.Entity("Web_Project.Models.Quiz", b =>
                 {
                     b.Navigation("Questions");
 
                     b.Navigation("QuizAttempts");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.QuizAttempt", b =>
+            modelBuilder.Entity("Web_Project.Models.QuizAttempt", b =>
                 {
                     b.Navigation("UserAnswers");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.Role", b =>
+            modelBuilder.Entity("Web_Project.Models.Role", b =>
                 {
                     b.Navigation("Users");
                 });
 
-            modelBuilder.Entity("Wed_Project.Models.User", b =>
+            modelBuilder.Entity("Web_Project.Models.User", b =>
                 {
                     b.Navigation("AdminAuditLogs");
 

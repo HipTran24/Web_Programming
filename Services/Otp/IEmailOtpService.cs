@@ -1,6 +1,6 @@
-using Wed_Project.Models;
+using Web_Project.Models;
 
-namespace Wed_Project.Services.Otp
+namespace Web_Project.Services.Otp
 {
     public interface IEmailOtpService
     {

@@ -1,4 +1,4 @@
-namespace Wed_Project.Services.Email
+namespace Web_Project.Services.Email
 {
     public interface IEmailSender
     {

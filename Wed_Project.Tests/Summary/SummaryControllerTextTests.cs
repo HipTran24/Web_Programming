@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;
-using Wed_Project.Controllers;
-using Wed_Project.Models;
-using Wed_Project.Services.Content;
+using Web_Project.Controllers;
+using Web_Project.Models;
+using Web_Project.Services.Content;
 
-namespace Wed_Project.Tests.Summary;
+namespace Web_Project.Tests.Summary;
 
 public sealed class SummaryControllerTextTests
 {

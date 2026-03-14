@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using Wed_Project.Models;
-using Wed_Project.Services.Content;
+using Web_Project.Models;
+using Web_Project.Services.Content;
 
-namespace Wed_Project.Controllers
+namespace Web_Project.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
