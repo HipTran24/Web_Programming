@@ -25,7 +25,7 @@
       return "/home/index.html";
     }
 
-    if (raw.startsWith("/home/login.html")) {
+    if (raw.startsWith("login.html")) {
       return "/home/index.html";
     }
 
@@ -106,7 +106,7 @@
     googleButton.addEventListener("click", () => {
       setMessage(
         "Đăng nhập Google chưa được cấu hình trên môi trường này. Vui lòng dùng email/mật khẩu.",
-        false
+        false,
       );
     });
   };
@@ -192,13 +192,25 @@
         if (data?.errors && typeof data.errors === "object") {
           Object.entries(data.errors).forEach(([field, messages]) => {
             const key = String(field || "").toLowerCase();
-            const firstMessage = Array.isArray(messages) ? String(messages[0] || "") : String(messages || "");
+            const firstMessage = Array.isArray(messages)
+              ? String(messages[0] || "")
+              : String(messages || "");
 
-            if (key.includes("emailorusername") || key.includes("email") || key.includes("username")) {
-              setFieldError("email", firstMessage || "Thông tin đăng nhập chưa hợp lệ.");
+            if (
+              key.includes("emailorusername") ||
+              key.includes("email") ||
+              key.includes("username")
+            ) {
+              setFieldError(
+                "email",
+                firstMessage || "Thông tin đăng nhập chưa hợp lệ.",
+              );
             }
             if (key.includes("password")) {
-              setFieldError("password", firstMessage || "Thông tin đăng nhập chưa hợp lệ.");
+              setFieldError(
+                "password",
+                firstMessage || "Thông tin đăng nhập chưa hợp lệ.",
+              );
             }
           });
 
@@ -217,7 +229,9 @@
       }
 
       const storage = rememberMe ? window.localStorage : window.sessionStorage;
-      const otherStorage = rememberMe ? window.sessionStorage : window.localStorage;
+      const otherStorage = rememberMe
+        ? window.sessionStorage
+        : window.localStorage;
       otherStorage.removeItem(tokenStorageKey);
       otherStorage.removeItem(userStorageKey);
 
@@ -231,7 +245,7 @@
           email: data?.email ?? "",
           role: data?.role ?? "",
           expiresAt: data?.expiresAt ?? null,
-        })
+        }),
       );
 
       window.sessionStorage.removeItem("pendingEmailVerification");
