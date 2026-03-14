@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Wed_Project.Models;
 using Wed_Project.Services.Auth;
@@ -14,6 +16,49 @@ namespace Wed_Project.Controllers
             IAuthService authService)
         {
             _authService = authService;
+        }
+
+        [HttpPost("login")]
+        public async Task<ActionResult<LoginResponse>> Login(
+            [FromBody] LoginRequest request,
+            CancellationToken cancellationToken)
+        {
+            if (!ModelState.IsValid)
+            {
+                return ValidationProblem(ModelState);
+            }
+
+            var result = await _authService.LoginAsync(request, cancellationToken);
+            if (!result.Success)
+            {
+                if (result.ValidationErrors.Count > 0)
+                {
+                    AddValidationErrors(result.ValidationErrors);
+                    return ValidationProblem(ModelState);
+                }
+
+                return StatusCode(result.StatusCode, new { message = result.Message });
+            }
+
+            return Ok(result.Response);
+        }
+
+        [Authorize]
+        [HttpGet("me")]
+        public IActionResult Me()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var username = User.FindFirstValue(ClaimTypes.Name);
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            var role = User.FindFirstValue(ClaimTypes.Role);
+
+            return Ok(new
+            {
+                userId,
+                username,
+                email,
+                role
+            });
         }
 
         [HttpPost("register")]

@@ -1,6 +1,10 @@
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text.RegularExpressions;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Wed_Project.Models;
 using Wed_Project.Security;
 using Wed_Project.Services.Otp;
@@ -13,16 +17,117 @@ namespace Wed_Project.Services.Auth
 
         private readonly AppDbContext _dbContext;
         private readonly IEmailOtpService _emailOtpService;
+        private readonly JwtSettings _jwtSettings;
+        private readonly JwtSigningMaterial _jwtSigningMaterial;
         private readonly ILogger<AuthService> _logger;
 
         public AuthService(
             AppDbContext dbContext,
             IEmailOtpService emailOtpService,
+            IOptions<JwtSettings> jwtSettings,
+            JwtSigningMaterial jwtSigningMaterial,
             ILogger<AuthService> logger)
         {
             _dbContext = dbContext;
             _emailOtpService = emailOtpService;
+            _jwtSettings = jwtSettings.Value;
+            _jwtSigningMaterial = jwtSigningMaterial;
             _logger = logger;
+        }
+
+        public async Task<LoginServiceResult> LoginAsync(
+            LoginRequest request,
+            CancellationToken cancellationToken)
+        {
+            var identifier = request.EmailOrUsername.Trim();
+            var validationErrors = new Dictionary<string, string[]>();
+
+            if (string.IsNullOrWhiteSpace(identifier))
+            {
+                validationErrors[nameof(LoginRequest.EmailOrUsername)] = ["Email hoặc tên đăng nhập không được để trống."];
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Password))
+            {
+                validationErrors[nameof(LoginRequest.Password)] = ["Mật khẩu không được để trống."];
+            }
+
+            if (validationErrors.Count > 0)
+            {
+                return new LoginServiceResult
+                {
+                    Success = false,
+                    StatusCode = 400,
+                    ValidationErrors = validationErrors
+                };
+            }
+
+            var normalizedEmail = identifier.ToLowerInvariant();
+            var user = await _dbContext.Users
+                .AsNoTracking()
+                .Include(x => x.Role)
+                .FirstOrDefaultAsync(
+                    x => x.Email == normalizedEmail || x.Username == identifier,
+                    cancellationToken);
+
+            if (user is null || !PasswordHashUtility.VerifyPassword(request.Password, user.PasswordHash))
+            {
+                return new LoginServiceResult
+                {
+                    Success = false,
+                    StatusCode = 401,
+                    Message = "Email/tên đăng nhập hoặc mật khẩu không đúng."
+                };
+            }
+
+            if (user.IsLocked)
+            {
+                return new LoginServiceResult
+                {
+                    Success = false,
+                    StatusCode = 403,
+                    Message = "Tài khoản đã bị khóa."
+                };
+            }
+
+            if (!user.IsEmailVerified)
+            {
+                return new LoginServiceResult
+                {
+                    Success = false,
+                    StatusCode = 403,
+                    Message = "Email chưa được xác thực. Vui lòng xác thực OTP trước khi đăng nhập."
+                };
+            }
+
+            if (!TryCreateAccessToken(user, request.RememberMe, out var accessToken, out var expiresAt))
+            {
+                _logger.LogError("JWT settings are invalid. Unable to issue token for UserId={UserId}", user.UserId);
+                return new LoginServiceResult
+                {
+                    Success = false,
+                    StatusCode = 500,
+                    Message = "Hệ thống xác thực chưa được cấu hình đúng."
+                };
+            }
+
+            _logger.LogInformation("User logged in successfully UserId={UserId}", user.UserId);
+
+            return new LoginServiceResult
+            {
+                Success = true,
+                StatusCode = 200,
+                Response = new LoginResponse
+                {
+                    UserId = user.UserId,
+                    Username = user.Username,
+                    FullName = user.FullName,
+                    Email = user.Email,
+                    Role = user.Role?.RoleName ?? DefaultUserRoleName,
+                    AccessToken = accessToken,
+                    ExpiresAt = expiresAt
+                }
+            };
         }
 
         public async Task<RegisterServiceResult> RegisterAsync(
@@ -208,5 +313,43 @@ namespace Wed_Project.Services.Auth
             return exception.InnerException is SqlException sqlException &&
                    (sqlException.Number == 2601 || sqlException.Number == 2627);
         }
+
+        private bool TryCreateAccessToken(
+            User user,
+            bool rememberMe,
+            out string accessToken,
+            out DateTime expiresAt)
+        {
+            accessToken = string.Empty;
+            expiresAt = DateTime.UtcNow;
+
+            var now = DateTime.UtcNow;
+            var lifetime = rememberMe
+                ? TimeSpan.FromDays(Math.Max(1, _jwtSettings.RememberMeAccessTokenDays))
+                : TimeSpan.FromMinutes(Math.Max(1, _jwtSettings.AccessTokenMinutes));
+            expiresAt = now.Add(lifetime);
+
+            var claims = new List<Claim>
+            {
+                new(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                new(ClaimTypes.Name, user.Username),
+                new(ClaimTypes.Email, user.Email),
+                new(ClaimTypes.Role, user.Role?.RoleName ?? DefaultUserRoleName)
+            };
+
+            var signingCredentials = _jwtSigningMaterial.CreateSigningCredentials();
+
+            var token = new JwtSecurityToken(
+                issuer: _jwtSettings.Issuer,
+                audience: _jwtSettings.Audience,
+                claims: claims,
+                notBefore: now,
+                expires: expiresAt,
+                signingCredentials: signingCredentials);
+
+            accessToken = new JwtSecurityTokenHandler().WriteToken(token);
+            return true;
+        }
     }
 }
+

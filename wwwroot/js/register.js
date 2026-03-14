@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
   const pendingVerificationKey = "pendingEmailVerification";
   const form = document.getElementById("registerForm");
   if (!form) {
@@ -65,6 +65,22 @@
     registerButton.textContent = isSubmitting ? "Đang tạo tài khoản..." : "Tạo tài khoản";
   };
 
+  const setupPasswordToggle = () => {
+    const toggle = document.getElementById("toggleRegisterPasswords");
+    const passwordInput = document.getElementById("password");
+    const confirmPasswordInput = document.getElementById("confirmPassword");
+
+    if (!toggle || !passwordInput || !confirmPasswordInput) {
+      return;
+    }
+
+    toggle.addEventListener("change", () => {
+      const inputType = toggle.checked ? "text" : "password";
+      passwordInput.type = inputType;
+      confirmPasswordInput.type = inputType;
+    });
+  };
+
   const getPayload = () => {
     return {
       username: (document.getElementById("username")?.value || "").trim(),
@@ -84,6 +100,7 @@
       .pop()
       .replace(/\[|\]/g, "")
       .toLowerCase();
+
     switch (normalized) {
       case "username":
         return "username";
@@ -217,4 +234,6 @@
       setSubmitting(false);
     }
   });
+
+  setupPasswordToggle();
 })();

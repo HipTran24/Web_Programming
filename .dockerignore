@@ -1,9 +1,8 @@
 bin/
 obj/
-.DS_Store
+.git/
 .vs/
 .vscode/
 .dotnet-cli-home/
+Wed_Project.Tests/
 *.user
-*.suo
-Thumbs.db
