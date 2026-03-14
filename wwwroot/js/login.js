@@ -97,6 +97,20 @@
     });
   };
 
+  const setupGoogleLogin = () => {
+    const googleButton = document.getElementById("googleLoginButton");
+    if (!googleButton) {
+      return;
+    }
+
+    googleButton.addEventListener("click", () => {
+      setMessage(
+        "Đăng nhập Google chưa được cấu hình trên môi trường này. Vui lòng dùng email/mật khẩu.",
+        false
+      );
+    });
+  };
+
   const readJsonSafely = async (response) => {
     const contentType = response.headers.get("content-type") || "";
     if (!contentType.toLowerCase().includes("application/json")) {
@@ -249,4 +263,5 @@
 
   prefillFromQuery();
   setupPasswordToggle();
+  setupGoogleLogin();
 })();

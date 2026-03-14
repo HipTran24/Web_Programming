@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging.Abstractions;
 using Wed_Project.Models;
+using Wed_Project.Security;
 using Wed_Project.Services.Auth;
 using Wed_Project.Services.Otp;
 
@@ -144,7 +146,23 @@ public sealed class AuthServiceRegisterTests
 
     private static AuthService CreateService(AppDbContext dbContext, FakeEmailOtpService otpService)
     {
-        return new AuthService(dbContext, otpService, NullLogger<AuthService>.Instance);
+        var jwtSettings = new JwtSettings
+        {
+            Issuer = "WedProject.Tests",
+            Audience = "WedProject.Tests.Client",
+            SecretKey = "this-is-a-very-strong-test-secret-key-12345",
+            AccessTokenMinutes = 60,
+            RememberMeAccessTokenDays = 7
+        };
+
+        var signingMaterial = JwtSigningMaterial.Create(jwtSettings, Directory.GetCurrentDirectory());
+
+        return new AuthService(
+            dbContext,
+            otpService,
+            Options.Create(jwtSettings),
+            signingMaterial,
+            NullLogger<AuthService>.Instance);
     }
 
     private static AppDbContext CreateDbContext()
