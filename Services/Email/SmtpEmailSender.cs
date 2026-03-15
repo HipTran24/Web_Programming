@@ -2,9 +2,9 @@ using System.Net;
 using System.Net.Mail;
 using System.Text;
 using Microsoft.Extensions.Options;
-using Wed_Project.Models;
+using Web_Project.Models;
 
-namespace Wed_Project.Services.Email
+namespace Web_Project.Services.Email
 {
     public class SmtpEmailSender : IEmailSender
     {

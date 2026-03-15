@@ -31,7 +31,7 @@
       <nav class="navbar navbar-expand-lg navbar-dark navbar-glass py-3">
         <div class="container">
           <a class="navbar-brand fw-semibold" href="/home/index.html">AI Study</a>
-          <div class="d-flex gap-2">
+          <div class="d-flex gap-2" data-auth-guest>
             <a class="btn btn-outline-light" href="/home/register.html">Đăng ký</a>
           </div>
         </div>
@@ -99,9 +99,8 @@
 
             <div class="d-flex justify-content-between align-items-center mb-3">
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="rememberMe" />
                 <label class="form-check-label" for="rememberMe"
-                  >Ghi nhớ đăng nhập</label
+                  ></label
                 >
               </div>
               <a class="text-muted-2" href="#">Quên mật khẩu?</a>
@@ -127,8 +126,6 @@
               </svg>
               <span>Đăng nhập với Google</span>
             </button>
-            <p class="google-login-note">Google Sign-In sẽ hoạt động sau khi cấu hình OAuth Client ID.</p>
-
             <div class="text-muted-2 small mt-3">
               Chưa có tài khoản?
               <a href="/home/register.html" class="text-white">Đăng ký</a>
@@ -141,6 +138,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/auth.js"></script>
     <script src="../assets/js/main.js"></script>
     <script src="../js/login.js"></script>
   </body>

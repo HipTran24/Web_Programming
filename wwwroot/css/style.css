@@ -178,6 +178,120 @@ main {
   background: rgba(255, 255, 255, 0.06);
 }
 
+.upload-file-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  max-width: 78%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.upload-file-chip-plus {
+  font-size: 1.35rem;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.46);
+}
+
+.upload-file-chip-ext {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #e3d84e;
+  text-transform: uppercase;
+}
+
+.upload-file-chip-name {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.upload-source-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.upload-source-icon {
+  min-width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #dbeafe;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.35), rgba(29, 78, 216, 0.7));
+}
+
+.upload-source-icon[data-kind="url"] {
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.36), rgba(8, 145, 178, 0.72));
+}
+
+.upload-source-icon[data-kind="image"] {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.36), rgba(217, 119, 6, 0.72));
+}
+
+.upload-source-icon[data-kind="video"] {
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.38), rgba(190, 24, 93, 0.72));
+}
+
+.upload-source-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.upload-source-name {
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.upload-source-meta {
+  margin-top: 2px;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.58);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.upload-source-badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: rgba(255, 255, 255, 0.86);
+  background: rgba(255, 255, 255, 0.06);
+  text-transform: uppercase;
+}
+
+.upload-summary-scroll {
+  background: rgba(255, 255, 255, 0.04);
+  max-height: 240px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
 /* ===== NOTE ===== */
 .small-note {
   font-size: 0.92rem;

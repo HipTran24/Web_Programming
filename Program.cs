@@ -1,13 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Wed_Project.Models;
-using Wed_Project.Security;
-using Wed_Project.Services.AI;
-using Wed_Project.Services.Auth;
-using Wed_Project.Services.Content;
-using Wed_Project.Services.Email;
-using Wed_Project.Services.Otp;
+using Web_Project.Models;
+using Web_Project.Security;
+using Web_Project.Services.AI;
+using Web_Project.Services.Auth;
+using Web_Project.Services.Content;
+using Web_Project.Services.Email;
+using Web_Project.Services.Otp;
+using Web_Project.Services.Users;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,6 +54,7 @@ builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 builder.Services.AddScoped<IEmailOtpService, EmailOtpService>();
 builder.Services.AddHttpClient<IGeminiSummaryService, GeminiSummaryService>();
 builder.Services.AddScoped<ISummaryProcessingService, SummaryProcessingService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 var app = builder.Build();
 

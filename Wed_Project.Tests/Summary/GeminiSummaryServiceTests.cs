@@ -2,10 +2,10 @@ using System.Net;
 using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
-using Wed_Project.Models;
-using Wed_Project.Services.AI;
+using Web_Project.Models;
+using Web_Project.Services.AI;
 
-namespace Wed_Project.Tests.Summary;
+namespace Web_Project.Tests.Summary;
 
 public sealed class GeminiSummaryServiceTests
 {

@@ -1,10 +1,10 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Wed_Project.Models.Dtos.User;
-using Wed_Project.Services.User;
+using Web_Project.Models.Dtos.User;
+using Web_Project.Services.Users;
 
-namespace Wed_Project.Controllers
+namespace Web_Project.Controllers
 {
     [ApiController]
     [Route("api/profile")]

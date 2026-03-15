@@ -1160,12 +1160,10 @@
         >
         <ul class="nav-links">
           <li><a href="index.html" class="active">Trang chủ</a></li>
-          <li><a href="guide.html">Hướng dẫn</a></li>
-          <li><a href="pricing.html">Gói sử dụng</a></li>
-        </ul>
-        <div class="nav-actions">
-          <a class="btn btn-ghost" href="login.html">Đăng nhập</a>
-          <a class="btn btn-lime" href="register.html">Đăng ký miễn phí</a>
+          <li><a href="guide.html">Hướng dẫn</a></li>        </ul>
+        <div class="nav-actions" data-auth-guest>
+          <a class="btn btn-ghost" href="/home/login.html">Đăng nhập</a>
+          <a class="btn btn-lime" href="/home/register.html">Đăng ký miễn phí</a>
         </div>
       </div>
     </nav>
@@ -1204,10 +1202,6 @@
                 >Vào Dashboard</a
               >
             </div>
-            <p class="hero-note">
-              * Guest: 1 lần dùng thử, không lưu lịch sử. Đăng ký để dùng đầy
-              đủ.
-            </p>
           </div>
 
           <div class="hero-right hero-card-stack">
@@ -1456,7 +1450,7 @@
                 nhiều lần
               </li>
             </ul>
-            <a href="register.html" class="role-cta cta-lime"
+            <a href="/home/register.html" class="role-cta cta-lime" data-auth-guest
               >Đăng ký miễn phí →</a
             >
           </div>
@@ -1495,7 +1489,7 @@
                 vi phạm
               </li>
             </ul>
-            <a href="login.html" class="role-cta cta-purple"
+            <a href="/home/login.html" class="role-cta cta-purple" data-auth-guest
               >Đăng nhập Admin →</a
             >
           </div>
@@ -1513,10 +1507,10 @@
             </div>
           </div>
           <div class="footer-links">
-            <a href="guide.html">Hướng dẫn</a>
-            <a href="pricing.html">Gói sử dụng</a>
-            <a href="register.html">Đăng ký</a>
-            <a href="login.html">Đăng nhập</a>
+            <a href="/home/guide.html">Hướng dẫn</a>
+            <a href="/home/pricing.html">Gói sử dụng</a>
+            <a href="/home/register.html" data-auth-guest>Đăng ký</a>
+            <a href="/home/login.html" data-auth-guest>Đăng nhập</a>
           </div>
           <div class="footer-copy">Bootstrap 5 + CSS thuần</div>
         </div>

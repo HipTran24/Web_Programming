@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 
-namespace Wed_Project.Models
+namespace Web_Project.Models
 {
     public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
     {

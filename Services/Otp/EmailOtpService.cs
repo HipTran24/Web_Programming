@@ -2,10 +2,10 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Wed_Project.Models;
-using Wed_Project.Services.Email;
+using Web_Project.Models;
+using Web_Project.Services.Email;
 
-namespace Wed_Project.Services.Otp
+namespace Web_Project.Services.Otp
 {
     public class EmailOtpService : IEmailOtpService
     {

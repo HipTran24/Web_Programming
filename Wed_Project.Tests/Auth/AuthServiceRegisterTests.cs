@@ -1,12 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging.Abstractions;
-using Wed_Project.Models;
-using Wed_Project.Security;
-using Wed_Project.Services.Auth;
-using Wed_Project.Services.Otp;
+using Web_Project.Models;
+using Web_Project.Security;
+using Web_Project.Services.Auth;
+using Web_Project.Services.Otp;
 
-namespace Wed_Project.Tests.Auth;
+namespace Web_Project.Tests.Auth;
 
 public sealed class AuthServiceRegisterTests
 {

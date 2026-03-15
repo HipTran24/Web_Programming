@@ -1,10 +1,10 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.EntityFrameworkCore;
-using Wed_Project.Models;
-using Wed_Project.Services.AI;
-using Wed_Project.Services.Content;
+using Web_Project.Models;
+using Web_Project.Services.AI;
+using Web_Project.Services.Content;
 
-namespace Wed_Project.Tests.Summary;
+namespace Web_Project.Tests.Summary;
 
 public sealed class SummaryProcessingServiceTextTests
 {

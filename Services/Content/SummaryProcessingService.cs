@@ -9,11 +9,11 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Microsoft.AspNetCore.Http;
-using Wed_Project.Models;
-using Wed_Project.Services.AI;
+using Web_Project.Models;
+using Web_Project.Services.AI;
 using UglyToad.PdfPig;
 
-namespace Wed_Project.Services.Content
+namespace Web_Project.Services.Content
 {
     public class SummaryProcessingService : ISummaryProcessingService
     {
@@ -546,7 +546,7 @@ namespace Wed_Project.Services.Content
             var sourceType = ResolveSourceTypeForPersistence(inputType, sourceUrl);
             var createdAt = DateTime.UtcNow;
 
-            var content = new Wed_Project.Models.Content
+            var content = new Web_Project.Models.Content
             {
                 UserId = null,
                 IsGuest = true,

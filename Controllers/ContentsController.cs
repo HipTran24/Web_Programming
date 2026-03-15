@@ -2,9 +2,9 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
-using Wed_Project.Models;
+using Web_Project.Models;
 
-namespace Wed_Project.Controllers
+namespace Web_Project.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

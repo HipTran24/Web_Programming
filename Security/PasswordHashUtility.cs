@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 
-namespace Wed_Project.Security
+namespace Web_Project.Security
 {
     public static class PasswordHashUtility
     {

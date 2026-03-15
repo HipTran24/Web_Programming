@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Wed_Project.Models.Dtos.User
+namespace Web_Project.Models.Dtos.User
 {
     public class UpdateProfileRequest
     {

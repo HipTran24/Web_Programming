@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Wed_Project.Models
+namespace Web_Project.Models
 {
     public class Question
     {

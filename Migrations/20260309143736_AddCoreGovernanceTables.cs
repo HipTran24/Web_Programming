@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Wed_Project.Migrations
+namespace Web_Project.Migrations
 {
     /// <inheritdoc />
     public partial class AddCoreGovernanceTables : Migration

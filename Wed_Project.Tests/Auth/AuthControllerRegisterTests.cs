@@ -1,12 +1,12 @@
 using System.Net;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Wed_Project.Controllers;
-using Wed_Project.Models;
-using Wed_Project.Services.Auth;
-using Wed_Project.Services.Otp;
+using Web_Project.Controllers;
+using Web_Project.Models;
+using Web_Project.Services.Auth;
+using Web_Project.Services.Otp;
 
-namespace Wed_Project.Tests.Auth;
+namespace Web_Project.Tests.Auth;
 
 public sealed class AuthControllerRegisterTests
 {

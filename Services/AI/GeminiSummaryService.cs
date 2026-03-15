@@ -2,9 +2,9 @@ using System.Text;
 using System.Text.Json;
 using System.Net;
 using Microsoft.Extensions.Options;
-using Wed_Project.Models;
+using Web_Project.Models;
 
-namespace Wed_Project.Services.AI
+namespace Web_Project.Services.AI
 {
     public class GeminiSummaryService : IGeminiSummaryService
     {
@@ -39,8 +39,8 @@ namespace Wed_Project.Services.AI
 
             var prompt =
                 "Bạn là trợ lý học tập AI Study. " +
-                "Hãy tóm tắt nội dung sau thành 1 đoạn văn tiếng Việt khoảng 120-220 từ, " +
-                "giữ đủ ý chính, rõ ràng, không lan man. " +
+                "Hãy tóm tắt nội dung sau thành 1 đoạn văn tiếng Việt CHI TIẾT khoảng 280-450 từ, " +
+                "không được dưới 250 từ, giữ đủ ý chính theo trình tự nội dung, rõ ràng, không lan man. " +
                 "Bắt buộc trả về JSON hợp lệ đúng định dạng: " +
                 "{\"summary\":\"...\",\"keyPoints\":[\"...\",\"...\"]}. " +
                 "Không thêm markdown/code fence.\n\n" +
@@ -70,7 +70,7 @@ namespace Wed_Project.Services.AI
             }
 
             var prompt =
-                "Đọc nội dung trong ảnh này (văn bản, biểu đồ, ghi chú...) và tóm tắt thành 1 đoạn tiếng Việt 120-220 từ. " +
+                "Đọc nội dung trong ảnh này (văn bản, biểu đồ, ghi chú...) và tóm tắt thành 1 đoạn tiếng Việt CHI TIẾT khoảng 220-380 từ. " +
                 "Bắt buộc trả về JSON hợp lệ đúng định dạng: " +
                 "{\"summary\":\"...\",\"keyPoints\":[\"...\",\"...\"]}. " +
                 $"Tên file: {fileName}. Không dùng markdown.";

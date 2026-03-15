@@ -41,6 +41,31 @@
 
   const isAuthenticated = () => Boolean(getAccessToken());
 
+  const setElementVisible = (element, visible) => {
+    if (!element) {
+      return;
+    }
+
+    if (visible) {
+      element.style.removeProperty("display");
+      return;
+    }
+
+    element.style.setProperty("display", "none", "important");
+  };
+
+  const applyAuthVisibility = () => {
+    const authed = isAuthenticated();
+
+    document.querySelectorAll("[data-auth-guest]").forEach((el) => {
+      setElementVisible(el, !authed);
+    });
+
+    document.querySelectorAll("[data-auth-user]").forEach((el) => {
+      setElementVisible(el, authed);
+    });
+  };
+
   const redirectToLogin = (message) => {
     const current = `${window.location.pathname}${window.location.search}`;
     const returnUrl = encodeURIComponent(current);
@@ -151,6 +176,13 @@
     clearSession,
     isAuthenticated,
     requireAuth,
+    applyAuthVisibility,
     bindUserUi,
   };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", applyAuthVisibility, { once: true });
+  } else {
+    applyAuthVisibility();
+  }
 })();
