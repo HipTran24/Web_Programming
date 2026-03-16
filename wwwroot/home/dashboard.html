@@ -1,177 +1,203 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="vi">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Dashboard — AI Study</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link href="../css/style.css" rel="stylesheet" />
-  </head>
-  <body>
-    <div id="page-loader" class="logo-loader">
-      <div class="logo-loader-box">
-        <div class="ai-orbit orbit-1"></div>
-        <div class="ai-orbit orbit-2"></div>
-        <div class="ai-logo-core">
-          <span>AI</span>
-        </div>
-        <h4>AI Study</h4>
-        <p>Hệ thống học tập thông minh đang khởi động</p>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard - AI Study</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="../css/style.css" rel="stylesheet" />
+</head>
+<body>
+  <div id="page-loader" class="logo-loader">
+    <div class="logo-loader-box">
+      <div class="ai-orbit orbit-1"></div>
+      <div class="ai-orbit orbit-2"></div>
+      <div class="ai-logo-core">
+        <span>AI</span>
       </div>
+      <h4>AI Study</h4>
+      <p>Hệ thống học tập thông minh đang khởi động</p>
     </div>
+  </div>
 
-    <div class="page-content">
-      <nav class="navbar navbar-expand-lg navbar-dark navbar-glass py-3">
-        <div class="container">
-          <a class="navbar-brand fw-semibold" href="dashboard.html">AI Study</a>
-          <button
-            class="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#nav"
-          >
-            <span class="navbar-toggler-icon"></span>
-          </button>
-          <div class="collapse navbar-collapse" id="nav">
-            <ul class="navbar-nav me-auto gap-lg-2">
-              <li class="nav-item">
-                <a class="nav-link active" href="dashboard.html">Dashboard</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="upload.html">Upload</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="history.html">Lịch sử</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="analytics.html">Phân tích</a>
-              </li>
-            </ul>
-            <div class="d-flex gap-2 align-items-center">
-              <span class="badge badge-soft"
-                >Xin chào, <span data-auth-name>User</span></span
-              >
-              <a
-                class="btn btn-outline-light btn-sm"
-                href="/home/login.html"
-                data-auth-logout
-                >Đăng xuất</a
-              >
-            </div>
+  <div class="page-content">
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-glass py-3">
+      <div class="container">
+        <button
+          id="sidebarToggle"
+          class="sidebar-toggle-btn me-2"
+          type="button"
+          aria-label="Toggle sidebar"
+          aria-controls="appSidebar"
+          aria-expanded="false"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+
+        <a class="navbar-brand fw-semibold" href="dashboard.html">AI Study</a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="nav">
+          <ul class="navbar-nav me-auto gap-lg-2">
+            <li class="nav-item"><a class="nav-link active" href="dashboard.html">Dashboard</a></li>
+            <li class="nav-item"><a class="nav-link" href="upload.html">Upload</a></li>
+            <li class="nav-item"><a class="nav-link" href="history.html">Lịch sử</a></li>
+            <li class="nav-item"><a class="nav-link" href="analytics.html">Phân tích</a></li>
+          </ul>
+
+          <div class="d-flex gap-2 align-items-center">
+            <span class="badge badge-soft">Xin chào, <span data-auth-name>User</span></span>
+            <a class="btn btn-outline-light btn-sm" href="/home/login.html" data-auth-logout>Đăng xuất</a>
           </div>
         </div>
+      </div>
+    </nav>
+
+    <aside id="appSidebar" class="app-sidebar" aria-hidden="true">
+      <div class="app-sidebar-avatar-wrap">
+        <div class="app-sidebar-avatar-placeholder">Avatar</div>
+        <div class="app-sidebar-avatar-name">Người dùng</div>
+      </div>
+      <nav class="app-sidebar-menu">
+        <a href="upload.html">Tóm tắt</a>
+        <a class="active" href="dashboard.html">Tổng quan</a>
+        <a href="content-list.html">Nội dung</a>
+        <a href="quiz.html">Câu hỏi</a>
       </nav>
+    </aside>
+    <div id="appSidebarBackdrop" class="app-sidebar-backdrop"></div>
 
-      <main class="container py-5">
-        <div class="row g-4">
-          <div class="col-lg-3">
-            <div class="glass p-3 sidebar">
-              <a class="active" href="dashboard.html">Tổng quan</a>
-              <a href="content-list.html">Nội dung đã upload</a>
-              <a href="upload.html">Upload mới</a>
-              <a href="history.html">Lịch sử làm bài</a>
-              <a href="analytics.html">Phân tích học tập</a>
-              <a href="admin.html">Admin (nếu có)</a>
+    <main class="container py-5">
+      <div class="row g-4">
+        <div class="col-lg-12">
+          <div class="row g-3" id="section-overview">
+            <div class="col-md-4">
+              <div class="glass p-4">
+                <div class="text-muted-2 small">Nội dung đã xử lý</div>
+                <div class="display-6 fw-bold">12</div>
+                <div class="text-muted-2 small">+2 tuần này</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="glass p-4">
+                <div class="text-muted-2 small">Bài kiểm tra đã làm</div>
+                <div class="display-6 fw-bold">28</div>
+                <div class="text-muted-2 small">Tỷ lệ đúng TB: 76%</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="glass p-4">
+                <div class="text-muted-2 small">Chủ đề yếu</div>
+                <div class="fw-semibold mt-1">Chương 3 - Khái niệm X</div>
+                <div class="text-muted-2 small">Gợi ý: ôn lại keypoints</div>
+              </div>
             </div>
           </div>
 
-          <div class="col-lg-9">
-            <div class="row g-3">
-              <div class="col-md-4">
-                <div class="glass p-4">
-                  <div class="text-muted-2 small">Nội dung đã xử lý</div>
-                  <div class="display-6 fw-bold">12</div>
-                  <div class="text-muted-2 small">+2 tuần này</div>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="glass p-4">
-                  <div class="text-muted-2 small">Bài kiểm tra đã làm</div>
-                  <div class="display-6 fw-bold">28</div>
-                  <div class="text-muted-2 small">Tỷ lệ đúng TB: 76%</div>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="glass p-4">
-                  <div class="text-muted-2 small">Chủ đề yếu</div>
-                  <div class="fw-semibold mt-1">Chương 3 • Khái niệm X</div>
-                  <div class="text-muted-2 small">Gợi ý: ôn lại keypoints</div>
-                </div>
-              </div>
+          <div class="glass p-4 mt-4" id="section-content">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+              <h5 class="fw-semibold mb-0">Hoạt động gần đây</h5>
+              <a class="btn btn-primary btn-sm" href="upload.html">Upload mới</a>
             </div>
-
-            <div class="glass p-4 mt-4">
-              <div
-                class="d-flex flex-wrap justify-content-between align-items-center gap-2"
-              >
-                <h5 class="fw-semibold mb-0">Hoạt động gần đây</h5>
-                <a class="btn btn-primary btn-sm" href="upload.html"
-                  >Upload mới</a
-                >
-              </div>
-              <div class="table-responsive mt-3">
-                <table class="table table-hover align-middle mb-0">
-                  <thead>
-                    <tr>
-                      <th>Thời gian</th>
-                      <th>Nội dung</th>
-                      <th>Loại</th>
-                      <th>Kết quả</th>
-                      <th class="text-end">Hành động</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td class="text-muted-2">Hôm nay 10:20</td>
-                      <td>Chương 1 — Tổng quan</td>
-                      <td><span class="badge badge-soft">PDF</span></td>
-                      <td><span class="badge text-bg-success">8/10</span></td>
-                      <td class="text-end">
-                        <a
-                          class="btn btn-outline-light btn-sm"
-                          href="content-detail.html"
-                          >Xem</a
-                        >
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="text-muted-2">Hôm qua 21:05</td>
-                      <td>Bài giảng Video — Phần A</td>
-                      <td><span class="badge badge-soft">MP4</span></td>
-                      <td><span class="badge text-bg-primary">Tạo đề</span></td>
-                      <td class="text-end">
-                        <a class="btn btn-outline-light btn-sm" href="quiz.html"
-                          >Làm bài</a
-                        >
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+            <div class="table-responsive mt-3">
+              <table class="table table-hover align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th>Thời gian</th>
+                    <th>Nội dung</th>
+                    <th>Loại</th>
+                    <th>Kết quả</th>
+                    <th class="text-end">Hành động</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="text-muted-2">Hôm nay 10:20</td>
+                    <td>Chương 1 - Tổng quan</td>
+                    <td><span class="badge badge-soft">PDF</span></td>
+                    <td><span class="badge text-bg-success">8/10</span></td>
+                    <td class="text-end">
+                      <a class="btn btn-outline-light btn-sm" href="content-detail.html">Xem</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="text-muted-2">Hôm qua 21:05</td>
+                    <td>Bài giảng Video - Phần A</td>
+                    <td><span class="badge badge-soft">MP4</span></td>
+                    <td><span class="badge text-bg-primary">Tạo đề</span></td>
+                    <td class="text-end">
+                      <a class="btn btn-outline-light btn-sm" href="quiz.html">Làm bài</a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
-      </main>
-    </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../js/auth.js"></script>
-    <script src="../assets/js/main.js"></script>
-    <script>
-      (async function () {
-        if (!window.AuthClient) {
-          return;
-        }
+      </div>
+    </main>
+  </div>
 
-        const me = await window.AuthClient.requireAuth();
-        if (!me) {
-          return;
-        }
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../assets/js/main.js"></script>
+  <script src="../js/navbar-sidebar.js"></script>
+  <script>
+    (function () {
+      const sidebarToggle = document.getElementById("sidebarToggle");
+      const appSidebar = document.getElementById("appSidebar");
+      const sidebarBackdrop = document.getElementById("appSidebarBackdrop");
+      const sidebarLinks = document.querySelectorAll(".app-sidebar-menu a");
 
-        window.AuthClient.bindUserUi(me);
-      })();
-    </script>
-  </body>
+      if (!sidebarToggle || !appSidebar || !sidebarBackdrop) {
+        return;
+      }
+
+      const setSidebarState = (open) => {
+        appSidebar.classList.toggle("is-open", open);
+        sidebarBackdrop.classList.toggle("is-visible", open);
+        sidebarToggle.setAttribute("aria-expanded", open ? "true" : "false");
+        appSidebar.setAttribute("aria-hidden", open ? "false" : "true");
+      };
+
+      sidebarToggle.addEventListener("click", () => {
+        setSidebarState(!appSidebar.classList.contains("is-open"));
+      });
+
+      sidebarBackdrop.addEventListener("click", () => {
+        setSidebarState(false);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          setSidebarState(false);
+        }
+      });
+
+      sidebarLinks.forEach((link) => {
+        link.addEventListener("click", () => {
+          setSidebarState(false);
+        });
+      });
+    })();
+
+    (async function () {
+      if (!window.AuthClient) {
+        return;
+      }
+
+      const me = await window.AuthClient.requireAuth();
+      if (!me) {
+        return;
+      }
+
+      window.AuthClient.bindUserUi(me);
+    })();
+  </script>
+</body>
 </html>

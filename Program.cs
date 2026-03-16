@@ -20,6 +20,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"));
 builder.Services.Configure<EmailOtpSettings>(builder.Configuration.GetSection("EmailOtp"));
 builder.Services.Configure<GeminiSettings>(builder.Configuration.GetSection("Gemini"));
+builder.Services.Configure<GoogleAuthSettings>(builder.Configuration.GetSection(GoogleAuthSettings.SectionName));
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SectionName));
 
 var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>() ?? new JwtSettings();

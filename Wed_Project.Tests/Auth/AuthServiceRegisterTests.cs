@@ -160,6 +160,7 @@ public sealed class AuthServiceRegisterTests
         return new AuthService(
             dbContext,
             otpService,
+            Options.Create(new GoogleAuthSettings { ClientId = "test-client-id" }),
             Options.Create(jwtSettings),
             signingMaterial,
             NullLogger<AuthService>.Instance);

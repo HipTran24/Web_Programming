@@ -1,6 +1,7 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
+using Google.Apis.Auth;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -17,6 +18,7 @@ namespace Web_Project.Services.Auth
 
         private readonly AppDbContext _dbContext;
         private readonly IEmailOtpService _emailOtpService;
+        private readonly GoogleAuthSettings _googleAuthSettings;
         private readonly JwtSettings _jwtSettings;
         private readonly JwtSigningMaterial _jwtSigningMaterial;
         private readonly ILogger<AuthService> _logger;
@@ -24,12 +26,14 @@ namespace Web_Project.Services.Auth
         public AuthService(
             AppDbContext dbContext,
             IEmailOtpService emailOtpService,
+            IOptions<GoogleAuthSettings> googleAuthSettings,
             IOptions<JwtSettings> jwtSettings,
             JwtSigningMaterial jwtSigningMaterial,
             ILogger<AuthService> logger)
         {
             _dbContext = dbContext;
             _emailOtpService = emailOtpService;
+            _googleAuthSettings = googleAuthSettings.Value;
             _jwtSettings = jwtSettings.Value;
             _jwtSigningMaterial = jwtSigningMaterial;
             _logger = logger;
@@ -117,16 +121,139 @@ namespace Web_Project.Services.Auth
             {
                 Success = true,
                 StatusCode = 200,
-                Response = new LoginResponse
+                Response = CreateLoginResponse(user, accessToken, expiresAt)
+            };
+        }
+
+        public async Task<LoginServiceResult> GoogleLoginAsync(
+            GoogleLoginRequest request,
+            CancellationToken cancellationToken)
+        {
+            var validationErrors = new Dictionary<string, string[]>();
+            if (string.IsNullOrWhiteSpace(request.IdToken))
+            {
+                validationErrors[nameof(GoogleLoginRequest.IdToken)] = ["Google ID token không được để trống."];
+            }
+
+            if (validationErrors.Count > 0)
+            {
+                return new LoginServiceResult
                 {
-                    UserId = user.UserId,
-                    Username = user.Username,
-                    FullName = user.FullName,
-                    Email = user.Email,
-                    Role = user.Role?.RoleName ?? DefaultUserRoleName,
-                    AccessToken = accessToken,
-                    ExpiresAt = expiresAt
+                    Success = false,
+                    StatusCode = 400,
+                    ValidationErrors = validationErrors
+                };
+            }
+
+            if (string.IsNullOrWhiteSpace(_googleAuthSettings.ClientId))
+            {
+                _logger.LogError("GoogleAuth:ClientId is not configured.");
+                return new LoginServiceResult
+                {
+                    Success = false,
+                    StatusCode = 500,
+                    Message = "Hệ thống đăng nhập Google chưa được cấu hình đúng."
+                };
+            }
+
+            GoogleJsonWebSignature.Payload payload;
+            try
+            {
+                payload = await GoogleJsonWebSignature.ValidateAsync(
+                    request.IdToken,
+                    new GoogleJsonWebSignature.ValidationSettings
+                    {
+                        Audience = [_googleAuthSettings.ClientId]
+                    });
+            }
+            catch (InvalidJwtException ex)
+            {
+                _logger.LogWarning(ex, "Invalid Google ID token.");
+                return new LoginServiceResult
+                {
+                    Success = false,
+                    StatusCode = 401,
+                    Message = "Google token không hợp lệ hoặc đã hết hạn."
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error while validating Google ID token.");
+                return new LoginServiceResult
+                {
+                    Success = false,
+                    StatusCode = 500,
+                    Message = "Không thể xác thực Google token ở thời điểm hiện tại."
+                };
+            }
+
+            if (string.IsNullOrWhiteSpace(payload.Email))
+            {
+                return new LoginServiceResult
+                {
+                    Success = false,
+                    StatusCode = 400,
+                    Message = "Tài khoản Google không cung cấp email hợp lệ."
+                };
+            }
+
+            var email = payload.Email.Trim().ToLowerInvariant();
+            var fullName = string.IsNullOrWhiteSpace(payload.Name)
+                ? email
+                : payload.Name.Trim();
+
+            var user = await _dbContext.Users
+                .Include(x => x.Role)
+                .FirstOrDefaultAsync(x => x.Email == email, cancellationToken);
+
+            if (user is null)
+            {
+                user = await CreateGoogleUserAsync(email, fullName, cancellationToken);
+                if (user is null)
+                {
+                    return new LoginServiceResult
+                    {
+                        Success = false,
+                        StatusCode = 500,
+                        Message = "Không thể tạo tài khoản từ Google. Vui lòng thử lại sau."
+                    };
                 }
+            }
+
+            if (user.IsLocked)
+            {
+                return new LoginServiceResult
+                {
+                    Success = false,
+                    StatusCode = 403,
+                    Message = "Tài khoản đã bị khóa."
+                };
+            }
+
+            if (!user.IsEmailVerified)
+            {
+                user.IsEmailVerified = true;
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+
+            if (!TryCreateAccessToken(user, request.RememberMe, out var accessToken, out var expiresAt))
+            {
+                _logger.LogError("JWT settings are invalid. Unable to issue token for UserId={UserId}", user.UserId);
+                return new LoginServiceResult
+                {
+                    Success = false,
+                    StatusCode = 500,
+                    Message = "Hệ thống xác thực chưa được cấu hình đúng."
+                };
+            }
+
+            _logger.LogInformation("User logged in with Google successfully UserId={UserId}", user.UserId);
+
+            return new LoginServiceResult
+            {
+                Success = true,
+                StatusCode = 200,
+                Response = CreateLoginResponse(user, accessToken, expiresAt)
             };
         }
 
@@ -294,6 +421,82 @@ namespace Web_Project.Services.Auth
             }
         }
 
+        private async Task<User?> CreateGoogleUserAsync(
+            string email,
+            string fullName,
+            CancellationToken cancellationToken)
+        {
+            var roleId = await EnsureDefaultUserRoleIdAsync(cancellationToken);
+
+            for (var attempt = 0; attempt < 5; attempt++)
+            {
+                var username = await GenerateUniqueUsernameAsync(email, cancellationToken);
+                var now = DateTime.UtcNow;
+
+                var newUser = new User
+                {
+                    Username = username,
+                    FullName = fullName,
+                    Email = email,
+                    PasswordHash = PasswordHashUtility.HashPassword($"GOOGLE::{Guid.NewGuid():N}Aa1"),
+                    RoleId = roleId,
+                    IsLocked = false,
+                    IsEmailVerified = true,
+                    CreatedAt = now
+                };
+
+                _dbContext.Users.Add(newUser);
+
+                try
+                {
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+
+                    return await _dbContext.Users
+                        .Include(x => x.Role)
+                        .FirstOrDefaultAsync(x => x.UserId == newUser.UserId, cancellationToken);
+                }
+                catch (DbUpdateException ex) when (IsUniqueConstraintViolation(ex))
+                {
+                    _dbContext.Entry(newUser).State = EntityState.Detached;
+
+                    var existingUser = await _dbContext.Users
+                        .Include(x => x.Role)
+                        .FirstOrDefaultAsync(x => x.Email == email, cancellationToken);
+
+                    if (existingUser is not null)
+                    {
+                        return existingUser;
+                    }
+                }
+            }
+
+            _logger.LogError("Failed to create Google user after retries for Email={Email}", email);
+            return null;
+        }
+
+        private async Task<string> GenerateUniqueUsernameAsync(
+            string email,
+            CancellationToken cancellationToken)
+        {
+            var localPart = email.Split('@')[0].Trim();
+            var sanitized = Regex.Replace(localPart, "[^a-zA-Z0-9._-]", string.Empty);
+            var baseUsername = string.IsNullOrWhiteSpace(sanitized) ? "google_user" : sanitized;
+            baseUsername = baseUsername.Length > 48 ? baseUsername[..48] : baseUsername;
+
+            var candidate = baseUsername;
+            var suffix = 0;
+            while (await _dbContext.Users.AnyAsync(x => x.Username == candidate, cancellationToken))
+            {
+                suffix++;
+                var suffixText = suffix.ToString();
+                var maxBaseLength = Math.Max(1, 64 - suffixText.Length);
+                var trimmedBase = baseUsername.Length > maxBaseLength ? baseUsername[..maxBaseLength] : baseUsername;
+                candidate = $"{trimmedBase}{suffixText}";
+            }
+
+            return candidate;
+        }
+
         private static bool HasStrongPassword(string password)
         {
             if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
@@ -349,6 +552,20 @@ namespace Web_Project.Services.Auth
 
             accessToken = new JwtSecurityTokenHandler().WriteToken(token);
             return true;
+        }
+
+        private static LoginResponse CreateLoginResponse(User user, string accessToken, DateTime expiresAt)
+        {
+            return new LoginResponse
+            {
+                UserId = user.UserId,
+                Username = user.Username,
+                FullName = user.FullName,
+                Email = user.Email,
+                Role = user.Role?.RoleName ?? DefaultUserRoleName,
+                AccessToken = accessToken,
+                ExpiresAt = expiresAt
+            };
         }
     }
 }
