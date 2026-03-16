@@ -6,6 +6,7 @@
 
   const tokenStorageKey = "auth.accessToken";
   const userStorageKey = "auth.currentUser";
+  const googleIdentitySdkUrl = "https://accounts.google.com/gsi/client";
   const identifierInput = document.getElementById("email");
   const passwordInput = document.getElementById("password");
   const rememberMeInput = document.getElementById("rememberMe");
@@ -71,6 +72,35 @@
     ["email", "password"].forEach(clearFieldError);
   };
 
+  const persistSession = (data, rememberMe) => {
+    const token = data?.accessToken || "";
+    if (!token) {
+      return false;
+    }
+
+    const storage = rememberMe ? window.localStorage : window.sessionStorage;
+    const otherStorage = rememberMe
+      ? window.sessionStorage
+      : window.localStorage;
+    otherStorage.removeItem(tokenStorageKey);
+    otherStorage.removeItem(userStorageKey);
+
+    storage.setItem(tokenStorageKey, token);
+    storage.setItem(
+      userStorageKey,
+      JSON.stringify({
+        userId: data?.userId ?? null,
+        username: data?.username ?? "",
+        fullName: data?.fullName ?? "",
+        email: data?.email ?? "",
+        role: data?.role ?? "",
+        expiresAt: data?.expiresAt ?? null,
+      }),
+    );
+
+    return true;
+  };
+
   const setSubmitting = (submitting) => {
     if (!loginButton) {
       return;
@@ -78,6 +108,37 @@
 
     loginButton.disabled = submitting;
     loginButton.textContent = submitting ? "Đang đăng nhập..." : "Đăng nhập";
+  };
+
+  const wait = (ms) =>
+    new Promise((resolve) => {
+      window.setTimeout(resolve, ms);
+    });
+
+  const ensureGoogleIdentitySdkReady = async (timeoutMs = 12000) => {
+    if (window.google?.accounts?.id) {
+      return true;
+    }
+
+    let sdkScript = document.querySelector(`script[src="${googleIdentitySdkUrl}"]`);
+    if (!sdkScript) {
+      sdkScript = document.createElement("script");
+      sdkScript.src = googleIdentitySdkUrl;
+      sdkScript.async = true;
+      sdkScript.defer = true;
+      document.head.appendChild(sdkScript);
+    }
+
+    const startedAt = Date.now();
+    while (Date.now() - startedAt < timeoutMs) {
+      if (window.google?.accounts?.id) {
+        return true;
+      }
+
+      await wait(120);
+    }
+
+    return false;
   };
 
   const setupPasswordToggle = () => {
@@ -97,17 +158,112 @@
     });
   };
 
-  const setupGoogleLogin = () => {
+  const submitGoogleToken = async (idToken) => {
+    if (isSubmitting) {
+      return;
+    }
+
+    const rememberMe = !!rememberMeInput?.checked;
+    isSubmitting = true;
+    setSubmitting(true);
+    setMessage("", false);
+
+    try {
+      const response = await fetch("/api/auth/google-login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          idToken,
+          rememberMe,
+        }),
+      });
+
+      const data = await readJsonSafely(response);
+      if (!response.ok) {
+        setMessage(data?.message || "Đăng nhập Google thất bại.", false);
+        return;
+      }
+
+      if (!persistSession(data, rememberMe)) {
+        setMessage("Đăng nhập thất bại: không nhận được token.", false);
+        return;
+      }
+
+      window.sessionStorage.removeItem("pendingEmailVerification");
+      setMessage("Đăng nhập Google thành công. Đang chuyển trang...", true);
+      window.setTimeout(() => {
+        window.location.href = returnUrl || "/home/index.html";
+      }, 700);
+    } catch (error) {
+      console.error("google_login_failed", error);
+      setMessage("Không thể kết nối tới máy chủ.", false);
+    } finally {
+      isSubmitting = false;
+      setSubmitting(false);
+    }
+  };
+
+  const setupGoogleLogin = async () => {
     const googleButton = document.getElementById("googleLoginButton");
     if (!googleButton) {
       return;
     }
 
-    googleButton.addEventListener("click", () => {
-      setMessage(
-        "Đăng nhập Google chưa được cấu hình trên môi trường này. Vui lòng dùng email/mật khẩu.",
-        false,
-      );
+    let config = null;
+    try {
+      const response = await fetch("/api/auth/google-config", {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+        },
+      });
+
+      config = await readJsonSafely(response);
+      if (!response.ok || !config?.enabled || !config?.clientId) {
+        setMessage(
+          "Đăng nhập Google chưa được cấu hình trên môi trường này. Vui lòng dùng email/mật khẩu.",
+          false,
+        );
+        return;
+      }
+    } catch (error) {
+      console.error("google_config_failed", error);
+      return;
+    }
+
+    const sdkReady = await ensureGoogleIdentitySdkReady();
+    if (!sdkReady || !window.google?.accounts?.id) {
+      setMessage("Không tải được dịch vụ đăng nhập Google. Vui lòng thử lại sau.", false);
+      return;
+    }
+
+    window.google.accounts.id.initialize({
+      client_id: config.clientId,
+      callback: async (googleResponse) => {
+        const idToken = googleResponse?.credential || "";
+        if (!idToken) {
+          setMessage("Không lấy được Google token hợp lệ.", false);
+          return;
+        }
+
+        await submitGoogleToken(idToken);
+      },
+      auto_select: false,
+      cancel_on_tap_outside: true,
+    });
+
+    const width = Math.max(240, Math.min(googleButton.clientWidth || 360, 400));
+    window.google.accounts.id.renderButton(googleButton, {
+      type: "standard",
+      theme: "outline",
+      size: "large",
+      text: "signin_with",
+      locale: "vi",
+      shape: "pill",
+      width,
+      logo_alignment: "left",
     });
   };
 
@@ -222,31 +378,10 @@
         return;
       }
 
-      const token = data?.accessToken || "";
-      if (!token) {
+      if (!persistSession(data, rememberMe)) {
         setMessage("Đăng nhập thất bại: không nhận được token.", false);
         return;
       }
-
-      const storage = rememberMe ? window.localStorage : window.sessionStorage;
-      const otherStorage = rememberMe
-        ? window.sessionStorage
-        : window.localStorage;
-      otherStorage.removeItem(tokenStorageKey);
-      otherStorage.removeItem(userStorageKey);
-
-      storage.setItem(tokenStorageKey, token);
-      storage.setItem(
-        userStorageKey,
-        JSON.stringify({
-          userId: data?.userId ?? null,
-          username: data?.username ?? "",
-          fullName: data?.fullName ?? "",
-          email: data?.email ?? "",
-          role: data?.role ?? "",
-          expiresAt: data?.expiresAt ?? null,
-        }),
-      );
 
       window.sessionStorage.removeItem("pendingEmailVerification");
       setMessage("Đăng nhập thành công. Đang chuyển trang...", true);
@@ -277,5 +412,5 @@
 
   prefillFromQuery();
   setupPasswordToggle();
-  setupGoogleLogin();
+  void setupGoogleLogin();
 })();

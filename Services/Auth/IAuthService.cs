@@ -9,6 +9,10 @@ namespace Web_Project.Services.Auth
             LoginRequest request,
             CancellationToken cancellationToken);
 
+        Task<LoginServiceResult> GoogleLoginAsync(
+            GoogleLoginRequest request,
+            CancellationToken cancellationToken);
+
         Task<RegisterServiceResult> RegisterAsync(
             RegisterRequest request,
             string requestIp,

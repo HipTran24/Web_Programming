@@ -369,6 +369,16 @@ main {
   color: rgba(255, 255, 255, 0.56);
 }
 
+.google-login-host {
+  display: flex;
+  justify-content: center;
+  min-height: 42px;
+}
+
+.google-login-host > div {
+  max-width: 100%;
+}
+
 /* ===== FOOTER ===== */
 .footer {
   margin-top: auto;

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Web_Project.Models;
 using Web_Project.Services.Auth;
 
@@ -41,6 +42,43 @@ namespace Web_Project.Controllers
             }
 
             return Ok(result.Response);
+        }
+
+        [HttpPost("google-login")]
+        public async Task<ActionResult<LoginResponse>> GoogleLogin(
+            [FromBody] GoogleLoginRequest request,
+            CancellationToken cancellationToken)
+        {
+            if (!ModelState.IsValid)
+            {
+                return ValidationProblem(ModelState);
+            }
+
+            var result = await _authService.GoogleLoginAsync(request, cancellationToken);
+            if (!result.Success)
+            {
+                if (result.ValidationErrors.Count > 0)
+                {
+                    AddValidationErrors(result.ValidationErrors);
+                    return ValidationProblem(ModelState);
+                }
+
+                return StatusCode(result.StatusCode, new { message = result.Message });
+            }
+
+            return Ok(result.Response);
+        }
+
+        [HttpGet("google-config")]
+        public IActionResult GoogleConfig([FromServices] IOptions<GoogleAuthSettings> googleAuthSettings)
+        {
+            var clientId = googleAuthSettings.Value.ClientId?.Trim() ?? string.Empty;
+
+            return Ok(new
+            {
+                enabled = !string.IsNullOrWhiteSpace(clientId),
+                clientId
+            });
         }
 
         [Authorize]

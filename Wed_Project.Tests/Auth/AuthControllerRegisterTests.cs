@@ -222,6 +222,24 @@ public sealed class AuthControllerRegisterTests
             });
         }
 
+        public Task<LoginServiceResult> GoogleLoginAsync(GoogleLoginRequest request, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(new LoginServiceResult
+            {
+                Success = true,
+                StatusCode = 200,
+                Response = new LoginResponse
+                {
+                    UserId = 1,
+                    Username = "new.user",
+                    FullName = "New User",
+                    Email = "new@example.com",
+                    Role = "User",
+                    AccessToken = "token"
+                }
+            });
+        }
+
         public Task<OtpVerificationResult> VerifyEmailOtpAsync(VerifyEmailOtpRequest request, CancellationToken cancellationToken)
         {
             return Task.FromResult(new OtpVerificationResult { Success = true });
