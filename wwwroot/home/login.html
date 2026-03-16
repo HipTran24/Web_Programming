@@ -41,10 +41,10 @@
         <div class="container">
           <div class="row justify-content-center">
             <div class="col-lg-5">
-              <div class="glass p-4">
+              <div class="glass p-4 login-card">
             <h3 class="fw-bold mb-2">Đăng nhập</h3>
             <p class="text-muted-2">
-              Đăng nhập để lưu lịch sử, tuỳ chỉnh đề, xem phân tích học tập.
+              Chào mừng bạn quay lại, tiếp tục hành trình học tập ngay.
             </p>
 
             <div class="alert alert-danger d-none" id="alertBox">
@@ -97,22 +97,14 @@
               <div class="invalid-feedback d-block" id="passwordError"></div>
             </div>
 
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <div class="form-check">
-                <label class="form-check-label" for="rememberMe"
-                  ></label
-                >
-              </div>
-              <a class="text-muted-2" href="#">Quên mật khẩu?</a>
-            </div>
-
             <button id="loginButton" type="submit" class="btn btn-primary w-100">Đăng nhập</button>
+            <a class="text-muted-2 forgot-password-link" href="#">Quên mật khẩu?</a>
 
             <div class="auth-divider" role="separator" aria-label="Hoặc đăng nhập bằng tài khoản khác">
               <span>hoặc</span>
             </div>
 
-            <div id="googleLoginButton" class="google-login-host w-100" aria-label="Đăng nhập với Google"></div>
+            <div id="googleLoginButton" class="google-login-host w-100" aria-label=""></div>
             <div class="text-muted-2 small mt-3">
               Chưa có tài khoản?
               <a href="/home/register.html" class="text-white">Đăng ký</a>

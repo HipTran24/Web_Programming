@@ -8,6 +8,7 @@ using Web_Project.Services.Auth;
 using Web_Project.Services.Content;
 using Web_Project.Services.Email;
 using Web_Project.Services.Otp;
+using Web_Project.Services.Quiz;
 using Web_Project.Services.Users;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -55,6 +56,7 @@ builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 builder.Services.AddScoped<IEmailOtpService, EmailOtpService>();
 builder.Services.AddHttpClient<IGeminiSummaryService, GeminiSummaryService>();
 builder.Services.AddScoped<ISummaryProcessingService, SummaryProcessingService>();
+builder.Services.AddScoped<IQuizGenerationService, QuizGenerationService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
 var app = builder.Build();

@@ -123,6 +123,14 @@ public sealed class SummaryProcessingServiceTextTests
         {
             return Task.FromResult("audio transcript");
         }
+
+        public Task<AiQuizResult> GenerateQuizAsync(string sourceText, int totalQuestions, string difficulty, string quizType, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(new AiQuizResult
+            {
+                Questions = []
+            });
+        }
     }
 
     private sealed class StubHttpClientFactory : IHttpClientFactory

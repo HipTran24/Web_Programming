@@ -141,6 +141,38 @@
     return false;
   };
 
+  const ensureCustomGoogleButtonOverlay = (googleButton) => {
+    if (!googleButton) {
+      return;
+    }
+
+    googleButton.classList.add("google-login-host--customized");
+
+    const nativeButtonHost = googleButton.querySelector(":scope > div");
+    if (nativeButtonHost) {
+      nativeButtonHost.classList.add("google-login-native");
+    }
+
+    let overlay = googleButton.querySelector(".google-login-overlay");
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.className = "google-login-overlay";
+      overlay.setAttribute("aria-hidden", "true");
+      overlay.innerHTML = `
+        <span class="google-login-overlay__icon">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+            <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.3-1.6 3.9-5.5 3.9-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.2.8 3.9 1.5l2.7-2.6C17 3.3 14.7 2.4 12 2.4 6.7 2.4 2.4 6.7 2.4 12S6.7 21.6 12 21.6c6.9 0 9.1-4.8 9.1-7.3 0-.5-.1-.9-.1-1.2H12Z"/>
+            <path fill="#4285F4" d="M21.1 12.3c0-.5-.1-.9-.1-1.2H12v3.9h5.5c-.1.8-.6 2-1.7 2.8l2.6 2c1.6-1.5 2.7-3.8 2.7-6.5Z"/>
+            <path fill="#FBBC05" d="M6 14.3c-.2-.6-.3-1.2-.3-1.8s.1-1.3.3-1.8l-3-2.3C2.6 9.5 2.4 10.7 2.4 12s.2 2.5.6 3.6l3-2.3Z"/>
+            <path fill="#34A853" d="M12 21.6c2.7 0 5-.9 6.7-2.5l-3-2.3c-.8.6-1.9 1.1-3.7 1.1-2.6 0-4.9-1.8-5.7-4.1l-3 2.3c1.6 3.2 4.9 5.5 8.7 5.5Z"/>
+          </svg>
+        </span>
+        <span class="google-login-overlay__label">Đăng nhập với Google</span>
+      `;
+      googleButton.appendChild(overlay);
+    }
+  };
+
   const setupPasswordToggle = () => {
     const toggleButton = document.getElementById("togglePwd");
     const eyeIcon = document.getElementById("eyeIcon");
@@ -250,6 +282,9 @@
 
         await submitGoogleToken(idToken);
       },
+      ux_mode: "popup",
+      use_fedcm_for_prompt: false,
+      use_fedcm_for_button: false,
       auto_select: false,
       cancel_on_tap_outside: true,
     });
@@ -265,6 +300,10 @@
       width,
       logo_alignment: "left",
     });
+
+    window.setTimeout(() => {
+      ensureCustomGoogleButtonOverlay(googleButton);
+    }, 0);
   };
 
   const readJsonSafely = async (response) => {

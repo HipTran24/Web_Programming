@@ -149,6 +149,45 @@ namespace Web_Project.Services.AI
             return transcript;
         }
 
+        public async Task<AiQuizResult> GenerateQuizAsync(
+            string sourceText,
+            int totalQuestions,
+            string difficulty,
+            string quizType,
+            CancellationToken cancellationToken)
+        {
+            EnsureApiKey();
+
+            var normalized = NormalizeInputText(sourceText);
+            if (string.IsNullOrWhiteSpace(normalized))
+            {
+                throw new InvalidOperationException("Nội dung nguồn để sinh quiz đang rỗng.");
+            }
+
+            var boundedQuestionCount = Math.Clamp(totalQuestions, 5, 30);
+            var normalizedDifficulty = string.IsNullOrWhiteSpace(difficulty) ? "medium" : difficulty.Trim().ToLowerInvariant();
+            var normalizedQuizType = string.IsNullOrWhiteSpace(quizType) ? "multiple-choice" : quizType.Trim().ToLowerInvariant();
+
+            var prompt =
+                "Bạn là trợ lý tạo đề cho hệ thống AI Study. " +
+                $"Hãy tạo {boundedQuestionCount} câu hỏi dạng trắc nghiệm 4 lựa chọn (A/B/C/D) bằng tiếng Việt dựa trên nội dung dưới đây. " +
+                $"Độ khó yêu cầu: {normalizedDifficulty}. Loại bài: {normalizedQuizType}. " +
+                "Mỗi câu phải có 1 đáp án đúng duy nhất. " +
+                "Bắt buộc trả về JSON hợp lệ đúng định dạng: " +
+                "{\"questions\":[{\"questionText\":\"...\",\"optionA\":\"...\",\"optionB\":\"...\",\"optionC\":\"...\",\"optionD\":\"...\",\"correctAnswer\":\"A\",\"explanation\":\"...\"}]}. " +
+                "Không thêm markdown, không code fence, không thêm text ngoài JSON.\n\n" +
+                $"Nội dung nguồn:\n{normalized}";
+
+            var generated = await GenerateContentAsync(
+                model: _settings.TextModel,
+                parts: [new { text = prompt }],
+                temperature: 0.3,
+                responseMimeType: null,
+                cancellationToken: cancellationToken);
+
+            return ParseQuizContent(generated, boundedQuestionCount);
+        }
+
         private async Task<string> GenerateContentAsync(
             string model,
             object[] parts,
@@ -391,6 +430,98 @@ namespace Web_Project.Services.AI
                     KeyPoints = []
                 };
             }
+        }
+
+        private static AiQuizResult ParseQuizContent(string rawContent, int requestedQuestions)
+        {
+            var normalized = rawContent.Trim();
+            if (normalized.StartsWith("```", StringComparison.Ordinal))
+            {
+                normalized = normalized.Trim('`').Trim();
+                if (normalized.StartsWith("json", StringComparison.OrdinalIgnoreCase))
+                {
+                    normalized = normalized[4..].Trim();
+                }
+            }
+
+            using var doc = JsonDocument.Parse(normalized);
+            if (!doc.RootElement.TryGetProperty("questions", out var questionsElement) ||
+                questionsElement.ValueKind != JsonValueKind.Array)
+            {
+                throw new InvalidOperationException("AI không trả về danh sách câu hỏi hợp lệ.");
+            }
+
+            var questions = new List<AiQuizQuestion>();
+            foreach (var item in questionsElement.EnumerateArray())
+            {
+                var questionText = item.TryGetProperty("questionText", out var questionTextElement)
+                    ? (questionTextElement.GetString() ?? string.Empty).Trim()
+                    : string.Empty;
+
+                var optionA = item.TryGetProperty("optionA", out var optionAElement)
+                    ? (optionAElement.GetString() ?? string.Empty).Trim()
+                    : string.Empty;
+
+                var optionB = item.TryGetProperty("optionB", out var optionBElement)
+                    ? (optionBElement.GetString() ?? string.Empty).Trim()
+                    : string.Empty;
+
+                var optionC = item.TryGetProperty("optionC", out var optionCElement)
+                    ? (optionCElement.GetString() ?? string.Empty).Trim()
+                    : string.Empty;
+
+                var optionD = item.TryGetProperty("optionD", out var optionDElement)
+                    ? (optionDElement.GetString() ?? string.Empty).Trim()
+                    : string.Empty;
+
+                var correctAnswer = item.TryGetProperty("correctAnswer", out var correctAnswerElement)
+                    ? (correctAnswerElement.GetString() ?? string.Empty).Trim().ToUpperInvariant()
+                    : string.Empty;
+
+                var explanation = item.TryGetProperty("explanation", out var explanationElement)
+                    ? (explanationElement.GetString() ?? string.Empty).Trim()
+                    : string.Empty;
+
+                if (string.IsNullOrWhiteSpace(questionText) ||
+                    string.IsNullOrWhiteSpace(optionA) ||
+                    string.IsNullOrWhiteSpace(optionB) ||
+                    string.IsNullOrWhiteSpace(optionC) ||
+                    string.IsNullOrWhiteSpace(optionD))
+                {
+                    continue;
+                }
+
+                if (correctAnswer is not ("A" or "B" or "C" or "D"))
+                {
+                    correctAnswer = "A";
+                }
+
+                questions.Add(new AiQuizQuestion
+                {
+                    QuestionText = questionText,
+                    OptionA = optionA,
+                    OptionB = optionB,
+                    OptionC = optionC,
+                    OptionD = optionD,
+                    CorrectAnswer = correctAnswer,
+                    Explanation = explanation
+                });
+            }
+
+            if (questions.Count == 0)
+            {
+                throw new InvalidOperationException("AI không sinh được câu hỏi hợp lệ.");
+            }
+
+            if (questions.Count > requestedQuestions)
+            {
+                questions = questions.Take(requestedQuestions).ToList();
+            }
+
+            return new AiQuizResult
+            {
+                Questions = questions
+            };
         }
 
         private string NormalizeInputText(string rawText)

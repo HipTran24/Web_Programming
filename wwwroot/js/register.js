@@ -66,19 +66,34 @@
   };
 
   const setupPasswordToggle = () => {
-    const toggle = document.getElementById("toggleRegisterPasswords");
     const passwordInput = document.getElementById("password");
     const confirmPasswordInput = document.getElementById("confirmPassword");
+    const passwordToggle = document.getElementById("toggleRegisterPassword");
+    const confirmPasswordToggle = document.getElementById("toggleRegisterConfirmPassword");
+    const passwordEyeIcon = document.getElementById("registerPasswordEyeIcon");
+    const confirmPasswordEyeIcon = document.getElementById("registerConfirmPasswordEyeIcon");
 
-    if (!toggle || !passwordInput || !confirmPasswordInput) {
+    if (!passwordInput || !confirmPasswordInput || !passwordToggle || !confirmPasswordToggle) {
       return;
     }
 
-    toggle.addEventListener("change", () => {
-      const inputType = toggle.checked ? "text" : "password";
-      passwordInput.type = inputType;
-      confirmPasswordInput.type = inputType;
-    });
+    const openedEyeMarkup =
+      '<path stroke="currentColor" stroke-width="2" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>';
+    const closedEyeMarkup =
+      '<path stroke="currentColor" stroke-width="2" d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22"/>';
+
+    const bindToggle = (toggleButton, input, eyeIcon) => {
+      toggleButton.addEventListener("click", () => {
+        const show = input.type === "password";
+        input.type = show ? "text" : "password";
+        if (eyeIcon) {
+          eyeIcon.innerHTML = show ? closedEyeMarkup : openedEyeMarkup;
+        }
+      });
+    };
+
+    bindToggle(passwordToggle, passwordInput, passwordEyeIcon);
+    bindToggle(confirmPasswordToggle, confirmPasswordInput, confirmPasswordEyeIcon);
   };
 
   const getPayload = () => {
