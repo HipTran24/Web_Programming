@@ -1,21 +1,162 @@
 (function () {
-  const SIDEBAR_STYLE_ID = "global-nav-sidebar-style";
+  const SHELL_STYLE_ID = "global-nav-shell-style";
   const SIDEBAR_ID = "globalAppSidebar";
   const BACKDROP_ID = "globalAppSidebarBackdrop";
   const TOGGLE_ID = "globalSidebarToggle";
 
+  const TOP_LINKS = [
+    { section: "home", href: "/home/index.html", label: "Home" },
+    { section: "dashboard", href: "/home/dashboard.html", label: "Dashboard" },
+    { section: "content", href: "/home/content-list.html", label: "Content" },
+    { section: "quiz", href: "/home/quiz.html", label: "Quiz" },
+    { section: "upload", href: "/home/upload.html", label: "Upload" },
+    { section: "history", href: "/home/history.html", label: "History" },
+    { section: "analytics", href: "/home/analytics.html", label: "Analytics" },
+    { section: "profile", href: "/home/profile.html", label: "Profile" },
+  ];
+
+  const SIDEBAR_GROUPS = [
+    {
+      heading: "Study",
+      links: [
+        { section: "dashboard", href: "/home/dashboard.html", label: "Dashboard" },
+        { section: "content", href: "/home/content-list.html", label: "Content" },
+        { section: "quiz", href: "/home/quiz.html", label: "Quiz" },
+      ],
+    },
+    {
+      heading: "Manage",
+      links: [
+        { section: "upload", href: "/home/upload.html", label: "Upload" },
+        { section: "history", href: "/home/history.html", label: "History" },
+        { section: "analytics", href: "/home/analytics.html", label: "Analytics" },
+      ],
+    },
+    {
+      heading: "Account",
+      links: [{ section: "profile", href: "/home/profile.html", label: "Profile" }],
+    },
+  ];
+
   function ensureStyle() {
-    if (document.getElementById(SIDEBAR_STYLE_ID)) {
+    if (document.getElementById(SHELL_STYLE_ID)) {
       return;
     }
 
     const style = document.createElement("style");
-    style.id = SIDEBAR_STYLE_ID;
+    style.id = SHELL_STYLE_ID;
     style.textContent = `
+      .global-shell-nav {
+        position: sticky;
+        top: 0;
+        z-index: 1046;
+        background: rgba(7, 12, 24, 0.88);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.13);
+        backdrop-filter: blur(10px);
+      }
+
+      .global-shell-nav-inner {
+        max-width: 1220px;
+        margin: 0 auto;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .global-shell-brand {
+        text-decoration: none;
+        color: rgba(255, 255, 255, 0.96);
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        margin-right: 4px;
+      }
+
+      .global-shell-links {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex: 1;
+        min-width: 0;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+
+      .global-shell-links::-webkit-scrollbar {
+        display: none;
+      }
+
+      .global-shell-link {
+        text-decoration: none;
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 0.82rem;
+        font-weight: 500;
+        padding: 7px 10px;
+        border-radius: 8px;
+        border: 1px solid transparent;
+        white-space: nowrap;
+      }
+
+      .global-shell-link:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .global-shell-link.active {
+        color: #fff;
+        background: rgba(13, 110, 253, 0.2);
+        border-color: rgba(13, 110, 253, 0.36);
+      }
+
+      .global-shell-actions,
+      .global-shell-guest,
+      .global-shell-user {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .global-shell-btn {
+        text-decoration: none;
+        color: rgba(255, 255, 255, 0.86);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 6px 11px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+      }
+
+      .global-shell-btn:hover {
+        color: #fff;
+        border-color: rgba(255, 255, 255, 0.36);
+      }
+
+      .global-shell-btn.is-primary {
+        background: rgba(13, 110, 253, 0.22);
+        border-color: rgba(13, 110, 253, 0.38);
+      }
+
+      .global-shell-user-name {
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 0.82rem;
+        white-space: nowrap;
+      }
+
+      .global-shell-avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        border: 1px dashed rgba(255, 255, 255, 0.35);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.82);
+      }
+
       .global-sidebar-toggle-btn {
-        width: 40px;
-        height: 40px;
-        border: 1px solid rgba(255, 255, 255, 0.22);
+        width: 38px;
+        height: 38px;
+        border: 1px solid rgba(255, 255, 255, 0.24);
         border-radius: 10px;
         background: rgba(255, 255, 255, 0.04);
         display: inline-flex;
@@ -23,7 +164,6 @@
         justify-content: center;
         gap: 5px;
         padding: 0 10px;
-        margin-right: 10px;
         cursor: pointer;
       }
 
@@ -36,9 +176,9 @@
 
       .global-app-sidebar {
         position: fixed;
-        top: 86px;
-        left: 16px;
-        width: min(86vw, 280px);
+        top: 80px;
+        left: 14px;
+        width: min(88vw, 290px);
         padding: 14px;
         font-family: inherit;
         background: rgba(16, 26, 46, 0.96);
@@ -125,7 +265,7 @@
         display: block;
         padding: 10px 12px;
         border-radius: 10px;
-        font-size: 0.95rem;
+        font-size: 0.92rem;
         font-weight: 500;
         line-height: 1.35;
         color: rgba(255, 255, 255, 0.82);
@@ -144,59 +284,79 @@
         border: 1px solid rgba(13, 110, 253, 0.35);
         color: #fff;
       }
+
+      @media (max-width: 991px) {
+        .global-shell-links {
+          display: none;
+        }
+
+        .global-shell-actions {
+          margin-left: auto;
+        }
+      }
+
+      @media (max-width: 580px) {
+        .global-shell-user-name {
+          display: none;
+        }
+
+        .global-shell-guest .global-shell-btn.is-primary {
+          display: none;
+        }
+      }
     `;
 
     document.head.appendChild(style);
   }
 
   function getActiveSection(pathname) {
-    if (pathname.includes("/dashboard")) {
+    const path = (pathname || "").toLowerCase();
+
+    if (!path || path === "/" || path === "/home" || path === "/home/") {
+      return "home";
+    }
+
+    if (path.includes("/index")) {
+      return "home";
+    }
+
+    if (path.includes("/dashboard")) {
       return "dashboard";
     }
 
-    if (pathname.includes("/content-list") || pathname.includes("/content-detail")) {
+    if (path.includes("/content-list") || path.includes("/content-detail")) {
       return "content";
     }
 
-    if (pathname.includes("/quiz")) {
-      return "questions";
+    if (path.includes("/quiz")) {
+      return "quiz";
     }
 
-    if (pathname.includes("/upload")) {
+    if (path.includes("/upload")) {
       return "upload";
     }
 
-    if (pathname.includes("/history")) {
+    if (path.includes("/history")) {
       return "history";
     }
 
-    if (pathname.includes("/analytics") || pathname.includes("/admin")) {
+    if (path.includes("/analytics") || path.includes("/admin")) {
       return "analytics";
     }
 
-    if (pathname.includes("/profile") || pathname.includes("/user")) {
+    if (path.includes("/profile") || path.includes("/user")) {
       return "profile";
     }
 
+    if (path.includes("/guide")) {
+      return "home";
+    }
+
+    if (path.includes("/login") || path.includes("/register") || path.includes("/otp")) {
+      return "home";
+    }
+
     return "";
-  }
-
-  function setActiveLink(sidebar) {
-    const pathname = (window.location.pathname || "").toLowerCase();
-    const links = sidebar.querySelectorAll("a[data-section]");
-
-    links.forEach((link) => link.classList.remove("active"));
-
-    const section = getActiveSection(pathname);
-
-    if (!section) {
-      return;
-    }
-
-    const active = sidebar.querySelector(`a[data-section="${section}"]`);
-    if (active) {
-      active.classList.add("active");
-    }
   }
 
   function getStoredCurrentUser() {
@@ -206,7 +366,9 @@
 
     const raw =
       window.localStorage.getItem("auth.currentUser") ||
-      window.sessionStorage.getItem("auth.currentUser");
+      window.sessionStorage.getItem("auth.currentUser") ||
+      window.localStorage.getItem("currentUser") ||
+      window.sessionStorage.getItem("currentUser");
 
     if (!raw) {
       return null;
@@ -217,6 +379,23 @@
     } catch {
       return null;
     }
+  }
+
+  function hasSessionToken() {
+    if (window.AuthClient && typeof window.AuthClient.isAuthenticated === "function") {
+      return window.AuthClient.isAuthenticated();
+    }
+
+    return Boolean(
+      window.localStorage.getItem("auth.accessToken") ||
+        window.sessionStorage.getItem("auth.accessToken") ||
+        window.localStorage.getItem("token") ||
+        window.sessionStorage.getItem("token")
+    );
+  }
+
+  function isAuthenticated() {
+    return hasSessionToken() || Boolean(getStoredCurrentUser());
   }
 
   function getInitials(name, email) {
@@ -233,135 +412,297 @@
     return source.slice(0, 2).toUpperCase();
   }
 
-  function hydrateSidebarUser(sidebar) {
-    const me = getStoredCurrentUser();
-    if (!me) {
+  function clearSession() {
+    if (window.AuthClient && typeof window.AuthClient.clearSession === "function") {
+      window.AuthClient.clearSession();
+    }
+
+    const keys = ["auth.accessToken", "auth.currentUser", "token", "currentUser"];
+    keys.forEach((key) => {
+      window.localStorage.removeItem(key);
+      window.sessionStorage.removeItem(key);
+    });
+  }
+
+  function bindLogoutHandlers(scope) {
+    scope.querySelectorAll("[data-auth-logout]").forEach((element) => {
+      if (element.dataset.logoutBound === "true") {
+        return;
+      }
+
+      element.dataset.logoutBound = "true";
+      element.addEventListener("click", (event) => {
+        event.preventDefault();
+        clearSession();
+        window.location.href = "/home/login.html";
+      });
+    });
+  }
+
+  function setAuthVisibility(scope, authenticated) {
+    scope.querySelectorAll("[data-auth-guest]").forEach((element) => {
+      if (authenticated) {
+        element.style.setProperty("display", "none", "important");
+      } else {
+        element.style.removeProperty("display");
+      }
+    });
+
+    scope.querySelectorAll("[data-auth-user]").forEach((element) => {
+      if (authenticated) {
+        element.style.removeProperty("display");
+      } else {
+        element.style.setProperty("display", "none", "important");
+      }
+    });
+  }
+
+  function hydrateUser(scope, user) {
+    if (!user) {
       return;
     }
 
-    const displayName = me.fullName || me.username || me.email || "User";
-    const avatar = getInitials(me.fullName || me.username, me.email);
+    const displayName = user.fullName || user.username || user.email || "User";
+    const avatar = getInitials(user.fullName || user.username, user.email);
 
-    sidebar.querySelectorAll("[data-auth-name]").forEach((element) => {
+    scope.querySelectorAll("[data-auth-name]").forEach((element) => {
       element.textContent = displayName;
     });
 
-    sidebar.querySelectorAll("[data-auth-avatar]").forEach((element) => {
+    scope.querySelectorAll("[data-auth-avatar]").forEach((element) => {
       element.textContent = avatar;
     });
   }
 
-  function initGlobalSidebar() {
-    if (window.__aiStudySidebarMounted) {
-      return;
+  function applyAuthUi(scope) {
+    const me = getStoredCurrentUser();
+    const authenticated = isAuthenticated();
+
+    setAuthVisibility(scope, authenticated);
+    hydrateUser(scope, me);
+    bindLogoutHandlers(scope);
+
+    if (window.AuthClient && typeof window.AuthClient.applyAuthVisibility === "function") {
+      window.AuthClient.applyAuthVisibility();
     }
 
-    if (document.getElementById("appSidebar") || document.getElementById(SIDEBAR_ID)) {
-      return;
+    if (window.AuthClient && me && typeof window.AuthClient.bindUserUi === "function") {
+      window.AuthClient.bindUserUi(me);
     }
+  }
 
-    const nav = document.querySelector("nav.navbar, nav#navbar, nav");
-    if (!nav) {
-      return;
-    }
+  function markActiveLinks(root, section) {
+    root.querySelectorAll("a[data-section]").forEach((link) => {
+      link.classList.toggle("active", link.dataset.section === section);
+    });
 
-    ensureStyle();
+    root.querySelectorAll("a[data-nav-section]").forEach((link) => {
+      link.classList.toggle("active", link.dataset.navSection === section);
+    });
+  }
 
-    const navContainer = nav.querySelector(".container, .nav-container") || nav.firstElementChild || nav;
-    if (!navContainer) {
-      return;
-    }
+  function buildTopLinksMarkup() {
+    return TOP_LINKS.map((link) => {
+      return `<a class="global-shell-link" data-nav-section="${link.section}" href="${link.href}">${link.label}</a>`;
+    }).join("");
+  }
 
-    if (document.getElementById(TOGGLE_ID)) {
-      return;
-    }
+  function buildSidebarMarkup() {
+    const groups = SIDEBAR_GROUPS.map((group) => {
+      const links = group.links
+        .map((link) => `<a href="${link.href}" data-section="${link.section}">${link.label}</a>`)
+        .join("");
 
-    const toggle = document.createElement("button");
-    toggle.id = TOGGLE_ID;
-    toggle.type = "button";
-    toggle.className = "global-sidebar-toggle-btn";
-    toggle.setAttribute("aria-label", "Toggle sidebar");
-    toggle.setAttribute("aria-controls", SIDEBAR_ID);
-    toggle.setAttribute("aria-expanded", "false");
-    toggle.innerHTML = "<span></span><span></span><span></span>";
+      return `
+        <div class="global-app-sidebar-group">
+          <div class="global-app-sidebar-heading">${group.heading}</div>
+          ${links}
+        </div>
+      `;
+    }).join("");
 
-    const brand = navContainer.querySelector(".navbar-brand, .logo, .brand, a[href*='dashboard'], a[href*='index']");
-    if (brand && brand.parentElement === navContainer) {
-      navContainer.insertBefore(toggle, brand);
-    } else {
-      navContainer.insertBefore(toggle, navContainer.firstChild);
-    }
-
-    const sidebar = document.createElement("aside");
-    sidebar.id = SIDEBAR_ID;
-    sidebar.className = "global-app-sidebar";
-    sidebar.setAttribute("aria-hidden", "true");
-    sidebar.innerHTML = `
+    return `
       <div class="global-app-sidebar-avatar-wrap">
         <div class="global-app-sidebar-avatar" data-auth-avatar>US</div>
-        <div class="global-app-sidebar-avatar-name" data-auth-name>Ng&#432;&#7901;i d&ugrave;ng</div>
+        <div class="global-app-sidebar-avatar-name" data-auth-name>User</div>
       </div>
       <nav class="global-app-sidebar-menu">
-        <div class="global-app-sidebar-group">
-          <div class="global-app-sidebar-heading">H&#7885;c t&#7853;p</div>
-          <a href="/home/dashboard.html" data-section="dashboard">Dashboard</a>
-          <a href="/home/content-list.html" data-section="content">N&#7897;i dung</a>
-          <a href="/home/quiz.html" data-section="questions">C&acirc;u h&#7887;i</a>
+        ${groups}
+        <div class="global-app-sidebar-group" data-auth-guest>
+          <div class="global-app-sidebar-heading">Start</div>
+          <a href="/home/login.html">Login</a>
+          <a href="/home/register.html">Register</a>
         </div>
-        <div class="global-app-sidebar-group">
-          <div class="global-app-sidebar-heading">Qu&#7843;n l&#253;</div>
-          <a href="/home/upload.html" data-section="upload">Upload</a>
-          <a href="/home/history.html" data-section="history">L&#7883;ch s&#7917;</a>
-          <a href="/home/analytics.html" data-section="analytics">Ph&acirc;n t&iacute;ch</a>
-        </div>
-        <div class="global-app-sidebar-group">
-          <div class="global-app-sidebar-heading">T&agrave;i kho&#7843;n</div>
-          <a href="/home/profile.html" data-section="profile">H&#7891; s&#417;</a>
+        <div class="global-app-sidebar-group" data-auth-user>
+          <div class="global-app-sidebar-heading">Session</div>
+          <a href="/home/login.html" data-auth-logout>Logout</a>
         </div>
       </nav>
     `;
+  }
 
-    const backdrop = document.createElement("div");
-    backdrop.id = BACKDROP_ID;
-    backdrop.className = "global-app-sidebar-backdrop";
+  function mountGlobalNav() {
+    let nav = document.querySelector('[data-global-shell-nav="mounted"]');
 
-    document.body.appendChild(sidebar);
-    document.body.appendChild(backdrop);
+    if (!nav) {
+      nav = document.querySelector("nav.navbar, nav#navbar, nav");
+    }
 
-    setActiveLink(sidebar);
-    hydrateSidebarUser(sidebar);
+    if (!nav) {
+      nav = document.querySelector("header");
+    }
 
-    const setSidebarState = (open) => {
-      sidebar.classList.toggle("is-open", open);
-      backdrop.classList.toggle("is-visible", open);
-      toggle.setAttribute("aria-expanded", open ? "true" : "false");
-      sidebar.setAttribute("aria-hidden", open ? "false" : "true");
-    };
+    if (!nav) {
+      nav = document.createElement("nav");
+      document.body.prepend(nav);
+    }
+
+    const preservedId = nav.id || "";
+    nav.className = "global-shell-nav";
+    nav.setAttribute("data-global-shell-nav", "mounted");
+
+    if (preservedId) {
+      nav.id = preservedId;
+    }
+
+    nav.innerHTML = `
+      <div class="global-shell-nav-inner">
+        <button id="${TOGGLE_ID}" type="button" class="global-sidebar-toggle-btn" aria-label="Toggle sidebar" aria-controls="${SIDEBAR_ID}" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+        <a class="global-shell-brand" href="/home/index.html">AI Study</a>
+        <div class="global-shell-links">${buildTopLinksMarkup()}</div>
+        <div class="global-shell-actions">
+          <div class="global-shell-guest" data-auth-guest>
+            <a class="global-shell-btn" href="/home/login.html">Login</a>
+            <a class="global-shell-btn is-primary" href="/home/register.html">Register</a>
+          </div>
+          <div class="global-shell-user" data-auth-user>
+            <span class="global-shell-user-name" data-auth-name>User</span>
+            <span class="global-shell-avatar" data-auth-avatar>US</span>
+            <a class="global-shell-btn" href="/home/login.html" data-auth-logout>Logout</a>
+          </div>
+        </div>
+      </div>
+    `;
+
+    return nav;
+  }
+
+  function mountSidebar() {
+    let sidebar = document.getElementById(SIDEBAR_ID);
+    if (!sidebar) {
+      sidebar = document.createElement("aside");
+      sidebar.id = SIDEBAR_ID;
+      sidebar.className = "global-app-sidebar";
+      sidebar.setAttribute("aria-hidden", "true");
+      document.body.appendChild(sidebar);
+    }
+
+    sidebar.innerHTML = buildSidebarMarkup();
+
+    let backdrop = document.getElementById(BACKDROP_ID);
+    if (!backdrop) {
+      backdrop = document.createElement("div");
+      backdrop.id = BACKDROP_ID;
+      backdrop.className = "global-app-sidebar-backdrop";
+      document.body.appendChild(backdrop);
+    }
+
+    return { sidebar, backdrop };
+  }
+
+  function closeSidebar(sidebar, backdrop, toggle) {
+    sidebar.classList.remove("is-open");
+    backdrop.classList.remove("is-visible");
+    sidebar.setAttribute("aria-hidden", "true");
+    toggle.setAttribute("aria-expanded", "false");
+  }
+
+  function openSidebar(sidebar, backdrop, toggle) {
+    sidebar.classList.add("is-open");
+    backdrop.classList.add("is-visible");
+    sidebar.setAttribute("aria-hidden", "false");
+    toggle.setAttribute("aria-expanded", "true");
+  }
+
+  function bindSidebarInteractions(nav, sidebar, backdrop) {
+    const toggle = nav.querySelector(`#${TOGGLE_ID}`);
+    if (!toggle) {
+      return;
+    }
 
     toggle.addEventListener("click", () => {
-      setSidebarState(!sidebar.classList.contains("is-open"));
+      const opening = !sidebar.classList.contains("is-open");
+      if (opening) {
+        openSidebar(sidebar, backdrop, toggle);
+      } else {
+        closeSidebar(sidebar, backdrop, toggle);
+      }
     });
 
     backdrop.addEventListener("click", () => {
-      setSidebarState(false);
+      closeSidebar(sidebar, backdrop, toggle);
+    });
+
+    sidebar.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", () => closeSidebar(sidebar, backdrop, toggle));
     });
 
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape") {
-        setSidebarState(false);
+        closeSidebar(sidebar, backdrop, toggle);
       }
     });
+  }
 
-    sidebar.querySelectorAll("a").forEach((link) => {
-      link.addEventListener("click", () => setSidebarState(false));
+  function hideLegacySidebars() {
+    const legacySidebars = document.querySelectorAll(".sidebar, #appSidebar, .app-sidebar");
+
+    legacySidebars.forEach((element) => {
+      if (element.id === SIDEBAR_ID || element.classList.contains("global-app-sidebar")) {
+        return;
+      }
+
+      if (element.closest(`#${SIDEBAR_ID}`)) {
+        return;
+      }
+
+      element.style.setProperty("display", "none", "important");
+      element.setAttribute("data-global-shell-hidden", "true");
+
+      const aside = element.closest("aside");
+      if (aside && !aside.closest(`#${SIDEBAR_ID}`)) {
+        aside.style.setProperty("display", "none", "important");
+
+        const parent = aside.parentElement;
+        if (parent && parent.classList.contains("layout")) {
+          parent.style.gridTemplateColumns = "1fr";
+        }
+      }
     });
+  }
+
+  function initGlobalShell() {
+    ensureStyle();
+
+    const nav = mountGlobalNav();
+    const { sidebar, backdrop } = mountSidebar();
+
+    const activeSection = getActiveSection(window.location.pathname);
+    markActiveLinks(nav, activeSection);
+    markActiveLinks(sidebar, activeSection);
+
+    applyAuthUi(document);
+    hideLegacySidebars();
+    bindSidebarInteractions(nav, sidebar, backdrop);
 
     window.__aiStudySidebarMounted = true;
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initGlobalSidebar, { once: true });
+    document.addEventListener("DOMContentLoaded", initGlobalShell, { once: true });
   } else {
-    initGlobalSidebar();
+    initGlobalShell();
   }
 })();
