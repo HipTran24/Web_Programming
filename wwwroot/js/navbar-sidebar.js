@@ -544,9 +544,9 @@
         <div class="global-app-sidebar-avatar" data-auth-avatar>US</div>
         <div class="global-app-sidebar-avatar-name" data-auth-name>Nguoi dung</div>
       </div>
-      <nav class="global-app-sidebar-menu">
+      <div class="global-app-sidebar-menu" role="navigation" aria-label="Sidebar menu">
         ${groups}
-      </nav>
+      </div>
     `;
   }
 
