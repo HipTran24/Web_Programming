@@ -1,92 +1,206 @@
-<!doctype html><html lang="vi"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Hướng dẫn — AI Study</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="../css/style.css" rel="stylesheet" />
-</head><body>
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Hướng dẫn sử dụng — AI Study</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="../css/style.css" rel="stylesheet" />
+  <style>
+    .search-mini{
+      position: relative;
+      min-width: 260px;
+    }
+    .search-mini input{
+      width: 100%;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.07);
+      color: #fff;
+      padding: 10px 40px 10px 14px;
+      outline: none;
+    }
+    .search-mini input::placeholder{
+      color: rgba(255,255,255,.45);
+    }
+    .search-mini svg{
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255,255,255,.55);
+    }
+    .guide-step{
+      border-left: 3px solid rgba(13,110,253,.45);
+      padding-left: 16px;
+      margin-bottom: 18px;
+    }
+    .guide-step h6{
+      margin-bottom: 6px;
+    }
+  </style>
+</head>
+<body>
   <div id="page-loader" class="logo-loader">
-  <div class="logo-loader-box">
-    <div class="ai-orbit orbit-1"></div>
-    <div class="ai-orbit orbit-2"></div>
-    <div class="ai-logo-core">
-      <span>AI</span>
-    </div>
-    <h4>AI Study</h4>
-    <p>Hệ thống học tập thông minh đang khởi động</p>
-  </div>
-</div>
-
-<div class="page-content">
-<nav class="navbar navbar-expand-lg navbar-dark navbar-glass py-3">
-  <div class="container">
-    <a class="navbar-brand fw-semibold" href="index.html">AI Study</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav"><span class="navbar-toggler-icon"></span></button>
-    <div class="collapse navbar-collapse" id="nav">
-      <ul class="navbar-nav me-auto gap-lg-2">
-        <li class="nav-item"><a class="nav-link" href="index.html">Trang chủ</a></li>
-        <li class="nav-item"><a class="nav-link active" href="guide.html">Hướng dẫn</a></li>
-        <li class="nav-item"><a class="nav-link" href="pricing.html">Gói sử dụng</a></li>
-      </ul>
-      <div class="d-flex gap-2" data-auth-guest>
-        <a class="btn btn-outline-light" href="/home/login.html">Đăng nhập</a>
-        <a class="btn btn-primary" href="/home/register.html">Đăng ký</a>
+    <div class="logo-loader-box">
+      <div class="ai-orbit orbit-1"></div>
+      <div class="ai-orbit orbit-2"></div>
+      <div class="ai-logo-core">
+        <span>AI</span>
       </div>
+      <h4>AI Study</h4>
+      <p>Hệ thống học tập thông minh đang khởi động</p>
     </div>
   </div>
-</nav>
 
-<main class="container py-5">
-  <div class="glass p-4">
-    <h3 class="fw-bold mb-2">Hướng dẫn sử dụng</h3>
-    <p class="text-muted-2 mb-4">Luồng cơ bản: Upload → AI xử lý → Tạo đề → Làm bài → Xem kết quả.</p>
+  <div class="page-content">
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-glass py-3">
+      <div class="container">
+        <a class="navbar-brand fw-semibold" href="index.html">AI Study</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
 
-    <div class="row g-4">
-      <div class="col-lg-6">
-        <div class="glass-2 p-4 h-100">
-          <h5 class="fw-semibold">Guest (dùng thử 1 lần)</h5>
-          <ul class="text-muted-2 mb-0">
-            <li>Vào <b>Upload</b> và tải 1 nội dung.</li>
-            <li>Hệ thống tạo tóm tắt + 10 câu trắc nghiệm.</li>
-            <li>Làm bài 1 lần và xem <b>điểm tổng</b>.</li>
-            <li>Không lưu lịch sử / không xem phân tích.</li>
+        <div class="collapse navbar-collapse" id="nav">
+          <ul class="navbar-nav me-auto gap-lg-2">
+            <li class="nav-item"><a class="nav-link" href="index.html">Trang chủ</a></li>
+            <li class="nav-item"><a class="nav-link" href="upload.html">Upload</a></li>
+            <li class="nav-item"><a class="nav-link active" href="guide.html">Hướng dẫn</a></li>
+            <li class="nav-item"><a class="nav-link" href="about.html">Giới thiệu</a></li>
           </ul>
+
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <div class="search-mini">
+              <input type="text" placeholder="Tìm bước sử dụng..." />
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-width="2" d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z"/>
+              </svg>
+            </div>
+            <div class="d-flex gap-2" data-auth-guest>
+              <a class="btn btn-outline-light" href="../home/login.html">Đăng nhập</a>
+              <a class="btn btn-primary" href="../home/register.html">Đăng ký</a>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="col-lg-6">
-        <div class="glass-2 p-4 h-100">
-          <h5 class="fw-semibold">User (đầy đủ tính năng)</h5>
-          <ul class="text-muted-2 mb-0">
-            <li>Upload không giới hạn.</li>
-            <li>Tuỳ chỉnh 5–30 câu, độ khó, trắc nghiệm/flashcard.</li>
-            <li>Lưu lịch sử, so sánh tiến độ, xem analytics.</li>
-            <li>Ôn lại câu sai, gợi ý nội dung yếu.</li>
-          </ul>
+    </nav>
+
+    <main class="container py-5">
+      <div class="glass p-4 p-lg-5">
+        <h2 class="fw-bold mb-2">Hướng dẫn sử dụng chi tiết</h2>
+        <p class="text-muted-2 mb-4">
+          Trang này hướng dẫn người dùng cách sử dụng AI Study từ bước tải nội dung đến khi làm bài và xem kết quả.
+        </p>
+
+        <div class="row g-4">
+          <div class="col-lg-6">
+            <div class="glass-2 p-4 h-100">
+              <h5 class="fw-semibold mb-3">Hướng dẫn cho Guest</h5>
+
+              <div class="guide-step">
+                <h6 class="fw-semibold">Bước 1: Truy cập website</h6>
+                <p class="text-muted-2 mb-0">Vào trang chủ và chọn nút <b>Dùng thử</b> hoặc truy cập trực tiếp trang Upload.</p>
+              </div>
+
+              <div class="guide-step">
+                <h6 class="fw-semibold">Bước 2: Upload nội dung</h6>
+                <p class="text-muted-2 mb-0">Tải lên 1 nội dung duy nhất dưới dạng văn bản, hình ảnh hoặc video.</p>
+              </div>
+
+              <div class="guide-step">
+                <h6 class="fw-semibold">Bước 3: AI xử lý</h6>
+                <p class="text-muted-2 mb-0">Hệ thống tự động chuyển đổi nội dung sang văn bản, tóm tắt và sinh câu hỏi.</p>
+              </div>
+
+              <div class="guide-step">
+                <h6 class="fw-semibold">Bước 4: Làm bài và xem điểm</h6>
+                <p class="text-muted-2 mb-0">Guest được làm bài 1 lần và chỉ xem điểm tổng, không lưu lịch sử học tập.</p>
+              </div>
+
+              <hr class="soft my-4" />
+              <h6 class="fw-semibold">Giới hạn của Guest</h6>
+              <ul class="text-muted-2 mb-0">
+                <li>Chỉ sử dụng thử 1 lần</li>
+                <li>Không chọn số câu hỏi hoặc độ khó</li>
+                <li>Không lưu lịch sử</li>
+                <li>Không xem phân tích chi tiết</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="col-lg-6">
+            <div class="glass-2 p-4 h-100">
+              <h5 class="fw-semibold mb-3">Hướng dẫn cho User</h5>
+
+              <div class="guide-step">
+                <h6 class="fw-semibold">Bước 1: Đăng ký / đăng nhập</h6>
+                <p class="text-muted-2 mb-0">Tạo tài khoản để sử dụng đầy đủ chức năng và lưu lại quá trình học tập.</p>
+              </div>
+
+              <div class="guide-step">
+                <h6 class="fw-semibold">Bước 2: Upload nhiều nội dung</h6>
+                <p class="text-muted-2 mb-0">Người dùng có thể tải lên nhiều tài liệu và xem lại danh sách nội dung cũ.</p>
+              </div>
+
+              <div class="guide-step">
+                <h6 class="fw-semibold">Bước 3: Tùy chỉnh bộ câu hỏi</h6>
+                <p class="text-muted-2 mb-0">Chọn số lượng câu hỏi, mức độ khó và loại bài như trắc nghiệm hoặc flashcard.</p>
+              </div>
+
+              <div class="guide-step">
+                <h6 class="fw-semibold">Bước 4: Theo dõi kết quả</h6>
+                <p class="text-muted-2 mb-0">Xem đáp án đúng/sai, lịch sử làm bài, tiến độ học và biểu đồ phân tích.</p>
+              </div>
+
+              <hr class="soft my-4" />
+              <h6 class="fw-semibold">Tính năng mở rộng cho User</h6>
+              <ul class="text-muted-2 mb-0">
+                <li>Tạo lại bộ câu hỏi từ cùng một nội dung</li>
+                <li>Ôn lại câu sai</li>
+                <li>Xem phân tích học tập</li>
+                <li>So sánh kết quả giữa các lần làm</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <hr class="soft my-4">
+
+        <div class="row g-4">
+          <div class="col-lg-6">
+            <h5 class="fw-semibold">Định dạng hỗ trợ</h5>
+            <div class="codebox">
+              Văn bản: txt, pdf, docx<br>
+              Hình ảnh: jpg, png<br>
+              Video: mp4
+            </div>
+          </div>
+
+          <div class="col-lg-6">
+            <h5 class="fw-semibold">Luồng sử dụng cơ bản</h5>
+            <div class="codebox">
+              Upload nội dung → AI xử lý → Tóm tắt → Sinh câu hỏi → Làm bài → Xem kết quả
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-4 flex-wrap">
+          <a class="btn btn-primary" href="upload.html">Đi tới Upload</a>
+          <a class="btn btn-outline-light" href="about.html">Xem giới thiệu hệ thống</a>
         </div>
       </div>
-    </div>
+    </main>
 
-    <hr class="soft my-4">
-
-    <h5 class="fw-semibold">Định dạng hỗ trợ</h5>
-    <div class="codebox">
-      Văn bản: txt, pdf, docx<br>
-      Hình ảnh: jpg, png<br>
-      Video: mp4
-    </div>
-
-    <div class="d-flex gap-2 mt-4 flex-wrap">
-      <a class="btn btn-primary" href="upload.html">Đi tới Upload</a>
-      <a class="btn btn-outline-light" href="pricing.html">Xem gói sử dụng</a>
-    </div>
+    <footer class="footer py-4">
+      <div class="container d-flex justify-content-between flex-wrap gap-2">
+        <div>© AI Study</div>
+        <div class="text-muted-2">Guide • Hướng dẫn chi tiết cho người dùng</div>
+      </div>
+    </footer>
   </div>
-</main>
 
-<footer class="footer py-4"><div class="container d-flex justify-content-between flex-wrap gap-2">
-  <div>© AI Study</div><div class="text-muted-2">Guide</div>
-</div></footer>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../js/auth.js"></script>
-<script src="../assets/js/main.js"></script>
-<script src="../js/navbar-sidebar.js"></script>
-</body></html>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../assets/js/main.js"></script>
+</body>
+</html>

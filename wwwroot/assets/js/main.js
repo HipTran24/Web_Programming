@@ -3,49 +3,55 @@ document.documentElement.classList.add("js");
 let pageRevealed = false;
 
 function revealPageContent() {
-  if (pageRevealed) {
-    return;
-  }
+  if (pageRevealed) return;
 
   pageRevealed = true;
 
   const loader = document.getElementById("page-loader");
   const content = document.querySelector(".page-content");
 
+  // Hiện nội dung
   if (content) {
     requestAnimationFrame(() => {
       content.classList.add("show");
     });
   }
 
+  // Ẩn loader
   if (loader) {
     loader.classList.add("hide");
+
+    // remove hẳn khỏi DOM để tránh chặn click
+    setTimeout(() => {
+      loader.remove();
+    }, 600);
   }
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-  const deleteButtons = document.querySelectorAll(".btn-danger");
-  deleteButtons.forEach((btn) => {
+  /* ================= DELETE CONFIRM ================= */
+  document.querySelectorAll(".btn-danger").forEach((btn) => {
     btn.addEventListener("click", function (e) {
-      const ok = confirm("Bạn có chắc muốn xóa mục này không?");
-      if (!ok) e.preventDefault();
+      if (!confirm("Bạn có chắc muốn xóa mục này không?")) {
+        e.preventDefault();
+      }
     });
   });
 
-  const saveButtons = document.querySelectorAll("[data-demo-save]");
-  saveButtons.forEach((btn) => {
-    btn.addEventListener("click", function () {
+  /* ================= DEMO BUTTON ================= */
+  document.querySelectorAll("[data-demo-save]").forEach((btn) => {
+    btn.addEventListener("click", () => {
       alert("Đã lưu cấu hình thành công (demo).");
     });
   });
 
-  const fakeSubmitButtons = document.querySelectorAll("[data-demo-submit]");
-  fakeSubmitButtons.forEach((btn) => {
-    btn.addEventListener("click", function () {
+  document.querySelectorAll("[data-demo-submit]").forEach((btn) => {
+    btn.addEventListener("click", () => {
       alert("Thao tác thành công (demo).");
     });
   });
 
+  /* ================= TOGGLE PASSWORD ================= */
   const passwordInput = document.getElementById("password");
   const togglePassword = document.getElementById("togglePassword");
   const eyeOpen = document.getElementById("eyeOpen");
@@ -63,13 +69,31 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Fallback in case window "load" is delayed by external assets.
-  window.setTimeout(revealPageContent, 1400);
+  /* ================= SCROLL REVEAL ================= */
+  const reveals = document.querySelectorAll(".reveal");
+
+  if (reveals.length > 0) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+
+    reveals.forEach((el) => io.observe(el));
+  }
+
+  /* ================= FALLBACK ================= */
+  setTimeout(revealPageContent, 1200);
 });
 
 window.addEventListener("load", function () {
-  window.setTimeout(revealPageContent, 1200);
+  setTimeout(revealPageContent, 800);
 });
 
-// Hard fallback: never allow loader to block interactions forever.
-window.setTimeout(revealPageContent, 3000);
+// HARD fallback (chống trắng trang)
+setTimeout(revealPageContent, 2500);
