@@ -101,6 +101,26 @@
         line-height: 1.25;
       }
 
+      .global-app-sidebar-menu {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .global-app-sidebar-group + .global-app-sidebar-group {
+        padding-top: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .global-app-sidebar-heading {
+        margin: 0 4px 8px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.46);
+      }
+
       .global-app-sidebar-menu a {
         display: block;
         padding: 10px 12px;
@@ -129,22 +149,45 @@
     document.head.appendChild(style);
   }
 
+  function getActiveSection(pathname) {
+    if (pathname.includes("/dashboard")) {
+      return "dashboard";
+    }
+
+    if (pathname.includes("/content-list") || pathname.includes("/content-detail")) {
+      return "content";
+    }
+
+    if (pathname.includes("/quiz")) {
+      return "questions";
+    }
+
+    if (pathname.includes("/upload")) {
+      return "upload";
+    }
+
+    if (pathname.includes("/history")) {
+      return "history";
+    }
+
+    if (pathname.includes("/analytics") || pathname.includes("/admin")) {
+      return "analytics";
+    }
+
+    if (pathname.includes("/profile") || pathname.includes("/user")) {
+      return "profile";
+    }
+
+    return "";
+  }
+
   function setActiveLink(sidebar) {
     const pathname = (window.location.pathname || "").toLowerCase();
     const links = sidebar.querySelectorAll("a[data-section]");
 
     links.forEach((link) => link.classList.remove("active"));
 
-    let section = "";
-    if (pathname.includes("/dashboard")) {
-      section = "overview";
-    } else if (pathname.includes("/content-list") || pathname.includes("/content-detail")) {
-      section = "content";
-    } else if (pathname.includes("/quiz")) {
-      section = "questions";
-    } else if (pathname.includes("/upload")) {
-      section = "summary";
-    }
+    const section = getActiveSection(pathname);
 
     if (!section) {
       return;
@@ -154,6 +197,58 @@
     if (active) {
       active.classList.add("active");
     }
+  }
+
+  function getStoredCurrentUser() {
+    if (window.AuthClient && typeof window.AuthClient.getCurrentUser === "function") {
+      return window.AuthClient.getCurrentUser();
+    }
+
+    const raw =
+      window.localStorage.getItem("auth.currentUser") ||
+      window.sessionStorage.getItem("auth.currentUser");
+
+    if (!raw) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }
+
+  function getInitials(name, email) {
+    const source = String(name || email || "").trim();
+    if (!source) {
+      return "US";
+    }
+
+    const parts = source.split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+
+    return source.slice(0, 2).toUpperCase();
+  }
+
+  function hydrateSidebarUser(sidebar) {
+    const me = getStoredCurrentUser();
+    if (!me) {
+      return;
+    }
+
+    const displayName = me.fullName || me.username || me.email || "User";
+    const avatar = getInitials(me.fullName || me.username, me.email);
+
+    sidebar.querySelectorAll("[data-auth-name]").forEach((element) => {
+      element.textContent = displayName;
+    });
+
+    sidebar.querySelectorAll("[data-auth-avatar]").forEach((element) => {
+      element.textContent = avatar;
+    });
   }
 
   function initGlobalSidebar() {
@@ -203,14 +298,26 @@
     sidebar.setAttribute("aria-hidden", "true");
     sidebar.innerHTML = `
       <div class="global-app-sidebar-avatar-wrap">
-        <div class="global-app-sidebar-avatar">Avatar</div>
-        <div class="global-app-sidebar-avatar-name">Ng&#432;&#7901;i d&ugrave;ng</div>
+        <div class="global-app-sidebar-avatar" data-auth-avatar>US</div>
+        <div class="global-app-sidebar-avatar-name" data-auth-name>Ng&#432;&#7901;i d&ugrave;ng</div>
       </div>
       <nav class="global-app-sidebar-menu">
-        <a href="/home/upload.html" data-section="summary">T&oacute;m t&#7855;t</a>
-        <a href="/home/dashboard.html" data-section="overview">T&#7893;ng quan</a>
-        <a href="/home/content-list.html" data-section="content">N&#7897;i dung</a>
-        <a href="/home/quiz.html" data-section="questions">C&acirc;u h&#7887;i</a>
+        <div class="global-app-sidebar-group">
+          <div class="global-app-sidebar-heading">H&#7885;c t&#7853;p</div>
+          <a href="/home/dashboard.html" data-section="dashboard">Dashboard</a>
+          <a href="/home/content-list.html" data-section="content">N&#7897;i dung</a>
+          <a href="/home/quiz.html" data-section="questions">C&acirc;u h&#7887;i</a>
+        </div>
+        <div class="global-app-sidebar-group">
+          <div class="global-app-sidebar-heading">Qu&#7843;n l&#253;</div>
+          <a href="/home/upload.html" data-section="upload">Upload</a>
+          <a href="/home/history.html" data-section="history">L&#7883;ch s&#7917;</a>
+          <a href="/home/analytics.html" data-section="analytics">Ph&acirc;n t&iacute;ch</a>
+        </div>
+        <div class="global-app-sidebar-group">
+          <div class="global-app-sidebar-heading">T&agrave;i kho&#7843;n</div>
+          <a href="/home/profile.html" data-section="profile">H&#7891; s&#417;</a>
+        </div>
       </nav>
     `;
 
@@ -222,6 +329,7 @@
     document.body.appendChild(backdrop);
 
     setActiveLink(sidebar);
+    hydrateSidebarUser(sidebar);
 
     const setSidebarState = (open) => {
       sidebar.classList.toggle("is-open", open);

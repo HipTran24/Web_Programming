@@ -23,19 +23,6 @@
   <div class="page-content">
     <nav class="navbar navbar-expand-lg navbar-dark navbar-glass py-3">
       <div class="container">
-        <button
-          id="sidebarToggle"
-          class="sidebar-toggle-btn me-2"
-          type="button"
-          aria-label="Toggle sidebar"
-          aria-controls="appSidebar"
-          aria-expanded="false"
-        >
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
-
         <a class="navbar-brand fw-semibold" href="dashboard.html">AI Study</a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
@@ -57,20 +44,6 @@
         </div>
       </div>
     </nav>
-
-    <aside id="appSidebar" class="app-sidebar" aria-hidden="true">
-      <div class="app-sidebar-avatar-wrap">
-        <div class="app-sidebar-avatar-placeholder">Avatar</div>
-        <div class="app-sidebar-avatar-name">Người dùng</div>
-      </div>
-      <nav class="app-sidebar-menu">
-        <a href="upload.html">Tóm tắt</a>
-        <a class="active" href="dashboard.html">Tổng quan</a>
-        <a href="content-list.html">Nội dung</a>
-        <a href="quiz.html">Câu hỏi</a>
-      </nav>
-    </aside>
-    <div id="appSidebarBackdrop" class="app-sidebar-backdrop"></div>
 
     <main class="container py-5">
       <div class="row g-4">
@@ -148,44 +121,6 @@
   <script src="../assets/js/main.js"></script>
   <script src="../js/navbar-sidebar.js"></script>
   <script>
-    (function () {
-      const sidebarToggle = document.getElementById("sidebarToggle");
-      const appSidebar = document.getElementById("appSidebar");
-      const sidebarBackdrop = document.getElementById("appSidebarBackdrop");
-      const sidebarLinks = document.querySelectorAll(".app-sidebar-menu a");
-
-      if (!sidebarToggle || !appSidebar || !sidebarBackdrop) {
-        return;
-      }
-
-      const setSidebarState = (open) => {
-        appSidebar.classList.toggle("is-open", open);
-        sidebarBackdrop.classList.toggle("is-visible", open);
-        sidebarToggle.setAttribute("aria-expanded", open ? "true" : "false");
-        appSidebar.setAttribute("aria-hidden", open ? "false" : "true");
-      };
-
-      sidebarToggle.addEventListener("click", () => {
-        setSidebarState(!appSidebar.classList.contains("is-open"));
-      });
-
-      sidebarBackdrop.addEventListener("click", () => {
-        setSidebarState(false);
-      });
-
-      document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape") {
-          setSidebarState(false);
-        }
-      });
-
-      sidebarLinks.forEach((link) => {
-        link.addEventListener("click", () => {
-          setSidebarState(false);
-        });
-      });
-    })();
-
     (async function () {
       if (!window.AuthClient) {
         return;
