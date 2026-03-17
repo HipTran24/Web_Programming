@@ -5,36 +5,36 @@
   const TOGGLE_ID = "globalSidebarToggle";
 
   const TOP_LINKS = [
-    { section: "home", href: "/home/index.html", label: "Home" },
+    { section: "home", href: "/home/index.html", label: "Trang ch&#7911;" },
     { section: "dashboard", href: "/home/dashboard.html", label: "Dashboard" },
-    { section: "content", href: "/home/content-list.html", label: "Content" },
-    { section: "quiz", href: "/home/quiz.html", label: "Quiz" },
+    { section: "content", href: "/home/content-list.html", label: "N&#7897;i dung" },
+    { section: "quiz", href: "/home/quiz.html", label: "C&acirc;u h&#7887;i" },
     { section: "upload", href: "/home/upload.html", label: "Upload" },
-    { section: "history", href: "/home/history.html", label: "History" },
-    { section: "analytics", href: "/home/analytics.html", label: "Analytics" },
-    { section: "profile", href: "/home/profile.html", label: "Profile" },
+    { section: "history", href: "/home/history.html", label: "L&#7883;ch s&#7917;" },
+    { section: "analytics", href: "/home/analytics.html", label: "Ph&acirc;n t&iacute;ch" },
+    { section: "profile", href: "/home/profile.html", label: "H&#7891; s&#417;" },
   ];
 
   const SIDEBAR_GROUPS = [
     {
-      heading: "Study",
+      heading: "H&#7885;c t&#7853;p",
       links: [
         { section: "dashboard", href: "/home/dashboard.html", label: "Dashboard" },
-        { section: "content", href: "/home/content-list.html", label: "Content" },
-        { section: "quiz", href: "/home/quiz.html", label: "Quiz" },
+        { section: "content", href: "/home/content-list.html", label: "N&#7897;i dung" },
+        { section: "quiz", href: "/home/quiz.html", label: "C&acirc;u h&#7887;i" },
       ],
     },
     {
-      heading: "Manage",
+      heading: "Qu&#7843;n l&#253;",
       links: [
         { section: "upload", href: "/home/upload.html", label: "Upload" },
-        { section: "history", href: "/home/history.html", label: "History" },
-        { section: "analytics", href: "/home/analytics.html", label: "Analytics" },
+        { section: "history", href: "/home/history.html", label: "L&#7883;ch s&#7917;" },
+        { section: "analytics", href: "/home/analytics.html", label: "Ph&acirc;n t&iacute;ch" },
       ],
     },
     {
-      heading: "Account",
-      links: [{ section: "profile", href: "/home/profile.html", label: "Profile" }],
+      heading: "T&agrave;i kho&#7843;n",
+      links: [{ section: "profile", href: "/home/profile.html", label: "H&#7891; s&#417;" }],
     },
   ];
 
@@ -114,6 +114,11 @@
         display: flex;
         align-items: center;
         gap: 8px;
+      }
+
+      .global-shell-actions {
+        margin-left: auto;
+        flex-shrink: 0;
       }
 
       .global-shell-btn {
@@ -244,7 +249,7 @@
       .global-app-sidebar-menu {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 14px;
       }
 
       .global-app-sidebar-group + .global-app-sidebar-group {
@@ -283,6 +288,19 @@
         background: rgba(13, 110, 253, 0.2);
         border: 1px solid rgba(13, 110, 253, 0.35);
         color: #fff;
+      }
+
+      @media (max-width: 1200px) {
+        .global-shell-nav-inner {
+          flex-wrap: wrap;
+          row-gap: 8px;
+        }
+
+        .global-shell-links {
+          order: 3;
+          width: 100%;
+          padding-top: 2px;
+        }
       }
 
       @media (max-width: 991px) {
@@ -462,7 +480,7 @@
       return;
     }
 
-    const displayName = user.fullName || user.username || user.email || "User";
+    const displayName = user.fullName || user.username || user.email || "Nguoi dung";
     const avatar = getInitials(user.fullName || user.username, user.email);
 
     scope.querySelectorAll("[data-auth-name]").forEach((element) => {
@@ -524,19 +542,10 @@
     return `
       <div class="global-app-sidebar-avatar-wrap">
         <div class="global-app-sidebar-avatar" data-auth-avatar>US</div>
-        <div class="global-app-sidebar-avatar-name" data-auth-name>User</div>
+        <div class="global-app-sidebar-avatar-name" data-auth-name>Nguoi dung</div>
       </div>
       <nav class="global-app-sidebar-menu">
         ${groups}
-        <div class="global-app-sidebar-group" data-auth-guest>
-          <div class="global-app-sidebar-heading">Start</div>
-          <a href="/home/login.html">Login</a>
-          <a href="/home/register.html">Register</a>
-        </div>
-        <div class="global-app-sidebar-group" data-auth-user>
-          <div class="global-app-sidebar-heading">Session</div>
-          <a href="/home/login.html" data-auth-logout>Logout</a>
-        </div>
       </nav>
     `;
   }
@@ -574,13 +583,13 @@
         <div class="global-shell-links">${buildTopLinksMarkup()}</div>
         <div class="global-shell-actions">
           <div class="global-shell-guest" data-auth-guest>
-            <a class="global-shell-btn" href="/home/login.html">Login</a>
-            <a class="global-shell-btn is-primary" href="/home/register.html">Register</a>
+            <a class="global-shell-btn" href="/home/login.html">&#272;&#259;ng nh&#7853;p</a>
+            <a class="global-shell-btn is-primary" href="/home/register.html">&#272;&#259;ng k&#253;</a>
           </div>
           <div class="global-shell-user" data-auth-user>
-            <span class="global-shell-user-name" data-auth-name>User</span>
+            <span class="global-shell-user-name" data-auth-name>Nguoi dung</span>
             <span class="global-shell-avatar" data-auth-avatar>US</span>
-            <a class="global-shell-btn" href="/home/login.html" data-auth-logout>Logout</a>
+            <a class="global-shell-btn" href="/home/login.html" data-auth-logout>&#272;&#259;ng xu&#7845;t</a>
           </div>
         </div>
       </div>
