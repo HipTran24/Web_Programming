@@ -7,15 +7,21 @@ namespace Web_Project.Services.Content
     {
         Task<SummarizeUploadResponse> SummarizeUploadAsync(
             IFormFile file,
+            int? userId,
+            bool isGuest,
             CancellationToken cancellationToken);
 
         Task<SummarizeUploadResponse> SummarizeTextAsync(
             string text,
             string? sourceHint,
+            int? userId,
+            bool isGuest,
             CancellationToken cancellationToken);
 
         Task<SummarizeUrlResponse> SummarizeFromUrlAsync(
             string url,
+            int? userId,
+            bool isGuest,
             CancellationToken cancellationToken);
     }
 }

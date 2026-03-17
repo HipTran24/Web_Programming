@@ -1,6 +1,10 @@
 using System.Text;
 using System.Text.Json;
 using System.Net;
+using System.Text.RegularExpressions;
+using System.Collections.Concurrent;
+using System.Security.Cryptography;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Web_Project.Models;
 
@@ -9,19 +13,40 @@ namespace Web_Project.Services.AI
     public class GeminiSummaryService : IGeminiSummaryService
     {
         private const int MaxInlineAudioBytes = 20 * 1024 * 1024;
+        private const string CacheKeyPrefixTextSummary = "gemini:summary:text:";
+        private const string CacheKeyPrefixImageSummary = "gemini:summary:image:";
+        private static readonly ConcurrentDictionary<int, SemaphoreSlim> ConcurrencyLimiters = new();
 
         private readonly HttpClient _httpClient;
         private readonly GeminiSettings _settings;
         private readonly ILogger<GeminiSummaryService> _logger;
+        private readonly IMemoryCache _cache;
+        private readonly TimeSpan _requestTimeout;
+        private readonly int _maxModelCandidates;
+        private readonly int _maxRetriesPerModel;
+        private readonly bool _enableResponseCache;
+        private readonly TimeSpan _responseCacheDuration;
+        private readonly SemaphoreSlim _concurrencyLimiter;
+        private readonly TimeSpan _queueWaitTimeout;
 
         public GeminiSummaryService(
             HttpClient httpClient,
             IOptions<GeminiSettings> settings,
+            IMemoryCache cache,
             ILogger<GeminiSummaryService> logger)
         {
             _httpClient = httpClient;
             _settings = settings.Value;
+            _cache = cache;
             _logger = logger;
+            _requestTimeout = TimeSpan.FromSeconds(Math.Clamp(_settings.RequestTimeoutSeconds, 5, 120));
+            _maxModelCandidates = Math.Clamp(_settings.MaxModelCandidates, 1, 5);
+            _maxRetriesPerModel = Math.Clamp(_settings.MaxRetriesPerModel, 0, 3);
+            _enableResponseCache = _settings.EnableResponseCache;
+            _responseCacheDuration = TimeSpan.FromMinutes(Math.Clamp(_settings.ResponseCacheMinutes, 1, 180));
+            var maxConcurrent = Math.Clamp(_settings.MaxConcurrentRequests, 1, 16);
+            _concurrencyLimiter = ConcurrencyLimiters.GetOrAdd(maxConcurrent, key => new SemaphoreSlim(key, key));
+            _queueWaitTimeout = TimeSpan.FromSeconds(Math.Clamp(_settings.QueueWaitTimeoutSeconds, 1, 60));
         }
 
         public async Task<AiSummaryResult> SummarizeTextAsync(
@@ -31,10 +56,16 @@ namespace Web_Project.Services.AI
         {
             EnsureApiKey();
 
-            var normalized = NormalizeInputText(text);
+            var normalized = NormalizeInputText(text, _settings.MaxInputCharacters);
             if (string.IsNullOrWhiteSpace(normalized))
             {
                 throw new InvalidOperationException("Nội dung văn bản sau xử lý đang rỗng.");
+            }
+
+            var cacheKey = BuildTextSummaryCacheKey(normalized, sourceHint);
+            if (TryGetCachedSummary(cacheKey, out var cachedSummary))
+            {
+                return cachedSummary;
             }
 
             var prompt =
@@ -50,10 +81,12 @@ namespace Web_Project.Services.AI
                 model: _settings.TextModel,
                 parts: [new { text = prompt }],
                 temperature: 0.2,
-                responseMimeType: null,
+                responseMimeType: "application/json",
                 cancellationToken: cancellationToken);
 
-            return ParseSummaryContent(generated);
+            var parsed = ParseSummaryContent(generated);
+            TrySetCachedSummary(cacheKey, parsed);
+            return parsed;
         }
 
         public async Task<AiSummaryResult> SummarizeImageAsync(
@@ -67,6 +100,12 @@ namespace Web_Project.Services.AI
             if (imageBytes.Length == 0)
             {
                 throw new InvalidOperationException("Dữ liệu ảnh rỗng.");
+            }
+
+            var cacheKey = BuildImageSummaryCacheKey(imageBytes, mimeType, fileName);
+            if (TryGetCachedSummary(cacheKey, out var cachedSummary))
+            {
+                return cachedSummary;
             }
 
             var prompt =
@@ -90,10 +129,12 @@ namespace Web_Project.Services.AI
                     }
                 ],
                 temperature: 0.2,
-                responseMimeType: null,
+                responseMimeType: "application/json",
                 cancellationToken: cancellationToken);
 
-            return ParseSummaryContent(generated);
+            var parsed = ParseSummaryContent(generated);
+            TrySetCachedSummary(cacheKey, parsed);
+            return parsed;
         }
 
         public async Task<string> TranscribeAudioAsync(
@@ -158,7 +199,11 @@ namespace Web_Project.Services.AI
         {
             EnsureApiKey();
 
-            var normalized = NormalizeInputText(sourceText);
+            var normalized = NormalizeInputText(
+                sourceText,
+                _settings.MaxQuizInputCharacters > 0
+                    ? _settings.MaxQuizInputCharacters
+                    : _settings.MaxInputCharacters);
             if (string.IsNullOrWhiteSpace(normalized))
             {
                 throw new InvalidOperationException("Nội dung nguồn để sinh quiz đang rỗng.");
@@ -182,7 +227,7 @@ namespace Web_Project.Services.AI
                 model: _settings.TextModel,
                 parts: [new { text = prompt }],
                 temperature: 0.3,
-                responseMimeType: null,
+                responseMimeType: "application/json",
                 cancellationToken: cancellationToken);
 
             return ParseQuizContent(generated, boundedQuestionCount);
@@ -195,6 +240,14 @@ namespace Web_Project.Services.AI
             string? responseMimeType,
             CancellationToken cancellationToken)
         {
+            if (!await WaitForSlotAsync(cancellationToken))
+            {
+                throw new InvalidOperationException(
+                    "Hệ thống AI đang bận xử lý nhiều yêu cầu. Vui lòng thử lại sau vài giây.");
+            }
+
+            try
+            {
             var generationConfig = new Dictionary<string, object>
             {
                 ["temperature"] = temperature
@@ -223,47 +276,85 @@ namespace Web_Project.Services.AI
 
             foreach (var candidate in ResolveModelCandidates(model))
             {
-                var endpoint = BuildEndpoint(candidate);
-                using var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
-                request.Content = new StringContent(body, Encoding.UTF8, "application/json");
-
-                using var response = await _httpClient.SendAsync(request, cancellationToken);
-                var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
-
-                if (response.IsSuccessStatusCode)
+                for (var attempt = 0; attempt <= _maxRetriesPerModel; attempt++)
                 {
+                    var endpoint = BuildEndpoint(candidate);
+                    using var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+                    request.Content = new StringContent(body, Encoding.UTF8, "application/json");
+
+                    using var attemptCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                    attemptCts.CancelAfter(_requestTimeout);
+
+                    HttpResponseMessage response;
+                    string responseBody;
                     try
                     {
-                        return ExtractGeneratedText(responseBody);
+                        response = await _httpClient.SendAsync(request, attemptCts.Token);
+                        responseBody = await response.Content.ReadAsStringAsync(attemptCts.Token);
                     }
-                    catch (InvalidOperationException ex)
+                    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
                     {
-                        _logger.LogWarning(
-                            "Gemini parse warning for model {Model}: {Message}. Response: {Response}",
-                            candidate,
-                            ex.Message,
-                            Trim(responseBody, 350));
-
-                        lastError = $"Gemini phản hồi không có text hợp lệ với model '{candidate}': {ex.Message}";
+                        lastError = $"Gemini timeout sau {(int)_requestTimeout.TotalSeconds}s với model '{candidate}'.";
+                        _logger.LogWarning("Gemini timed out for model {Model} after {TimeoutSeconds}s", candidate, (int)_requestTimeout.TotalSeconds);
                         continue;
                     }
+
+                    using (response)
+                    {
+                        if (response.IsSuccessStatusCode)
+                        {
+                            try
+                            {
+                                return ExtractGeneratedText(responseBody);
+                            }
+                            catch (InvalidOperationException ex)
+                            {
+                                _logger.LogWarning(
+                                    "Gemini parse warning for model {Model}: {Message}. Response: {Response}",
+                                    candidate,
+                                    ex.Message,
+                                    Trim(responseBody, 350));
+
+                                lastError = $"Gemini phản hồi không có text hợp lệ với model '{candidate}': {ex.Message}";
+                                break;
+                            }
+                        }
+
+                        var isQuotaExceeded = IsQuotaExceeded(response.StatusCode, responseBody);
+                        var errorMessage = BuildGeminiErrorMessage(response.StatusCode, responseBody, candidate);
+                        _logger.LogError("Gemini request failed for model {Model}: {Error}", candidate, errorMessage);
+                        lastError = errorMessage;
+
+                        if (isQuotaExceeded)
+                        {
+                            throw new InvalidOperationException(errorMessage);
+                        }
+
+                        if (attempt < _maxRetriesPerModel && ShouldRetrySameModel(response.StatusCode, responseBody))
+                        {
+                            var delay = ResolveRetryDelay(response, responseBody);
+                            await Task.Delay(delay, cancellationToken);
+                            continue;
+                        }
+
+                        if (ShouldTryNextModel(response.StatusCode, responseBody))
+                        {
+                            _logger.LogWarning("Fallback to next Gemini model after failure on {Model}", candidate);
+                            break;
+                        }
+
+                        throw new InvalidOperationException(errorMessage);
+                    }
                 }
-
-                var errorMessage = BuildGeminiErrorMessage(response.StatusCode, responseBody, candidate);
-                _logger.LogError("Gemini request failed for model {Model}: {Error}", candidate, errorMessage);
-                lastError = errorMessage;
-
-                if (ShouldTryNextModel(response.StatusCode, responseBody))
-                {
-                    _logger.LogWarning("Fallback to next Gemini model after failure on {Model}", candidate);
-                    continue;
-                }
-
-                throw new InvalidOperationException(errorMessage);
             }
 
             throw new InvalidOperationException(
                 lastError ?? "Không tìm thấy model Gemini tương thích để xử lý nội dung.");
+            }
+            finally
+            {
+                _concurrencyLimiter.Release();
+            }
         }
 
         private static string ExtractGeneratedText(string responseBody)
@@ -524,16 +615,17 @@ namespace Web_Project.Services.AI
             };
         }
 
-        private string NormalizeInputText(string rawText)
+        private static string NormalizeInputText(string rawText, int maxInputChars)
         {
             var text = (rawText ?? string.Empty).Trim();
-            if (text.Length <= _settings.MaxInputCharacters)
+            var safeMax = Math.Clamp(maxInputChars, 2000, 100_000);
+            if (text.Length <= safeMax)
             {
                 return text;
             }
 
-            var headLength = _settings.MaxInputCharacters * 3 / 4;
-            var tailLength = _settings.MaxInputCharacters - headLength;
+            var headLength = safeMax * 3 / 4;
+            var tailLength = safeMax - headLength;
 
             var head = text[..headLength];
             var tail = text[^tailLength..];
@@ -564,7 +656,7 @@ namespace Web_Project.Services.AI
             AddCandidate(candidates, "gemini-2.0-flash");
             AddCandidate(candidates, "gemini-flash-latest");
 
-            return candidates;
+            return candidates.Take(_maxModelCandidates);
         }
 
         private static void AddCandidate(List<string> candidates, string? rawModel)
@@ -625,39 +717,256 @@ namespace Web_Project.Services.AI
             return $"{uri.Scheme}://{uri.Authority}";
         }
 
-        private static string BuildGeminiErrorMessage(HttpStatusCode statusCode, string responseBody, string model)
+        private async Task<bool> WaitForSlotAsync(CancellationToken cancellationToken)
         {
-            var fallback = $"Gemini lỗi ({(int)statusCode}) khi dùng model '{model}'.";
-            if (string.IsNullOrWhiteSpace(responseBody))
-            {
-                return fallback;
-            }
+            using var queueCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            queueCts.CancelAfter(_queueWaitTimeout);
 
             try
             {
-                using var doc = JsonDocument.Parse(responseBody);
-                if (!doc.RootElement.TryGetProperty("error", out var errorElement))
-                {
-                    return $"{fallback} Response: {Trim(responseBody, 300)}";
-                }
-
-                var code = errorElement.TryGetProperty("code", out var codeElement)
-                    ? codeElement.GetInt32()
-                    : (int)statusCode;
-                var status = errorElement.TryGetProperty("status", out var statusElement)
-                    ? (statusElement.GetString() ?? string.Empty)
-                    : string.Empty;
-                var message = errorElement.TryGetProperty("message", out var messageElement)
-                    ? (messageElement.GetString() ?? string.Empty)
-                    : string.Empty;
-
-                var reason = string.IsNullOrWhiteSpace(message) ? Trim(responseBody, 300) : message;
-                return $"Gemini lỗi ({code} {status}) với model '{model}': {reason}";
+                await _concurrencyLimiter.WaitAsync(queueCts.Token);
+                return true;
             }
-            catch
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
             {
-                return $"{fallback} Response: {Trim(responseBody, 300)}";
+                return false;
             }
+        }
+
+        private bool TryGetCachedSummary(string cacheKey, out AiSummaryResult result)
+        {
+            result = new AiSummaryResult();
+            if (!_enableResponseCache)
+            {
+                return false;
+            }
+
+            if (!_cache.TryGetValue(cacheKey, out AiSummaryResult? cached) || cached is null)
+            {
+                return false;
+            }
+
+            result = CloneSummaryResult(cached);
+            return true;
+        }
+
+        private void TrySetCachedSummary(string cacheKey, AiSummaryResult result)
+        {
+            if (!_enableResponseCache)
+            {
+                return;
+            }
+
+            _cache.Set(cacheKey, CloneSummaryResult(result), _responseCacheDuration);
+        }
+
+        private static AiSummaryResult CloneSummaryResult(AiSummaryResult source)
+        {
+            return new AiSummaryResult
+            {
+                Summary = source.Summary,
+                KeyPoints = [.. source.KeyPoints]
+            };
+        }
+
+        private static string BuildTextSummaryCacheKey(string normalizedText, string sourceHint)
+        {
+            var hash = ComputeSha256Hex($"{sourceHint}\n{normalizedText}");
+            return $"{CacheKeyPrefixTextSummary}{hash}";
+        }
+
+        private static string BuildImageSummaryCacheKey(byte[] imageBytes, string mimeType, string fileName)
+        {
+            var bytesHash = Convert.ToHexString(SHA256.HashData(imageBytes));
+            var metaHash = ComputeSha256Hex($"{mimeType}|{fileName}");
+            return $"{CacheKeyPrefixImageSummary}{metaHash}:{bytesHash}";
+        }
+
+        private static string ComputeSha256Hex(string value)
+        {
+            var bytes = Encoding.UTF8.GetBytes(value);
+            return Convert.ToHexString(SHA256.HashData(bytes));
+        }
+
+        private static bool IsQuotaExceeded(HttpStatusCode statusCode, string responseBody)
+        {
+            if (statusCode != HttpStatusCode.TooManyRequests)
+            {
+                return false;
+            }
+
+            var message = (responseBody ?? string.Empty).ToLowerInvariant();
+            return message.Contains("quota exceeded") ||
+                   message.Contains("resource_exhausted") ||
+                   message.Contains("limit: 0") ||
+                   message.Contains("free_tier_requests");
+        }
+
+        private static bool ShouldRetrySameModel(HttpStatusCode statusCode, string responseBody)
+        {
+            if (statusCode == HttpStatusCode.TooManyRequests)
+            {
+                return !IsQuotaExceeded(statusCode, responseBody);
+            }
+
+            if (statusCode == HttpStatusCode.ServiceUnavailable ||
+                statusCode == HttpStatusCode.GatewayTimeout ||
+                statusCode == HttpStatusCode.BadGateway ||
+                statusCode == HttpStatusCode.InternalServerError)
+            {
+                return true;
+            }
+
+            var message = (responseBody ?? string.Empty).ToLowerInvariant();
+            return message.Contains("high demand") ||
+                   message.Contains("temporarily unavailable") ||
+                   message.Contains("try again later");
+        }
+
+        private static TimeSpan ResolveRetryDelay(HttpResponseMessage response, string responseBody)
+        {
+            if (response.Headers.RetryAfter?.Delta is TimeSpan delta && delta > TimeSpan.Zero)
+            {
+                return ClampRetryDelay(delta);
+            }
+
+            if (response.Headers.RetryAfter?.Date is DateTimeOffset date)
+            {
+                var diff = date - DateTimeOffset.UtcNow;
+                if (diff > TimeSpan.Zero)
+                {
+                    return ClampRetryDelay(diff);
+                }
+            }
+
+            var seconds = ExtractRetryHintSecondsNumeric(responseBody);
+            if (seconds > 0)
+            {
+                return ClampRetryDelay(TimeSpan.FromSeconds(seconds));
+            }
+
+            return TimeSpan.FromSeconds(2);
+        }
+
+        private static TimeSpan ClampRetryDelay(TimeSpan delay)
+        {
+            if (delay < TimeSpan.FromMilliseconds(300))
+            {
+                return TimeSpan.FromMilliseconds(300);
+            }
+
+            if (delay > TimeSpan.FromSeconds(12))
+            {
+                return TimeSpan.FromSeconds(12);
+            }
+
+            return delay;
+        }
+
+        private static double ExtractRetryHintSecondsNumeric(string message)
+        {
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                return 0;
+            }
+
+            var match = Regex.Match(message, @"retry\s+in\s+([0-9]+(?:\.[0-9]+)?)s", RegexOptions.IgnoreCase);
+            if (!match.Success)
+            {
+                return 0;
+            }
+
+            return double.TryParse(match.Groups[1].Value, out var seconds) ? seconds : 0;
+        }
+
+        private static string BuildGeminiErrorMessage(HttpStatusCode statusCode, string responseBody, string model)
+        {
+            var providerCode = (int)statusCode;
+            var providerStatus = string.Empty;
+            var providerMessage = string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(responseBody))
+            {
+                try
+                {
+                    using var doc = JsonDocument.Parse(responseBody);
+                    if (doc.RootElement.TryGetProperty("error", out var errorElement))
+                    {
+                        if (errorElement.TryGetProperty("code", out var codeElement) &&
+                            codeElement.ValueKind == JsonValueKind.Number)
+                        {
+                            providerCode = codeElement.GetInt32();
+                        }
+
+                        if (errorElement.TryGetProperty("status", out var statusElement) &&
+                            statusElement.ValueKind == JsonValueKind.String)
+                        {
+                            providerStatus = statusElement.GetString() ?? string.Empty;
+                        }
+
+                        if (errorElement.TryGetProperty("message", out var messageElement) &&
+                            messageElement.ValueKind == JsonValueKind.String)
+                        {
+                            providerMessage = messageElement.GetString() ?? string.Empty;
+                        }
+                    }
+                }
+                catch
+                {
+                    // Keep fallback values.
+                }
+            }
+
+            var normalized = $"{providerStatus} {providerMessage}".ToLowerInvariant();
+            var isQuotaOrRateLimit = providerCode == 429 ||
+                                     normalized.Contains("resource_exhausted") ||
+                                     normalized.Contains("quota") ||
+                                     normalized.Contains("rate limit") ||
+                                     normalized.Contains("too many requests");
+
+            if (isQuotaOrRateLimit)
+            {
+                var retryHint = ExtractRetryHintSeconds(providerMessage);
+                return string.IsNullOrWhiteSpace(retryHint)
+                    ? "AI đang tạm quá tải hoặc vượt giới hạn sử dụng. Vui lòng thử lại sau ít phút."
+                    : $"AI đang tạm quá tải hoặc vượt giới hạn sử dụng. Vui lòng thử lại sau khoảng {retryHint}.";
+            }
+
+            if (providerCode == 401 || providerCode == 403 ||
+                normalized.Contains("api key") ||
+                normalized.Contains("permission_denied") ||
+                normalized.Contains("unauthenticated"))
+            {
+                return "AI chưa được cấu hình quyền truy cập hợp lệ. Vui lòng liên hệ quản trị viên.";
+            }
+
+            if (providerCode == 404 || normalized.Contains("model not found") || normalized.Contains("not supported"))
+            {
+                return "Model AI hiện không khả dụng. Hệ thống sẽ tự chuyển model khác, vui lòng thử lại.";
+            }
+
+            if (providerCode >= 500 ||
+                normalized.Contains("temporarily unavailable") ||
+                normalized.Contains("high demand"))
+            {
+                return "Dịch vụ AI đang bận. Vui lòng thử lại sau ít phút.";
+            }
+
+            return $"Không thể xử lý yêu cầu AI lúc này (mã {providerCode}). Vui lòng thử lại.";
+        }
+
+        private static string ExtractRetryHintSeconds(string message)
+        {
+            var seconds = ExtractRetryHintSecondsNumeric(message);
+            if (seconds <= 0)
+            {
+                return string.Empty;
+            }
+
+            var rounded = Math.Clamp((int)Math.Ceiling(seconds), 1, 3600);
+            return rounded < 60
+                ? $"{rounded} giây"
+                : $"{(int)Math.Ceiling(rounded / 60d)} phút";
         }
 
         private static bool ShouldTryNextModel(HttpStatusCode statusCode, string responseBody)
@@ -673,6 +982,11 @@ namespace Web_Project.Services.AI
                 statusCode == HttpStatusCode.BadGateway ||
                 statusCode == HttpStatusCode.InternalServerError)
             {
+                if (statusCode == HttpStatusCode.TooManyRequests && IsQuotaExceeded(statusCode, responseBody))
+                {
+                    return false;
+                }
+
                 return true;
             }
 

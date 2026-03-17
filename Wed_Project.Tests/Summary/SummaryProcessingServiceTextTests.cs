@@ -15,7 +15,7 @@ public sealed class SummaryProcessingServiceTextTests
         var gemini = new FakeGeminiSummaryService();
         var service = CreateService(gemini, dbContext);
 
-        var response = await service.SummarizeTextAsync("  Day la noi dung can tom tat.  ", "text", CancellationToken.None);
+        var response = await service.SummarizeTextAsync("  Day la noi dung can tom tat.  ", "text", null, true, CancellationToken.None);
 
         var content = await dbContext.Contents.Include(x => x.AIProcess).SingleAsync();
 
@@ -42,7 +42,7 @@ public sealed class SummaryProcessingServiceTextTests
         };
         var service = CreateService(gemini, dbContext);
 
-        var response = await service.SummarizeTextAsync("Noi dung lich su", "text", CancellationToken.None);
+        var response = await service.SummarizeTextAsync("Noi dung lich su", "text", null, true, CancellationToken.None);
 
         Assert.Equal("lich-su-viet-nam-va-cac-moc-quan-trong.txt", response.FileName);
     }
@@ -55,7 +55,7 @@ public sealed class SummaryProcessingServiceTextTests
         var service = CreateService(gemini, dbContext);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            service.SummarizeTextAsync("   ", null, CancellationToken.None));
+            service.SummarizeTextAsync("   ", null, null, true, CancellationToken.None));
     }
 
     [Fact]
@@ -66,7 +66,7 @@ public sealed class SummaryProcessingServiceTextTests
         var service = CreateService(gemini, dbContext);
         var longHint = $"  {new string('v', 80)}  ";
 
-        var response = await service.SummarizeTextAsync("Noi dung", longHint, CancellationToken.None);
+        var response = await service.SummarizeTextAsync("Noi dung", longHint, null, true, CancellationToken.None);
 
         Assert.Equal(64, response.InputType.Length);
         Assert.Equal(response.InputType, gemini.LastSourceHint);

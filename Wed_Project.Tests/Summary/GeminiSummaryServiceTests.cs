@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Web_Project.Models;
@@ -126,6 +127,7 @@ public sealed class GeminiSummaryServiceTests
         return new GeminiSummaryService(
             new HttpClient(handler),
             Options.Create(settings),
+          new MemoryCache(new MemoryCacheOptions()),
             NullLogger<GeminiSummaryService>.Instance);
     }
 

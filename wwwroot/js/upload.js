@@ -412,6 +412,11 @@
     return headers;
   };
 
+  const getAuthTokenHeader = () => {
+    const token = window.AuthClient?.getAccessToken?.() || "";
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   const generateQuiz = async (useReloadNonce) => {
     if (latestContentId <= 0) {
       throw new Error("Bạn cần xử lý nội dung trước khi tạo đề trắc nghiệm.");
@@ -486,6 +491,7 @@
 
     const response = await fetch("/api/summary/upload", {
       method: "POST",
+      headers: getAuthTokenHeader(),
       body: formData,
     });
 
@@ -506,7 +512,7 @@
 
     const response = await fetch("/api/summary/text", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { ...getAuthTokenHeader(), "Content-Type": "application/json" },
       body: JSON.stringify({ text, sourceHint: "unified-input" }),
     });
 
@@ -527,7 +533,7 @@
 
     const response = await fetch("/api/summary/from-url", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { ...getAuthTokenHeader(), "Content-Type": "application/json" },
       body: JSON.stringify({ url }),
     });
 

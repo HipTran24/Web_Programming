@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Web_Project.Controllers;
 using Web_Project.Models;
@@ -77,7 +78,12 @@ public sealed class SummaryControllerTextTests
 
     private static SummaryController CreateController(StubSummaryProcessingService service)
     {
-        return new SummaryController(service, NullLogger<SummaryController>.Instance)
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
+            .Options;
+        var dbContext = new AppDbContext(options);
+
+        return new SummaryController(service, dbContext, NullLogger<SummaryController>.Instance)
         {
             ControllerContext = new ControllerContext
             {
@@ -115,12 +121,21 @@ public sealed class SummaryControllerTextTests
             Summary = "ok"
         };
 
-        public Task<SummarizeUploadResponse> SummarizeUploadAsync(IFormFile file, CancellationToken cancellationToken)
+        public Task<SummarizeUploadResponse> SummarizeUploadAsync(
+            IFormFile file,
+            int? userId,
+            bool isGuest,
+            CancellationToken cancellationToken)
         {
             return Task.FromResult(new SummarizeUploadResponse());
         }
 
-        public Task<SummarizeUploadResponse> SummarizeTextAsync(string text, string? sourceHint, CancellationToken cancellationToken)
+        public Task<SummarizeUploadResponse> SummarizeTextAsync(
+            string text,
+            string? sourceHint,
+            int? userId,
+            bool isGuest,
+            CancellationToken cancellationToken)
         {
             TextCallCount++;
             LastText = text;
@@ -134,7 +149,11 @@ public sealed class SummaryControllerTextTests
             return Task.FromResult(TextResult);
         }
 
-        public Task<SummarizeUrlResponse> SummarizeFromUrlAsync(string url, CancellationToken cancellationToken)
+        public Task<SummarizeUrlResponse> SummarizeFromUrlAsync(
+            string url,
+            int? userId,
+            bool isGuest,
+            CancellationToken cancellationToken)
         {
             return Task.FromResult(new SummarizeUrlResponse());
         }

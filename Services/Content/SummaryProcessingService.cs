@@ -53,6 +53,8 @@ namespace Web_Project.Services.Content
 
         public async Task<SummarizeUploadResponse> SummarizeUploadAsync(
             IFormFile file,
+            int? userId,
+            bool isGuest,
             CancellationToken cancellationToken)
         {
             if (file.Length <= 0)
@@ -83,12 +85,16 @@ namespace Web_Project.Services.Content
                 charset: null,
                 payload: bytes,
                 sourceUrl: null,
+                userId: userId,
+                isGuest: isGuest,
                 cancellationToken: cancellationToken);
         }
 
         public Task<SummarizeUploadResponse> SummarizeTextAsync(
             string text,
             string? sourceHint,
+            int? userId,
+            bool isGuest,
             CancellationToken cancellationToken)
         {
             var normalized = NormalizeText(text ?? string.Empty, ".txt", "text/plain");
@@ -110,11 +116,15 @@ namespace Web_Project.Services.Content
                 usedVisionModel: false,
                 usedTranscription: false,
                 sourceUrl: null,
+                userId: userId,
+                isGuest: isGuest,
                 cancellationToken: cancellationToken);
         }
 
         public async Task<SummarizeUrlResponse> SummarizeFromUrlAsync(
             string url,
+            int? userId,
+            bool isGuest,
             CancellationToken cancellationToken)
         {
             if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) ||
@@ -173,6 +183,8 @@ namespace Web_Project.Services.Content
                 charset: charset,
                 payload: payload,
                 sourceUrl: url,
+                userId: userId,
+                isGuest: isGuest,
                 cancellationToken: cancellationToken);
 
             return new SummarizeUrlResponse
@@ -198,26 +210,28 @@ namespace Web_Project.Services.Content
             string? charset,
             byte[] payload,
             string? sourceUrl,
+            int? userId,
+            bool isGuest,
             CancellationToken cancellationToken)
         {
             if (IsPdf(mediaType, extension))
             {
-                return await SummarizePdfBytesAsync(fileName, payload, sourceUrl, cancellationToken);
+                return await SummarizePdfBytesAsync(fileName, payload, sourceUrl, userId, isGuest, cancellationToken);
             }
 
             if (IsDocx(mediaType, extension))
             {
-                return await SummarizeDocxBytesAsync(fileName, payload, sourceUrl, cancellationToken);
+                return await SummarizeDocxBytesAsync(fileName, payload, sourceUrl, userId, isGuest, cancellationToken);
             }
 
             if (IsImage(mediaType, extension))
             {
-                return await SummarizeImageBytesAsync(fileName, extension, payload, sourceUrl, cancellationToken);
+                return await SummarizeImageBytesAsync(fileName, extension, payload, sourceUrl, userId, isGuest, cancellationToken);
             }
 
             if (IsVideo(mediaType, extension))
             {
-                return await SummarizeVideoBytesAsync(fileName, extension, payload, sourceUrl, cancellationToken);
+                return await SummarizeVideoBytesAsync(fileName, extension, payload, sourceUrl, userId, isGuest, cancellationToken);
             }
 
             if (IsTextLike(mediaType, extension))
@@ -235,6 +249,8 @@ namespace Web_Project.Services.Content
                     usedVisionModel: false,
                     usedTranscription: false,
                     sourceUrl: sourceUrl,
+                    userId: userId,
+                    isGuest: isGuest,
                     cancellationToken: cancellationToken);
             }
 
@@ -246,6 +262,8 @@ namespace Web_Project.Services.Content
             string fileName,
             byte[] payload,
             string? sourceUrl,
+            int? userId,
+            bool isGuest,
             CancellationToken cancellationToken)
         {
             using var memory = new MemoryStream(payload);
@@ -270,6 +288,8 @@ namespace Web_Project.Services.Content
                 usedVisionModel: false,
                 usedTranscription: false,
                 sourceUrl: sourceUrl,
+                userId: userId,
+                isGuest: isGuest,
                 cancellationToken: cancellationToken);
         }
 
@@ -277,6 +297,8 @@ namespace Web_Project.Services.Content
             string fileName,
             byte[] payload,
             string? sourceUrl,
+            int? userId,
+            bool isGuest,
             CancellationToken cancellationToken)
         {
             using var memory = new MemoryStream(payload);
@@ -305,6 +327,8 @@ namespace Web_Project.Services.Content
                 usedVisionModel: false,
                 usedTranscription: false,
                 sourceUrl: sourceUrl,
+                userId: userId,
+                isGuest: isGuest,
                 cancellationToken: cancellationToken);
         }
 
@@ -313,6 +337,8 @@ namespace Web_Project.Services.Content
             string extension,
             byte[] payload,
             string? sourceUrl,
+            int? userId,
+            bool isGuest,
             CancellationToken cancellationToken)
         {
             var startedAt = Stopwatch.StartNew();
@@ -334,6 +360,8 @@ namespace Web_Project.Services.Content
                 summary: result.Summary,
                 keyPoints: result.KeyPoints,
                 processingTimeSeconds: startedAt.Elapsed.TotalSeconds,
+                userId: userId,
+                isGuest: isGuest,
                 cancellationToken: cancellationToken);
 
             return new SummarizeUploadResponse
@@ -355,6 +383,8 @@ namespace Web_Project.Services.Content
             string extension,
             byte[] payload,
             string? sourceUrl,
+            int? userId,
+            bool isGuest,
             CancellationToken cancellationToken)
         {
             var safeExtension = string.IsNullOrWhiteSpace(extension) ? ".mp4" : extension;
@@ -375,6 +405,8 @@ namespace Web_Project.Services.Content
                     usedVisionModel: false,
                     usedTranscription: true,
                     sourceUrl: sourceUrl,
+                    userId: userId,
+                    isGuest: isGuest,
                     cancellationToken: cancellationToken);
             }
             finally
@@ -391,6 +423,8 @@ namespace Web_Project.Services.Content
             bool usedVisionModel,
             bool usedTranscription,
             string? sourceUrl,
+            int? userId,
+            bool isGuest,
             CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(extractedText))
@@ -399,10 +433,23 @@ namespace Web_Project.Services.Content
             }
 
             var startedAt = Stopwatch.StartNew();
-            var summary = await _geminiSummaryService.SummarizeTextAsync(
-                text: extractedText,
-                sourceHint: inputType,
-                cancellationToken: cancellationToken);
+            AiSummaryResult summary;
+            try
+            {
+                summary = await _geminiSummaryService.SummarizeTextAsync(
+                    text: extractedText,
+                    sourceHint: inputType,
+                    cancellationToken: cancellationToken);
+            }
+            catch (InvalidOperationException ex) when (IsAiUnavailable(ex.Message))
+            {
+                _logger.LogWarning(
+                    "Gemini unavailable for summarize text. Falling back to local summary. Reason: {Message}",
+                    ex.Message);
+
+                summary = BuildLocalFallbackSummary(extractedText, inputType);
+            }
+
             startedAt.Stop();
 
             var generatedFileName = BuildMeaningfulFileName(summary.Summary, inputType, fileName);
@@ -415,6 +462,8 @@ namespace Web_Project.Services.Content
                 summary: summary.Summary,
                 keyPoints: summary.KeyPoints,
                 processingTimeSeconds: startedAt.Elapsed.TotalSeconds,
+                userId: userId,
+                isGuest: isGuest,
                 cancellationToken: cancellationToken);
 
             return new SummarizeUploadResponse
@@ -428,6 +477,67 @@ namespace Web_Project.Services.Content
                 Summary = summary.Summary,
                 KeyPoints = summary.KeyPoints,
                 Preview = BuildPreview(extractedText)
+            };
+        }
+
+        private static bool IsAiUnavailable(string? message)
+        {
+            var normalized = (message ?? string.Empty).ToLowerInvariant();
+            return normalized.Contains("quá tải") ||
+                   normalized.Contains("giới hạn") ||
+                   normalized.Contains("quota") ||
+                   normalized.Contains("resource_exhausted") ||
+                   normalized.Contains("tạm thời") ||
+                   normalized.Contains("try lại") ||
+                   normalized.Contains("thử lại");
+        }
+
+        private static AiSummaryResult BuildLocalFallbackSummary(string extractedText, string inputType)
+        {
+            var clean = NormalizeText(extractedText, ".txt", "text/plain");
+            if (string.IsNullOrWhiteSpace(clean))
+            {
+                return new AiSummaryResult
+                {
+                    Summary = "Nội dung đã được tải lên thành công, nhưng hệ thống AI đang bận nên chưa thể tạo tóm tắt chi tiết ngay lúc này.",
+                    KeyPoints =
+                    [
+                        "Tệp đã được lưu thành công.",
+                        "Bạn có thể thử tạo lại tóm tắt sau vài phút.",
+                        "Hệ thống đang dùng chế độ dự phòng do AI tạm thời quá tải."
+                    ]
+                };
+            }
+
+            var sentences = clean
+                .Split([".", "!", "?", "\n"], StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => x.Trim())
+                .Where(x => x.Length > 20)
+                .ToList();
+
+            var topSentences = sentences.Take(4).ToList();
+            if (topSentences.Count == 0)
+            {
+                topSentences.Add(clean[..Math.Min(clean.Length, 280)]);
+            }
+
+            var summaryText = string.Join(". ", topSentences);
+            if (!summaryText.EndsWith(".", StringComparison.Ordinal))
+            {
+                summaryText += ".";
+            }
+
+            var keyPoints = topSentences
+                .Take(5)
+                .Select(x => x.Length > 180 ? x[..180].TrimEnd() + "..." : x)
+                .ToList();
+
+            keyPoints.Add($"Chế độ dự phòng được bật cho nguồn: {inputType}.");
+
+            return new AiSummaryResult
+            {
+                Summary = summaryText,
+                KeyPoints = keyPoints
             };
         }
 
@@ -541,6 +651,8 @@ namespace Web_Project.Services.Content
             string summary,
             List<string> keyPoints,
             double processingTimeSeconds,
+            int? userId,
+            bool isGuest,
             CancellationToken cancellationToken)
         {
             var sourceType = ResolveSourceTypeForPersistence(inputType, sourceUrl);
@@ -548,8 +660,8 @@ namespace Web_Project.Services.Content
 
             var content = new Web_Project.Models.Content
             {
-                UserId = null,
-                IsGuest = true,
+                UserId = userId,
+                IsGuest = isGuest,
                 FileName = generatedFileName,
                 FileType = ResolveFileTypeForPersistence(inputType, originalFileName),
                 FilePath = string.IsNullOrWhiteSpace(sourceUrl) ? originalFileName : sourceUrl,

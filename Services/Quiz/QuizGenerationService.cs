@@ -1,4 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
+using System.Text;
+using System.Text.RegularExpressions;
 using Web_Project.Models;
 using Web_Project.Services.AI;
 
@@ -81,14 +84,59 @@ namespace Web_Project.Services.Quiz
                 throw new InvalidOperationException("Nội dung chưa đủ dữ liệu để sinh câu hỏi trắc nghiệm.");
             }
 
+            var previousQuestionTexts = await GetPreviousQuestionTextsAsync(
+                content.ContentId,
+                userId,
+                isGuest,
+                cancellationToken);
+
+            var previousQuestionSignatures = previousQuestionTexts
+                .Select(NormalizeQuestionSignature)
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
             var generated = await _geminiSummaryService.GenerateQuizAsync(
-                BuildQuizGenerationSource(sourceText, request.VariationNonce),
+                BuildQuizGenerationSource(sourceText, request.VariationNonce, previousQuestionTexts, forceFreshCoverage: false),
                 totalQuestions,
                 difficulty,
                 quizType,
                 cancellationToken);
 
-            if (generated.Questions.Count == 0)
+            var uniqueQuestions = BuildUniqueQuestions(
+                generated.Questions,
+                previousQuestionSignatures,
+                totalQuestions);
+
+            var minTarget = Math.Max(3, totalQuestions * 7 / 10);
+            if (uniqueQuestions.Count < minTarget)
+            {
+                var retryNonce = $"{request.VariationNonce}-{Guid.NewGuid():N}";
+                if (retryNonce.Length > 64)
+                {
+                    retryNonce = retryNonce[..64];
+                }
+
+                var retryGenerated = await _geminiSummaryService.GenerateQuizAsync(
+                    BuildQuizGenerationSource(
+                        sourceText,
+                        retryNonce,
+                        previousQuestionTexts,
+                        forceFreshCoverage: true),
+                    totalQuestions,
+                    difficulty,
+                    quizType,
+                    cancellationToken);
+
+                var retryUnique = BuildUniqueQuestions(
+                    retryGenerated.Questions,
+                    previousQuestionSignatures,
+                    totalQuestions,
+                    existingQuestions: uniqueQuestions);
+
+                uniqueQuestions = retryUnique;
+            }
+
+            if (uniqueQuestions.Count == 0)
             {
                 throw new InvalidOperationException("AI không sinh được câu hỏi phù hợp từ nội dung này.");
             }
@@ -99,11 +147,11 @@ namespace Web_Project.Services.Quiz
                 ContentId = content.ContentId,
                 UserId = userId,
                 IsGuest = isGuest,
-                TotalQuestions = generated.Questions.Count,
+                TotalQuestions = uniqueQuestions.Count,
                 Difficulty = difficulty,
                 QuizType = quizType,
                 CreatedAt = now,
-                Questions = generated.Questions.Select(MapQuestion).ToList()
+                Questions = uniqueQuestions.Select(MapQuestion).ToList()
             };
 
             _dbContext.Quizzes.Add(quiz);
@@ -287,13 +335,126 @@ namespace Web_Project.Services.Quiz
             };
         }
 
-        private static string BuildQuizGenerationSource(string sourceText, string? variationNonce)
+        private static string BuildQuizGenerationSource(
+            string sourceText,
+            string? variationNonce,
+            IReadOnlyList<string> previousQuestions,
+            bool forceFreshCoverage)
         {
             var nonce = string.IsNullOrWhiteSpace(variationNonce)
                 ? Guid.NewGuid().ToString("N")
                 : variationNonce.Trim();
 
-            return $"{sourceText}\n\nMA PHIEN DE: {nonce}";
+            var sb = new StringBuilder();
+            sb.AppendLine(sourceText);
+            sb.AppendLine();
+            sb.AppendLine($"MA PHIEN DE: {nonce}");
+
+            if (previousQuestions.Count > 0)
+            {
+                sb.AppendLine();
+                sb.AppendLine("CAC CAU HOI DA TUNG DUNG (CAM LAP LAI):");
+                foreach (var question in previousQuestions.Take(24))
+                {
+                    sb.AppendLine($"- {question}");
+                }
+            }
+
+            if (forceFreshCoverage)
+            {
+                sb.AppendLine();
+                sb.AppendLine("YEU CAU BAT BUOC: BO DE MOI PHAI TAP TRUNG VAO CAC Y/CHU DE KHAC VOI DANH SACH CAM LAP O TREN. KHONG DOI CAU CHU DE CHE GIAU NOI DUNG GIONG NHAU.");
+            }
+
+            return sb.ToString();
+        }
+
+        private async Task<List<string>> GetPreviousQuestionTextsAsync(
+            int contentId,
+            int? userId,
+            bool isGuest,
+            CancellationToken cancellationToken)
+        {
+            if (isGuest || !userId.HasValue)
+            {
+                return [];
+            }
+
+            return await _dbContext.Quizzes
+                .AsNoTracking()
+                .Where(x => x.ContentId == contentId && x.UserId == userId.Value && !x.IsGuest)
+                .OrderByDescending(x => x.CreatedAt)
+                .Take(6)
+                .SelectMany(x => x.Questions.Select(q => q.QuestionText))
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Distinct()
+                .Take(40)
+                .ToListAsync(cancellationToken);
+        }
+
+        private static List<AiQuizQuestion> BuildUniqueQuestions(
+            IEnumerable<AiQuizQuestion> incoming,
+            HashSet<string> forbiddenSignatures,
+            int maxCount,
+            IReadOnlyList<AiQuizQuestion>? existingQuestions = null)
+        {
+            var output = existingQuestions is null ? new List<AiQuizQuestion>() : [..existingQuestions];
+            var seen = output
+                .Select(x => NormalizeQuestionSignature(x.QuestionText))
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var question in incoming)
+            {
+                if (output.Count >= maxCount)
+                {
+                    break;
+                }
+
+                var signature = NormalizeQuestionSignature(question.QuestionText);
+                if (string.IsNullOrWhiteSpace(signature))
+                {
+                    continue;
+                }
+
+                if (forbiddenSignatures.Contains(signature) || seen.Contains(signature))
+                {
+                    continue;
+                }
+
+                seen.Add(signature);
+                output.Add(question);
+            }
+
+            return output;
+        }
+
+        private static string NormalizeQuestionSignature(string value)
+        {
+            var raw = (value ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(raw))
+            {
+                return string.Empty;
+            }
+
+            var noDiacritics = RemoveDiacritics(raw).ToLowerInvariant();
+            var compact = Regex.Replace(noDiacritics, "[^a-z0-9]+", " ").Trim();
+            return compact;
+        }
+
+        private static string RemoveDiacritics(string text)
+        {
+            var normalized = text.Normalize(NormalizationForm.FormD);
+            var sb = new StringBuilder(normalized.Length);
+            foreach (var c in normalized)
+            {
+                if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+                {
+                    sb.Append(c);
+                }
+            }
+
+            return sb.ToString().Normalize(NormalizationForm.FormC);
         }
 
         private static string NormalizeSelectedAnswer(string raw)
