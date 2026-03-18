@@ -1,16 +1,16 @@
 namespace Web_Project.Models
 {
-    public class GeminiSettings
+    public class GroqSettings
     {
-        public string ApiKey { get; set; } = string.Empty;
+        public string GroqApiKey { get; set; } = string.Empty;
 
-        public string BaseUrl { get; set; } = "https://generativelanguage.googleapis.com";
+        public string BaseUrl { get; set; } = "https://api.groq.com/openai";
 
-        public string TextModel { get; set; } = "gemini-2.0-flash";
+        public string TextModel { get; set; } = "llama-3.3-70b-versatile";
 
-        public string VisionModel { get; set; } = "gemini-2.0-flash";
+        public string VisionModel { get; set; } = "llama-3.2-90b-vision-preview";
 
-        public string AudioModel { get; set; } = "gemini-2.0-flash";
+        public string AudioModel { get; set; } = "whisper-large-v3-turbo";
 
         public int MaxInputCharacters { get; set; } = 16000;
 
@@ -32,9 +32,8 @@ namespace Web_Project.Models
 
         public List<string> FallbackModels { get; set; } =
         [
-            "gemini-2.5-flash",
-            "gemini-2.0-flash",
-            "gemini-flash-latest"
+            "llama-3.1-8b-instant",
+            "llama3-70b-8192"
         ];
     }
 }

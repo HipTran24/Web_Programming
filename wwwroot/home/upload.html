@@ -49,11 +49,11 @@
       <section class="glass p-4">
         <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
           <div>
-            <h3 class="fw-bold mb-1">Xử lý nội dung bằng AI</h3>
+            <h3 class="fw-bold mb-1">Upload</h3>
             <p class="text-muted-2 mb-0">
             </p>
           </div>
-          <span class="badge badge-soft">Giới hạn file 100MB</span>
+          <span class="badge badge-soft">Giới hạn file 10MB</span>
         </div>
 
         <form id="uploadForm" class="mt-4" novalidate>
@@ -133,12 +133,27 @@
           </div>
 
           <div class="mb-3">
-            <div class="upload-section-title mb-1">Tóm tắt</div>
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <div class="upload-section-title mb-0">Tóm tắt</div>
+              <button id="expandSummaryButton" type="button" class="btn btn-outline-light btn-sm panel-expand-btn" disabled aria-label="Mở rộng tóm tắt" title="Mở rộng tóm tắt">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M9 3H3v6m0-6 7 7M15 3h6v6m0-6-7 7M9 21H3v-6m0 6 7-7M15 21h6v-6m0 6-7-7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
             <div id="resultSummary" class="p-3 rounded upload-summary-scroll">Chưa có tóm tắt.</div>
           </div>
 
           <div class="mb-3">
-            <div class="upload-section-title mb-1">Ý chính</div>
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <div id="resultKeyPointsTitle" class="upload-section-title mb-0">Ý chính</div>
+              <button id="expandKeyPointsButton" type="button" class="btn btn-outline-light btn-sm panel-expand-btn" disabled aria-label="Mở rộng ý chính" title="Mở rộng ý chính">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M9 3H3v6m0-6 7 7M15 3h6v6m0-6-7 7M9 21H3v-6m0 6 7-7M15 21h6v-6m0 6-7-7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            <div id="resultKnowledgeHint" class="small text-muted-2 mb-2 d-none"></div>
             <div class="upload-keypoints-scroll p-3 rounded">
               <ul id="resultKeyPoints" class="mb-0 ps-3">
                 <li>Chưa có ý chính.</li>
@@ -212,6 +227,35 @@
           </div>
 
           <div id="quizWrongList" class="quiz-wrong-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="summaryExpandModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+      <div class="modal-content panel-expand-modal-content">
+        <div class="modal-header border-0 pb-1">
+          <h5 class="modal-title fw-bold">Tóm tắt đầy đủ</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body pt-2">
+          <div id="summaryExpandContent" class="panel-expand-summary-content"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="keyPointsExpandModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+      <div class="modal-content panel-expand-modal-content">
+        <div class="modal-header border-0 pb-1">
+          <h5 class="modal-title fw-bold">Ý chính đầy đủ</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body pt-2">
+          <div id="keyPointsExpandHint" class="small text-muted-2 mb-2 d-none"></div>
+          <ul id="keyPointsExpandList" class="panel-expand-keypoints-list mb-0 ps-3"></ul>
         </div>
       </div>
     </div>

@@ -11,14 +11,14 @@ namespace Web_Project.Services.Quiz
     {
 
         private readonly AppDbContext _dbContext;
-        private readonly IGeminiSummaryService _geminiSummaryService;
+        private readonly IGroqSummaryService _groqSummaryService;
 
         public QuizGenerationService(
             AppDbContext dbContext,
-            IGeminiSummaryService geminiSummaryService)
+            IGroqSummaryService groqSummaryService)
         {
             _dbContext = dbContext;
-            _geminiSummaryService = geminiSummaryService;
+            _groqSummaryService = groqSummaryService;
         }
 
         public async Task<GenerateQuizResponse> GenerateQuizAsync(
@@ -95,7 +95,7 @@ namespace Web_Project.Services.Quiz
                 .Where(x => !string.IsNullOrWhiteSpace(x))
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-            var generated = await _geminiSummaryService.GenerateQuizAsync(
+            var generated = await _groqSummaryService.GenerateQuizAsync(
                 BuildQuizGenerationSource(sourceText, request.VariationNonce, previousQuestionTexts, forceFreshCoverage: false),
                 totalQuestions,
                 difficulty,
@@ -116,7 +116,7 @@ namespace Web_Project.Services.Quiz
                     retryNonce = retryNonce[..64];
                 }
 
-                var retryGenerated = await _geminiSummaryService.GenerateQuizAsync(
+                var retryGenerated = await _groqSummaryService.GenerateQuizAsync(
                     BuildQuizGenerationSource(
                         sourceText,
                         retryNonce,

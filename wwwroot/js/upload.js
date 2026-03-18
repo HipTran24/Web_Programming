@@ -26,6 +26,23 @@
   const resultFileBadge = document.getElementById("resultFileBadge");
   const resultSummary = document.getElementById("resultSummary");
   const resultKeyPoints = document.getElementById("resultKeyPoints");
+  const resultKeyPointsTitle = document.getElementById("resultKeyPointsTitle");
+  const resultKnowledgeHint = document.getElementById("resultKnowledgeHint");
+  const expandSummaryButton = document.getElementById("expandSummaryButton");
+  const expandKeyPointsButton = document.getElementById("expandKeyPointsButton");
+  const summaryExpandModal = document.getElementById("summaryExpandModal");
+  const keyPointsExpandModal = document.getElementById("keyPointsExpandModal");
+  const summaryExpandContent = document.getElementById("summaryExpandContent");
+  const keyPointsExpandList = document.getElementById("keyPointsExpandList");
+  const keyPointsExpandHint = document.getElementById("keyPointsExpandHint");
+  const summaryExpandModalInstance =
+    summaryExpandModal && window.bootstrap?.Modal
+      ? new window.bootstrap.Modal(summaryExpandModal)
+      : null;
+  const keyPointsExpandModalInstance =
+    keyPointsExpandModal && window.bootstrap?.Modal
+      ? new window.bootstrap.Modal(keyPointsExpandModal)
+      : null;
 
   const quizConfigForm = document.getElementById("quizConfigForm");
   const quizQuestionCount = document.getElementById("quizQuestionCount");
@@ -52,6 +69,9 @@
   let generatingQuiz = false;
   let submittingQuiz = false;
   let currentQuiz = null;
+  let latestExpandedSummary = "";
+  let latestExpandedKeyPointsHtml = "";
+  let latestExpandedKeyPointsHint = "";
 
   const escapeHtml = (text) =>
     String(text || "")
@@ -222,6 +242,101 @@
     };
   };
 
+  const detectDominantProfile = (data, normalized, rawSource, mode) => {
+    const source = `${String(rawSource || "")} ${String(data?.url || "")}`.toLowerCase();
+    const text = `${String(normalized?.summary || "")} ${(normalized?.keyPoints || []).join(" ")}`.toLowerCase();
+    const inputType = String(data?.inputType || mode || "").toLowerCase();
+
+    const newsLikeSource = /(vnexpress|tuoitre|thanhnien|dantri|vietnamnet|vtv|baomoi|cafef|kinhtedothi|reuters|bbc|cnn|news)/i.test(source);
+    const infoSignals = /(thoi su|thời sự|ban tin|bản tin|su kien|sự kiện|dien bien|diễn biến|so lieu|số liệu|bao cao|báo cáo|phong su|phóng sự|ngay|ngày|thang|tháng|nam|năm)/i.test(text);
+    const knowledgeSignals = /(khai niem|khái niệm|dinh nghia|định nghĩa|nguyen ly|nguyên lý|ly thuyet|lý thuyết|cong thuc|công thức|quy tac|quy tắc|phuong phap|phương pháp|chuong|chương|bai hoc|bài học)/i.test(text);
+
+    if (newsLikeSource || infoSignals) {
+      return "Thông tin";
+    }
+
+    if (knowledgeSignals) {
+      return "Kiến thức";
+    }
+
+    if (inputType === "pdf" || inputType === "docx" || inputType === "text") {
+      return "Kiến thức";
+    }
+
+    return "Thông tin";
+  };
+
+  const normalizeVideoTagLabel = (tag) => {
+    const normalized = String(tag || "").trim().toLowerCase();
+    if (!normalized) {
+      return "Thông tin";
+    }
+    if (normalized.includes("thuật ngữ") || normalized.includes("thuat ngu")) {
+      return "Thuật ngữ";
+    }
+    if (normalized.includes("mốc") || normalized.includes("moc") || normalized.includes("thời gian") || normalized.includes("timeline")) {
+      return "Mốc thời gian";
+    }
+    if (normalized.includes("thông tin") || normalized.includes("thong tin") || normalized.includes("fact") || normalized.includes("chi tiết")) {
+      return "Thông tin";
+    }
+    if (normalized.includes("kiến thức") || normalized.includes("kien thuc") || normalized.includes("khái niệm") || normalized.includes("khai niem") || normalized.includes("nguyên lý") || normalized.includes("quy tắc") || normalized.includes("công thức")) {
+      return "Kiến thức";
+    }
+    return "Thông tin";
+  };
+
+  const inferVideoTagFromText = (text) => {
+    const normalized = String(text || "").trim().toLowerCase();
+    if (!normalized) {
+      return "Thông tin";
+    }
+
+    if (/(\d{1,2}:\d{2}|\bnăm\b|\btháng\b|\bngày\b|trước đó|sau đó|giai đoạn)/i.test(normalized)) {
+      return "Mốc thời gian";
+    }
+    if (/là gì|định nghĩa|khái niệm|nguyên lý|công thức|quy tắc|phương pháp|điều kiện|kết luận|suy ra/i.test(normalized)) {
+      return "Kiến thức";
+    }
+    if (/số liệu|thống kê|ví dụ|trường hợp|thông tin|chi tiết|dữ liệu|fact|mô tả/i.test(normalized)) {
+      return "Thông tin";
+    }
+
+    return normalized.length > 110 ? "Thông tin" : "Kiến thức";
+  };
+
+  const parseTaggedPoint = (point) => {
+    const raw = String(point || "").trim();
+    const tagged = raw.match(/^\[(.+?)\]\s*(.+)$/);
+    if (tagged) {
+      return { tag: normalizeVideoTagLabel(tagged[1]), text: tagged[2] || "-" };
+    }
+
+    return {
+      tag: inferVideoTagFromText(raw),
+      text: raw || "-",
+    };
+  };
+
+  const parsePointWithProfile = (point, dominantProfile) => {
+    const parsed = parseTaggedPoint(point);
+    const normalizedTag = String(parsed.tag || "").toLowerCase();
+
+    if (normalizedTag === "thuật ngữ" || normalizedTag === "mốc thời gian") {
+      return parsed;
+    }
+
+    return {
+      tag: dominantProfile,
+      text: parsed.text,
+    };
+  };
+
+  const isVideoResult = (data, visual) => {
+    const type = String(data?.inputType || "").toLowerCase();
+    return type === "video" || visual?.kind === "video";
+  };
+
   const resetQuizUi = () => {
     currentQuiz = null;
     if (quizFormBlock) {
@@ -235,6 +350,30 @@
     }
     if (quizMeta) {
       quizMeta.textContent = "Chưa có đề.";
+    }
+  };
+
+  const resetExpandPanels = () => {
+    latestExpandedSummary = "";
+    latestExpandedKeyPointsHtml = "";
+    latestExpandedKeyPointsHint = "";
+
+    if (expandSummaryButton) {
+      expandSummaryButton.disabled = true;
+    }
+    if (expandKeyPointsButton) {
+      expandKeyPointsButton.disabled = true;
+    }
+
+    if (summaryExpandContent) {
+      summaryExpandContent.textContent = "Chưa có tóm tắt để hiển thị.";
+    }
+    if (keyPointsExpandList) {
+      keyPointsExpandList.innerHTML = "<li>Chưa có ý chính.</li>";
+    }
+    if (keyPointsExpandHint) {
+      keyPointsExpandHint.classList.add("d-none");
+      keyPointsExpandHint.textContent = "";
     }
   };
 
@@ -258,7 +397,14 @@
       resultFileName.textContent = displayName;
     }
     if (resultFileMeta) {
-      resultFileMeta.textContent = mode === "url" ? "Nguồn URL đã xử lý" : "Tệp nguồn đã xử lý";
+      const isVideo = isVideoResult(data, visual);
+      if (isVideo) {
+        resultFileMeta.textContent = data?.usedTranscription
+          ? "Nguồn video đã trích xuất phụ đề/lời thoại để phân tích."
+          : "Video được phân tích từ metadata (tiêu đề/mô tả); nên cung cấp video có phụ đề để kết quả sâu hơn.";
+      } else {
+        resultFileMeta.textContent = mode === "url" ? "Nguồn URL đã xử lý" : "Tệp nguồn đã xử lý";
+      }
     }
     if (resultFileIcon) {
       resultFileIcon.textContent = visual.icon;
@@ -270,8 +416,58 @@
     if (resultSummary) {
       resultSummary.textContent = normalized.summary;
     }
+    latestExpandedSummary = normalized.summary;
+
+    const isVideo = isVideoResult(data, visual);
+    const dominantProfile = detectDominantProfile(data, normalized, rawSource, mode);
+    if (resultKeyPointsTitle) {
+      resultKeyPointsTitle.textContent = "Ý chính";
+    }
+    let keyPointsHintText = "";
+    if (resultKnowledgeHint) {
+      resultKnowledgeHint.classList.remove("d-none");
+      keyPointsHintText = `Phân loại nội dung: ${dominantProfile}. Nhãn đã được đồng nhất để tránh lộn xộn.`;
+      resultKnowledgeHint.textContent = keyPointsHintText;
+    }
+
     if (resultKeyPoints) {
-      resultKeyPoints.innerHTML = normalized.keyPoints.map((point) => `<li>${escapeHtml(point)}</li>`).join("");
+      const keyPointsHtml = normalized.keyPoints
+        .map((point) => {
+          const parsed = parsePointWithProfile(point, dominantProfile);
+          const tagClass = parsed.tag === "Thông tin"
+            ? "upload-keypoint-tag upload-keypoint-tag--info"
+            : parsed.tag === "Kiến thức"
+              ? "upload-keypoint-tag upload-keypoint-tag--knowledge"
+              : "upload-keypoint-tag";
+          return `<li class="upload-keypoint-item"><span class="${tagClass}">${escapeHtml(parsed.tag)}</span><span class="upload-keypoint-text">${escapeHtml(parsed.text)}</span></li>`;
+        })
+        .join("");
+
+      resultKeyPoints.innerHTML = keyPointsHtml;
+      latestExpandedKeyPointsHtml = keyPointsHtml;
+      latestExpandedKeyPointsHint = keyPointsHintText;
+    }
+
+    if (expandSummaryButton) {
+      expandSummaryButton.disabled = !latestExpandedSummary;
+    }
+    if (expandKeyPointsButton) {
+      expandKeyPointsButton.disabled = !latestExpandedKeyPointsHtml;
+    }
+    if (summaryExpandContent) {
+      summaryExpandContent.textContent = latestExpandedSummary || "Chưa có tóm tắt để hiển thị.";
+    }
+    if (keyPointsExpandList) {
+      keyPointsExpandList.innerHTML = latestExpandedKeyPointsHtml || "<li>Chưa có ý chính.</li>";
+    }
+    if (keyPointsExpandHint) {
+      if (latestExpandedKeyPointsHint) {
+        keyPointsExpandHint.classList.remove("d-none");
+        keyPointsExpandHint.textContent = latestExpandedKeyPointsHint;
+      } else {
+        keyPointsExpandHint.classList.add("d-none");
+        keyPointsExpandHint.textContent = "";
+      }
     }
 
     latestContentId = Number(data?.contentId || 0);
@@ -315,7 +511,7 @@
       .join("");
 
     if (quizMeta) {
-      quizMeta.textContent = `Quiz #${quiz.quizId} • ${questions.length} câu • Độ khó: ${quiz.difficulty || "medium"}`;
+      quizMeta.textContent = `${questions.length} câu • Độ khó: ${quiz.difficulty || "medium"}`;
     }
 
     quizFormBlock.classList.remove("d-none");
@@ -369,9 +565,9 @@
                 </div>
                 <div class="small text-muted-2">Bạn chọn: ${escapeHtml(selectedAnswer || "(bỏ trống)")}</div>
                 ${isWrong
-                  ? `<div class="small text-success-emphasis">Đáp án đúng: ${escapeHtml(wrongDetail.correctAnswer || "")}</div>
+                  ? `<div class="quiz-correct-answer-line">Đáp án đúng: ${escapeHtml(wrongDetail.correctAnswer || "")}</div>
                      <div class="small text-muted-2 mt-1">Giải thích: ${escapeHtml(wrongDetail.explanation || "Không có giải thích.")}</div>`
-                  : '<div class="small text-success-emphasis">Bạn trả lời đúng.</div>'}
+                  : '<div class="quiz-correct-status-line">Bạn trả lời đúng.</div>'}
               </article>
             `;
           })
@@ -697,7 +893,35 @@
     });
   }
 
+  if (expandSummaryButton) {
+    expandSummaryButton.addEventListener("click", () => {
+      if (summaryExpandContent) {
+        summaryExpandContent.textContent = latestExpandedSummary || "Chưa có tóm tắt để hiển thị.";
+      }
+      summaryExpandModalInstance?.show();
+    });
+  }
+
+  if (expandKeyPointsButton) {
+    expandKeyPointsButton.addEventListener("click", () => {
+      if (keyPointsExpandList) {
+        keyPointsExpandList.innerHTML = latestExpandedKeyPointsHtml || "<li>Chưa có ý chính.</li>";
+      }
+      if (keyPointsExpandHint) {
+        if (latestExpandedKeyPointsHint) {
+          keyPointsExpandHint.classList.remove("d-none");
+          keyPointsExpandHint.textContent = latestExpandedKeyPointsHint;
+        } else {
+          keyPointsExpandHint.classList.add("d-none");
+          keyPointsExpandHint.textContent = "";
+        }
+      }
+      keyPointsExpandModalInstance?.show();
+    });
+  }
+
   setSelectedFile(null);
   resetQuizUi();
+  resetExpandPanels();
   setQuizButtonsState();
 })();

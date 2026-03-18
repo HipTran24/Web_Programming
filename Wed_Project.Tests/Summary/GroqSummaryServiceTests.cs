@@ -8,25 +8,21 @@ using Web_Project.Services.AI;
 
 namespace Web_Project.Tests.Summary;
 
-public sealed class GeminiSummaryServiceTests
+public sealed class GroqSummaryServiceTests
 {
     [Fact]
     public async Task SummarizeTextAsync_Fallbacks_WhenSuccessResponseMissingContentParts()
     {
         var handler = new SequenceHttpMessageHandler(
             _ => JsonResponse(HttpStatusCode.OK, """
-                {"candidates":[{"finishReason":"SAFETY"}]}
+                {"id":"1","choices":[{"message":{}}]}
                 """),
             _ => JsonResponse(HttpStatusCode.OK, """
                 {
-                  "candidates": [
+                  "choices": [
                     {
-                      "content": {
-                        "parts": [
-                          {
-                            "text": "{\"summary\":\"Tom tat\",\"keyPoints\":[\"Y1\"]}"
-                          }
-                        ]
+                      "message": {
+                        "content": "{\"summary\":\"Tom tat\",\"keyPoints\":[\"Y1\"]}"
                       }
                     }
                   ]
@@ -44,24 +40,21 @@ public sealed class GeminiSummaryServiceTests
     }
 
     [Fact]
-    public async Task SummarizeTextAsync_ThrowsFriendlyMessage_WhenPromptFeedbackBlocksContent()
+    public async Task SummarizeTextAsync_ThrowsFriendlyMessage_WhenRateLimited()
     {
         var blockedBody = """
             {
-              "promptFeedback": {
-                "blockReason": "SAFETY",
-                "blockReasonMessage": "Blocked by safety policy"
+              "error": {
+                "message": "Rate limit reached. retry in 15s",
+                "type": "rate_limit_exceeded",
+                "code": 429
               },
-              "candidates": []
+              "choices": []
             }
             """;
 
         var handler = new SequenceHttpMessageHandler(
-            _ => JsonResponse(HttpStatusCode.OK, blockedBody),
-            _ => JsonResponse(HttpStatusCode.OK, blockedBody),
-            _ => JsonResponse(HttpStatusCode.OK, blockedBody),
-            _ => JsonResponse(HttpStatusCode.OK, blockedBody),
-            _ => JsonResponse(HttpStatusCode.OK, blockedBody)
+            _ => JsonResponse(HttpStatusCode.TooManyRequests, blockedBody)
         );
 
         var service = CreateService(handler);
@@ -69,7 +62,7 @@ public sealed class GeminiSummaryServiceTests
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             service.SummarizeTextAsync("Noi dung", "text", CancellationToken.None));
 
-        Assert.Contains("Gemini chặn nội dung đầu vào", ex.Message);
+        Assert.Contains("Groq Cloud", ex.Message);
     }
 
     [Fact]
@@ -80,21 +73,17 @@ public sealed class GeminiSummaryServiceTests
                 {
                   "error": {
                     "code": 503,
-                    "status": "UNAVAILABLE",
+                    "type": "service_unavailable",
                     "message": "This model is currently experiencing high demand. Please try again later."
                   }
                 }
                 """),
             _ => JsonResponse(HttpStatusCode.OK, """
                 {
-                  "candidates": [
+                  "choices": [
                     {
-                      "content": {
-                        "parts": [
-                          {
-                            "text": "{\"summary\":\"Da fallback\",\"keyPoints\":[\"Y2\"]}"
-                          }
-                        ]
+                      "message": {
+                        "content": "{\"summary\":\"Da fallback\",\"keyPoints\":[\"Y2\"]}"
                       }
                     }
                   ]
@@ -111,24 +100,24 @@ public sealed class GeminiSummaryServiceTests
         Assert.True(handler.RequestUris.Count >= 2);
     }
 
-    private static GeminiSummaryService CreateService(HttpMessageHandler handler)
+    private static GroqSummaryService CreateService(HttpMessageHandler handler)
     {
-        var settings = new GeminiSettings
+        var settings = new GroqSettings
         {
-            ApiKey = "test-key",
-            BaseUrl = "https://generativelanguage.googleapis.com",
-            TextModel = "gemini-a",
-            VisionModel = "gemini-a",
-            AudioModel = "gemini-a",
+            GroqApiKey = "test-key",
+          BaseUrl = "https://api.groq.com/openai",
+          TextModel = "llama-a",
+          VisionModel = "llama-v",
+          AudioModel = "whisper-a",
             MaxInputCharacters = 24000,
-            FallbackModels = ["gemini-b"]
+          FallbackModels = ["llama-b"]
         };
 
-        return new GeminiSummaryService(
+        return new GroqSummaryService(
             new HttpClient(handler),
             Options.Create(settings),
           new MemoryCache(new MemoryCacheOptions()),
-            NullLogger<GeminiSummaryService>.Instance);
+            NullLogger<GroqSummaryService>.Instance);
     }
 
     private static HttpResponseMessage JsonResponse(HttpStatusCode statusCode, string body)

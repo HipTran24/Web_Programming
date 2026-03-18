@@ -12,35 +12,35 @@ public sealed class SummaryProcessingServiceTextTests
     public async Task SummarizeTextAsync_ReturnsSummary_WhenInputIsValid()
     {
         await using var dbContext = CreateDbContext();
-        var gemini = new FakeGeminiSummaryService();
-        var service = CreateService(gemini, dbContext);
+        var groq = new FakeGroqSummaryService();
+        var service = CreateService(groq, dbContext);
 
         var response = await service.SummarizeTextAsync("  Day la noi dung can tom tat.  ", "text", null, true, CancellationToken.None);
 
         var content = await dbContext.Contents.Include(x => x.AIProcess).SingleAsync();
 
         Assert.Equal(content.ContentId, response.ContentId);
-        Assert.Equal("tom-tat-tu-fake-gemini.txt", response.FileName);
+        Assert.Equal("tom-tat-tu-fake-groq.txt", response.FileName);
         Assert.Equal("text", response.InputType);
-        Assert.Equal("Tom tat tu fake gemini", response.Summary);
+        Assert.Equal("Tom tat tu fake groq", response.Summary);
         Assert.Contains("Y chinh 1", response.KeyPoints);
         Assert.True(response.ExtractedTextLength > 0);
-        Assert.Equal("text", gemini.LastSourceHint);
-        Assert.Equal("Day la noi dung can tom tat.", gemini.LastText);
+        Assert.Equal("text", groq.LastSourceHint);
+        Assert.Equal("Day la noi dung can tom tat.", groq.LastText);
         Assert.Equal("FileUpload", content.SourceType);
         Assert.NotNull(content.AIProcess);
-        Assert.Equal("Tom tat tu fake gemini", content.AIProcess!.Summary);
+        Assert.Equal("Tom tat tu fake groq", content.AIProcess!.Summary);
     }
 
     [Fact]
     public async Task SummarizeTextAsync_GeneratesMeaningfulFileName_FromVietnameseSummary()
     {
         await using var dbContext = CreateDbContext();
-        var gemini = new FakeGeminiSummaryService
+        var groq = new FakeGroqSummaryService
         {
             NextSummary = "Lịch sử Việt Nam và các mốc quan trọng"
         };
-        var service = CreateService(gemini, dbContext);
+        var service = CreateService(groq, dbContext);
 
         var response = await service.SummarizeTextAsync("Noi dung lich su", "text", null, true, CancellationToken.None);
 
@@ -51,8 +51,8 @@ public sealed class SummaryProcessingServiceTextTests
     public async Task SummarizeTextAsync_Throws_WhenInputIsEmpty()
     {
         await using var dbContext = CreateDbContext();
-        var gemini = new FakeGeminiSummaryService();
-        var service = CreateService(gemini, dbContext);
+        var groq = new FakeGroqSummaryService();
+        var service = CreateService(groq, dbContext);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             service.SummarizeTextAsync("   ", null, null, true, CancellationToken.None));
@@ -62,20 +62,20 @@ public sealed class SummaryProcessingServiceTextTests
     public async Task SummarizeTextAsync_TrimsAndLimits_SourceHint()
     {
         await using var dbContext = CreateDbContext();
-        var gemini = new FakeGeminiSummaryService();
-        var service = CreateService(gemini, dbContext);
+        var groq = new FakeGroqSummaryService();
+        var service = CreateService(groq, dbContext);
         var longHint = $"  {new string('v', 80)}  ";
 
         var response = await service.SummarizeTextAsync("Noi dung", longHint, null, true, CancellationToken.None);
 
         Assert.Equal(64, response.InputType.Length);
-        Assert.Equal(response.InputType, gemini.LastSourceHint);
+        Assert.Equal(response.InputType, groq.LastSourceHint);
     }
 
-    private static SummaryProcessingService CreateService(FakeGeminiSummaryService gemini, AppDbContext dbContext)
+    private static SummaryProcessingService CreateService(FakeGroqSummaryService groq, AppDbContext dbContext)
     {
         return new SummaryProcessingService(
-            gemini,
+            groq,
             dbContext,
             new StubHttpClientFactory(),
             NullLogger<SummaryProcessingService>.Instance);
@@ -90,13 +90,13 @@ public sealed class SummaryProcessingServiceTextTests
         return new AppDbContext(options);
     }
 
-    private sealed class FakeGeminiSummaryService : IGeminiSummaryService
+    private sealed class FakeGroqSummaryService : IGroqSummaryService
     {
         public string LastText { get; private set; } = string.Empty;
 
         public string LastSourceHint { get; private set; } = string.Empty;
 
-        public string NextSummary { get; set; } = "Tom tat tu fake gemini";
+        public string NextSummary { get; set; } = "Tom tat tu fake groq";
 
         public Task<AiSummaryResult> SummarizeTextAsync(string text, string sourceHint, CancellationToken cancellationToken)
         {

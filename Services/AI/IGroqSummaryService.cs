@@ -1,6 +1,6 @@
 namespace Web_Project.Services.AI
 {
-    public interface IGeminiSummaryService
+    public interface IGroqSummaryService
     {
         Task<AiSummaryResult> SummarizeTextAsync(
             string text,

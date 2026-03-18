@@ -1,25 +1,25 @@
+using System.Collections.Concurrent;
+using System.Globalization;
+using System.Net;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Net;
 using System.Text.RegularExpressions;
-using System.Collections.Concurrent;
-using System.Security.Cryptography;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Web_Project.Models;
 
 namespace Web_Project.Services.AI
 {
-    public class GeminiSummaryService : IGeminiSummaryService
+    public class GroqSummaryService : IGroqSummaryService
     {
-        private const int MaxInlineAudioBytes = 20 * 1024 * 1024;
-        private const string CacheKeyPrefixTextSummary = "gemini:summary:text:";
-        private const string CacheKeyPrefixImageSummary = "gemini:summary:image:";
+        private const string CacheKeyPrefixTextSummary = "ai:summary:text:";
+        private const string CacheKeyPrefixImageSummary = "ai:summary:image:";
         private static readonly ConcurrentDictionary<int, SemaphoreSlim> ConcurrencyLimiters = new();
 
         private readonly HttpClient _httpClient;
-        private readonly GeminiSettings _settings;
-        private readonly ILogger<GeminiSummaryService> _logger;
+        private readonly GroqSettings _settings;
+        private readonly ILogger<GroqSummaryService> _logger;
         private readonly IMemoryCache _cache;
         private readonly TimeSpan _requestTimeout;
         private readonly int _maxModelCandidates;
@@ -29,11 +29,11 @@ namespace Web_Project.Services.AI
         private readonly SemaphoreSlim _concurrencyLimiter;
         private readonly TimeSpan _queueWaitTimeout;
 
-        public GeminiSummaryService(
+        public GroqSummaryService(
             HttpClient httpClient,
-            IOptions<GeminiSettings> settings,
+            IOptions<GroqSettings> settings,
             IMemoryCache cache,
-            ILogger<GeminiSummaryService> logger)
+            ILogger<GroqSummaryService> logger)
         {
             _httpClient = httpClient;
             _settings = settings.Value;
@@ -54,7 +54,7 @@ namespace Web_Project.Services.AI
             string sourceHint,
             CancellationToken cancellationToken)
         {
-            EnsureApiKey();
+            EnsureGroqApiKey();
 
             var normalized = NormalizeInputText(text, _settings.MaxInputCharacters);
             if (string.IsNullOrWhiteSpace(normalized))
@@ -68,7 +68,18 @@ namespace Web_Project.Services.AI
                 return cachedSummary;
             }
 
-            var prompt =
+            var normalizedSourceHint = (sourceHint ?? string.Empty).Trim().ToLowerInvariant();
+            var prompt = normalizedSourceHint == "video"
+                ?
+                "Bạn là trợ lý học tập AI Study chuyên phân tích video bài giảng. " +
+                "Từ dữ liệu video bên dưới, hãy tạo tóm tắt nội dung rõ ràng và dễ học. " +
+                "Bắt buộc trả về JSON hợp lệ theo định dạng: " +
+                "{\"summary\":\"...\",\"keyPoints\":[\"[Kiến thức] ...\",\"[Thông tin] ...\",\"[Thuật ngữ] ...\",\"[Mốc thời gian] ...\"]}. " +
+                "Yêu cầu: summary dài 220-380 từ; keyPoints có 8-14 ý; mỗi ý cụ thể, có thông tin học được từ video, " +
+                "ưu tiên phân biệt đúng: [Kiến thức] cho khái niệm/nguyên lý/phương pháp; [Thông tin] cho dữ kiện/sự kiện/số liệu/chi tiết mô tả. " +
+                "không viết chung chung, không markdown, không code fence.\n\n" +
+                $"Nguồn: {sourceHint}\n\nNội dung video đã trích xuất:\n{normalized}"
+                :
                 "Bạn là trợ lý học tập AI Study. " +
                 "Hãy tóm tắt nội dung sau thành 1 đoạn văn tiếng Việt CHI TIẾT khoảng 280-450 từ, " +
                 "không được dưới 250 từ, giữ đủ ý chính theo trình tự nội dung, rõ ràng, không lan man. " +
@@ -77,11 +88,13 @@ namespace Web_Project.Services.AI
                 "Không thêm markdown/code fence.\n\n" +
                 $"Nguồn: {sourceHint}\n\nNội dung:\n{normalized}";
 
-            var generated = await GenerateContentAsync(
+            var generated = await GenerateChatCompletionAsync(
                 model: _settings.TextModel,
-                parts: [new { text = prompt }],
+                prompt: prompt,
                 temperature: 0.2,
-                responseMimeType: "application/json",
+                requireJsonObject: true,
+                imageBytes: null,
+                imageMimeType: null,
                 cancellationToken: cancellationToken);
 
             var parsed = ParseSummaryContent(generated);
@@ -95,7 +108,7 @@ namespace Web_Project.Services.AI
             string fileName,
             CancellationToken cancellationToken)
         {
-            EnsureApiKey();
+            EnsureGroqApiKey();
 
             if (imageBytes.Length == 0)
             {
@@ -114,22 +127,13 @@ namespace Web_Project.Services.AI
                 "{\"summary\":\"...\",\"keyPoints\":[\"...\",\"...\"]}. " +
                 $"Tên file: {fileName}. Không dùng markdown.";
 
-            var generated = await GenerateContentAsync(
+            var generated = await GenerateChatCompletionAsync(
                 model: _settings.VisionModel,
-                parts:
-                [
-                    new { text = prompt },
-                    new
-                    {
-                        inlineData = new
-                        {
-                            mimeType,
-                            data = Convert.ToBase64String(imageBytes)
-                        }
-                    }
-                ],
+                prompt: prompt,
                 temperature: 0.2,
-                responseMimeType: "application/json",
+                requireJsonObject: true,
+                imageBytes: imageBytes,
+                imageMimeType: mimeType,
                 cancellationToken: cancellationToken);
 
             var parsed = ParseSummaryContent(generated);
@@ -141,53 +145,106 @@ namespace Web_Project.Services.AI
             string audioFilePath,
             CancellationToken cancellationToken)
         {
-            EnsureApiKey();
+            EnsureGroqApiKey();
 
             if (!File.Exists(audioFilePath))
             {
                 throw new InvalidOperationException("Không tìm thấy file audio để phiên âm.");
             }
 
-            var audioBytes = await File.ReadAllBytesAsync(audioFilePath, cancellationToken);
-            if (audioBytes.Length == 0)
+            await using var audioStream = File.OpenRead(audioFilePath);
+            if (audioStream.Length == 0)
             {
                 throw new InvalidOperationException("File audio rỗng.");
             }
 
-            if (audioBytes.Length > MaxInlineAudioBytes)
+            if (!await WaitForSlotAsync(cancellationToken))
             {
                 throw new InvalidOperationException(
-                    "Audio sau khi tách từ video quá lớn cho Gemini inline input. Hãy dùng video ngắn hơn.");
+                    "Hệ thống AI đang bận xử lý nhiều yêu cầu. Vui lòng thử lại sau vài giây.");
             }
 
-            var generated = await GenerateContentAsync(
-                model: _settings.AudioModel,
-                parts:
-                [
-                    new
+            try
+            {
+                string? lastError = null;
+
+                foreach (var candidate in ResolveModelCandidates(_settings.AudioModel))
+                {
+                    for (var attempt = 0; attempt <= _maxRetriesPerModel; attempt++)
                     {
-                        text = "Hãy phiên âm chính xác audio sau thành văn bản tiếng Việt thuần, không thêm chú thích."
-                    },
-                    new
-                    {
-                        inlineData = new
+                        using var request = new HttpRequestMessage(HttpMethod.Post, BuildAudioTranscriptionEndpoint());
+                        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _settings.GroqApiKey);
+
+                        audioStream.Position = 0;
+                        var multipart = new MultipartFormDataContent();
+                        multipart.Add(new StringContent(candidate), "model");
+                        multipart.Add(new StringContent("text"), "response_format");
+                        var audioContent = new StreamContent(audioStream);
+                        audioContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("audio/mpeg");
+                        multipart.Add(audioContent, "file", Path.GetFileName(audioFilePath));
+                        request.Content = multipart;
+
+                        using var attemptCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                        attemptCts.CancelAfter(_requestTimeout);
+
+                        HttpResponseMessage response;
+                        string responseBody;
+                        try
                         {
-                            mimeType = "audio/mpeg",
-                            data = Convert.ToBase64String(audioBytes)
+                            response = await _httpClient.SendAsync(request, attemptCts.Token);
+                            responseBody = await response.Content.ReadAsStringAsync(attemptCts.Token);
+                        }
+                        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+                        {
+                            lastError = $"Groq timeout sau {(int)_requestTimeout.TotalSeconds}s với model '{candidate}'.";
+                            continue;
+                        }
+
+                        using (response)
+                        {
+                            if (response.IsSuccessStatusCode)
+                            {
+                                var transcript = responseBody.Trim();
+                                if (!string.IsNullOrWhiteSpace(transcript))
+                                {
+                                    return transcript;
+                                }
+
+                                throw new InvalidOperationException("Groq không trả transcript từ audio.");
+                            }
+
+                            var errorMessage = BuildProviderErrorMessage(response.StatusCode, responseBody, candidate);
+                            lastError = errorMessage;
+
+                            if (IsQuotaExceeded(response.StatusCode, responseBody))
+                            {
+                                throw new InvalidOperationException(errorMessage);
+                            }
+
+                            if (attempt < _maxRetriesPerModel && ShouldRetrySameModel(response.StatusCode, responseBody))
+                            {
+                                var delay = ResolveRetryDelay(response, responseBody);
+                                await Task.Delay(delay, cancellationToken);
+                                continue;
+                            }
+
+                            if (ShouldTryNextModel(response.StatusCode, responseBody))
+                            {
+                                break;
+                            }
+
+                            throw new InvalidOperationException(errorMessage);
                         }
                     }
-                ],
-                temperature: 0.0,
-                responseMimeType: null,
-                cancellationToken: cancellationToken);
+                }
 
-            var transcript = generated.Trim();
-            if (string.IsNullOrWhiteSpace(transcript))
-            {
-                throw new InvalidOperationException("Gemini không trả transcript từ audio.");
+                throw new InvalidOperationException(
+                    lastError ?? "Không thể phiên âm audio với model AI hiện tại.");
             }
-
-            return transcript;
+            finally
+            {
+                _concurrencyLimiter.Release();
+            }
         }
 
         public async Task<AiQuizResult> GenerateQuizAsync(
@@ -197,7 +254,7 @@ namespace Web_Project.Services.AI
             string quizType,
             CancellationToken cancellationToken)
         {
-            EnsureApiKey();
+            EnsureGroqApiKey();
 
             var normalized = NormalizeInputText(
                 sourceText,
@@ -223,21 +280,25 @@ namespace Web_Project.Services.AI
                 "Không thêm markdown, không code fence, không thêm text ngoài JSON.\n\n" +
                 $"Nội dung nguồn:\n{normalized}";
 
-            var generated = await GenerateContentAsync(
+            var generated = await GenerateChatCompletionAsync(
                 model: _settings.TextModel,
-                parts: [new { text = prompt }],
+                prompt: prompt,
                 temperature: 0.3,
-                responseMimeType: "application/json",
+                requireJsonObject: true,
+                imageBytes: null,
+                imageMimeType: null,
                 cancellationToken: cancellationToken);
 
             return ParseQuizContent(generated, boundedQuestionCount);
         }
 
-        private async Task<string> GenerateContentAsync(
+        private async Task<string> GenerateChatCompletionAsync(
             string model,
-            object[] parts,
+            string prompt,
             double temperature,
-            string? responseMimeType,
+            bool requireJsonObject,
+            byte[]? imageBytes,
+            string? imageMimeType,
             CancellationToken cancellationToken)
         {
             if (!await WaitForSlotAsync(cancellationToken))
@@ -248,108 +309,87 @@ namespace Web_Project.Services.AI
 
             try
             {
-            var generationConfig = new Dictionary<string, object>
-            {
-                ["temperature"] = temperature
-            };
+                string? lastError = null;
 
-            if (!string.IsNullOrWhiteSpace(responseMimeType))
-            {
-                generationConfig["responseMimeType"] = responseMimeType;
-            }
-
-            var payload = new
-            {
-                contents = new object[]
+                foreach (var candidate in ResolveModelCandidates(model))
                 {
-                    new
+                    for (var attempt = 0; attempt <= _maxRetriesPerModel; attempt++)
                     {
-                        role = "user",
-                        parts
-                    }
-                },
-                generationConfig
-            };
+                        var payload = BuildChatPayload(candidate, prompt, temperature, requireJsonObject, imageBytes, imageMimeType);
+                        var body = JsonSerializer.Serialize(payload);
 
-            var body = JsonSerializer.Serialize(payload);
-            string? lastError = null;
+                        using var request = new HttpRequestMessage(HttpMethod.Post, BuildChatCompletionEndpoint());
+                        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _settings.GroqApiKey);
+                        request.Content = new StringContent(body, Encoding.UTF8, "application/json");
 
-            foreach (var candidate in ResolveModelCandidates(model))
-            {
-                for (var attempt = 0; attempt <= _maxRetriesPerModel; attempt++)
-                {
-                    var endpoint = BuildEndpoint(candidate);
-                    using var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
-                    request.Content = new StringContent(body, Encoding.UTF8, "application/json");
+                        using var attemptCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                        attemptCts.CancelAfter(_requestTimeout);
 
-                    using var attemptCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                    attemptCts.CancelAfter(_requestTimeout);
-
-                    HttpResponseMessage response;
-                    string responseBody;
-                    try
-                    {
-                        response = await _httpClient.SendAsync(request, attemptCts.Token);
-                        responseBody = await response.Content.ReadAsStringAsync(attemptCts.Token);
-                    }
-                    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
-                    {
-                        lastError = $"Gemini timeout sau {(int)_requestTimeout.TotalSeconds}s với model '{candidate}'.";
-                        _logger.LogWarning("Gemini timed out for model {Model} after {TimeoutSeconds}s", candidate, (int)_requestTimeout.TotalSeconds);
-                        continue;
-                    }
-
-                    using (response)
-                    {
-                        if (response.IsSuccessStatusCode)
+                        HttpResponseMessage response;
+                        string responseBody;
+                        try
                         {
-                            try
-                            {
-                                return ExtractGeneratedText(responseBody);
-                            }
-                            catch (InvalidOperationException ex)
-                            {
-                                _logger.LogWarning(
-                                    "Gemini parse warning for model {Model}: {Message}. Response: {Response}",
-                                    candidate,
-                                    ex.Message,
-                                    Trim(responseBody, 350));
-
-                                lastError = $"Gemini phản hồi không có text hợp lệ với model '{candidate}': {ex.Message}";
-                                break;
-                            }
+                            response = await _httpClient.SendAsync(request, attemptCts.Token);
+                            responseBody = await response.Content.ReadAsStringAsync(attemptCts.Token);
                         }
-
-                        var isQuotaExceeded = IsQuotaExceeded(response.StatusCode, responseBody);
-                        var errorMessage = BuildGeminiErrorMessage(response.StatusCode, responseBody, candidate);
-                        _logger.LogError("Gemini request failed for model {Model}: {Error}", candidate, errorMessage);
-                        lastError = errorMessage;
-
-                        if (isQuotaExceeded)
+                        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
                         {
-                            throw new InvalidOperationException(errorMessage);
-                        }
-
-                        if (attempt < _maxRetriesPerModel && ShouldRetrySameModel(response.StatusCode, responseBody))
-                        {
-                            var delay = ResolveRetryDelay(response, responseBody);
-                            await Task.Delay(delay, cancellationToken);
+                            lastError = $"Groq timeout sau {(int)_requestTimeout.TotalSeconds}s với model '{candidate}'.";
+                            _logger.LogWarning("Groq timed out for model {Model} after {TimeoutSeconds}s", candidate, (int)_requestTimeout.TotalSeconds);
                             continue;
                         }
 
-                        if (ShouldTryNextModel(response.StatusCode, responseBody))
+                        using (response)
                         {
-                            _logger.LogWarning("Fallback to next Gemini model after failure on {Model}", candidate);
-                            break;
-                        }
+                            if (response.IsSuccessStatusCode)
+                            {
+                                try
+                                {
+                                    return ExtractGeneratedText(responseBody);
+                                }
+                                catch (InvalidOperationException ex)
+                                {
+                                    _logger.LogWarning(
+                                        "Groq parse warning for model {Model}: {Message}. Response: {Response}",
+                                        candidate,
+                                        ex.Message,
+                                        Trim(responseBody, 350));
 
-                        throw new InvalidOperationException(errorMessage);
+                                    lastError = $"Groq phản hồi không có text hợp lệ với model '{candidate}': {ex.Message}";
+                                    break;
+                                }
+                            }
+
+                            var isQuotaExceeded = IsQuotaExceeded(response.StatusCode, responseBody);
+                            var errorMessage = BuildProviderErrorMessage(response.StatusCode, responseBody, candidate);
+                            _logger.LogError("Groq request failed for model {Model}: {Error}", candidate, errorMessage);
+                            lastError = errorMessage;
+
+                            if (isQuotaExceeded)
+                            {
+                                throw new InvalidOperationException(errorMessage);
+                            }
+
+                            if (attempt < _maxRetriesPerModel && ShouldRetrySameModel(response.StatusCode, responseBody))
+                            {
+                                var delay = ResolveRetryDelay(response, responseBody);
+                                await Task.Delay(delay, cancellationToken);
+                                continue;
+                            }
+
+                            if (ShouldTryNextModel(response.StatusCode, responseBody))
+                            {
+                                _logger.LogWarning("Fallback to next Groq model after failure on {Model}", candidate);
+                                break;
+                            }
+
+                            throw new InvalidOperationException(errorMessage);
+                        }
                     }
                 }
-            }
 
-            throw new InvalidOperationException(
-                lastError ?? "Không tìm thấy model Gemini tương thích để xử lý nội dung.");
+                throw new InvalidOperationException(
+                    lastError ?? "Không tìm thấy model Groq tương thích để xử lý nội dung.");
             }
             finally
             {
@@ -357,116 +397,119 @@ namespace Web_Project.Services.AI
             }
         }
 
+        private static object BuildChatPayload(
+            string model,
+            string prompt,
+            double temperature,
+            bool requireJsonObject,
+            byte[]? imageBytes,
+            string? imageMimeType)
+        {
+            object[] messages;
+            if (imageBytes is { Length: > 0 })
+            {
+                var mime = string.IsNullOrWhiteSpace(imageMimeType) ? "image/png" : imageMimeType;
+                var imageDataUrl = $"data:{mime};base64,{Convert.ToBase64String(imageBytes)}";
+                messages =
+                [
+                    new
+                    {
+                        role = "user",
+                        content = new object[]
+                        {
+                            new { type = "text", text = prompt },
+                            new { type = "image_url", image_url = new { url = imageDataUrl } }
+                        }
+                    }
+                ];
+            }
+            else
+            {
+                messages =
+                [
+                    new
+                    {
+                        role = "user",
+                        content = prompt
+                    }
+                ];
+            }
+
+            var options = new Dictionary<string, object?>
+            {
+                ["model"] = NormalizeModel(model),
+                ["temperature"] = temperature,
+                ["messages"] = messages
+            };
+
+            if (requireJsonObject)
+            {
+                options["response_format"] = new { type = "json_object" };
+            }
+
+            return options;
+        }
+
         private static string ExtractGeneratedText(string responseBody)
         {
             using var doc = JsonDocument.Parse(responseBody);
             var root = doc.RootElement;
-            if (!root.TryGetProperty("candidates", out var candidates) ||
-                candidates.ValueKind != JsonValueKind.Array)
-            {
-                var blocked = ReadPromptBlockReason(root);
-                if (!string.IsNullOrWhiteSpace(blocked))
-                {
-                    throw new InvalidOperationException($"Gemini chặn nội dung đầu vào: {blocked}.");
-                }
 
-                throw new InvalidOperationException("Phản hồi Gemini không có candidates.");
+            if (!root.TryGetProperty("choices", out var choices) || choices.ValueKind != JsonValueKind.Array)
+            {
+                throw new InvalidOperationException("Phản hồi AI không có choices.");
             }
 
-            if (candidates.GetArrayLength() == 0)
+            if (choices.GetArrayLength() == 0)
             {
-                var blocked = ReadPromptBlockReason(root);
-                if (!string.IsNullOrWhiteSpace(blocked))
-                {
-                    throw new InvalidOperationException($"Gemini chặn nội dung đầu vào: {blocked}.");
-                }
-
-                throw new InvalidOperationException("Phản hồi Gemini có candidates rỗng.");
+                throw new InvalidOperationException("Phản hồi AI có choices rỗng.");
             }
 
-            var sb = new StringBuilder();
-            string? lastFinishReason = null;
-            foreach (var candidate in candidates.EnumerateArray())
+            foreach (var choice in choices.EnumerateArray())
             {
-                if (candidate.TryGetProperty("finishReason", out var finishReasonElement))
-                {
-                    lastFinishReason = finishReasonElement.GetString();
-                }
-
-                if (!candidate.TryGetProperty("content", out var content) ||
-                    !content.TryGetProperty("parts", out var parts) ||
-                    parts.ValueKind != JsonValueKind.Array)
+                if (!choice.TryGetProperty("message", out var message))
                 {
                     continue;
                 }
 
-                foreach (var part in parts.EnumerateArray())
+                if (!message.TryGetProperty("content", out var content))
                 {
-                    if (part.TryGetProperty("text", out var textElement))
+                    continue;
+                }
+
+                if (content.ValueKind == JsonValueKind.String)
+                {
+                    var text = content.GetString();
+                    if (!string.IsNullOrWhiteSpace(text))
                     {
-                        var value = textElement.GetString();
-                        if (!string.IsNullOrWhiteSpace(value))
+                        return text.Trim();
+                    }
+                }
+
+                if (content.ValueKind == JsonValueKind.Array)
+                {
+                    var sb = new StringBuilder();
+                    foreach (var part in content.EnumerateArray())
+                    {
+                        if (part.TryGetProperty("text", out var textElement))
                         {
-                            sb.AppendLine(value);
+                            var value = textElement.GetString();
+                            if (!string.IsNullOrWhiteSpace(value))
+                            {
+                                sb.AppendLine(value);
+                            }
                         }
+                    }
+
+                    var text = sb.ToString().Trim();
+                    if (!string.IsNullOrWhiteSpace(text))
+                    {
+                        return text;
                     }
                 }
             }
 
-            var text = sb.ToString().Trim();
-            if (!string.IsNullOrWhiteSpace(text))
-            {
-                return text;
-            }
-
-            var promptBlockReason = ReadPromptBlockReason(root);
-            if (!string.IsNullOrWhiteSpace(promptBlockReason))
-            {
-                throw new InvalidOperationException($"Gemini chặn nội dung đầu vào: {promptBlockReason}.");
-            }
-
-            if (!string.IsNullOrWhiteSpace(lastFinishReason))
-            {
-                throw new InvalidOperationException($"Gemini không trả text. finishReason={lastFinishReason}.");
-            }
-
-            throw new InvalidOperationException("Gemini trả về candidates nhưng không có phần text.");
-        }
-
-        private static string? ReadPromptBlockReason(JsonElement root)
-        {
-            if (!root.TryGetProperty("promptFeedback", out var promptFeedback))
-            {
-                return null;
-            }
-
-            var reasons = new List<string>();
-            if (promptFeedback.TryGetProperty("blockReason", out var blockReason) &&
-                blockReason.ValueKind == JsonValueKind.String)
-            {
-                var value = blockReason.GetString();
-                if (!string.IsNullOrWhiteSpace(value))
-                {
-                    reasons.Add(value.Trim());
-                }
-            }
-
-            if (promptFeedback.TryGetProperty("blockReasonMessage", out var blockReasonMessage) &&
-                blockReasonMessage.ValueKind == JsonValueKind.String)
-            {
-                var value = blockReasonMessage.GetString();
-                if (!string.IsNullOrWhiteSpace(value))
-                {
-                    reasons.Add(value.Trim());
-                }
-            }
-
-            if (reasons.Count == 0)
-            {
-                return null;
-            }
-
-            return string.Join(" - ", reasons);
+            throw new InvalidOperationException("AI trả về choices nhưng không có phần text.");
         }
 
         private static AiSummaryResult ParseSummaryContent(string rawContent)
@@ -632,12 +675,12 @@ namespace Web_Project.Services.AI
             return $"{head}\n\n...[nội dung đã được rút gọn để vừa ngữ cảnh AI]...\n\n{tail}";
         }
 
-        private void EnsureApiKey()
+        private void EnsureGroqApiKey()
         {
-            if (string.IsNullOrWhiteSpace(_settings.ApiKey))
+                if (string.IsNullOrWhiteSpace(_settings.GroqApiKey))
             {
                 throw new InvalidOperationException(
-                    "Thiếu Gemini:ApiKey. Vui lòng cấu hình API key trước khi gọi endpoint tóm tắt.");
+                    "Thiếu Groq:GroqApiKey. Vui lòng cấu hình key Groq trước khi gọi endpoint tóm tắt.");
             }
         }
 
@@ -651,10 +694,6 @@ namespace Web_Project.Services.AI
             {
                 AddCandidate(candidates, fallback);
             }
-
-            AddCandidate(candidates, "gemini-2.5-flash");
-            AddCandidate(candidates, "gemini-2.0-flash");
-            AddCandidate(candidates, "gemini-flash-latest");
 
             return candidates.Take(_maxModelCandidates);
         }
@@ -677,28 +716,29 @@ namespace Web_Project.Services.AI
 
         private static string NormalizeModel(string? rawModel)
         {
-            var normalizedModel = (rawModel ?? string.Empty).Trim();
-            if (normalizedModel.StartsWith("models/", StringComparison.OrdinalIgnoreCase))
-            {
-                normalizedModel = normalizedModel["models/".Length..];
-            }
-
-            return normalizedModel;
+            return (rawModel ?? string.Empty).Trim();
         }
 
-        private string BuildEndpoint(string model)
+        private string BuildChatCompletionEndpoint()
         {
             var baseUrl = NormalizeBaseUrl(_settings.BaseUrl);
-            var normalizedModel = NormalizeModel(model);
-
-            if (string.IsNullOrWhiteSpace(normalizedModel))
+            if (baseUrl.EndsWith("/v1", StringComparison.OrdinalIgnoreCase))
             {
-                normalizedModel = "gemini-2.0-flash";
+                return $"{baseUrl}/chat/completions";
             }
 
-            var encodedModel = Uri.EscapeDataString(normalizedModel);
-            var encodedKey = Uri.EscapeDataString(_settings.ApiKey);
-            return $"{baseUrl}/v1beta/models/{encodedModel}:generateContent?key={encodedKey}";
+            return $"{baseUrl}/v1/chat/completions";
+        }
+
+        private string BuildAudioTranscriptionEndpoint()
+        {
+            var baseUrl = NormalizeBaseUrl(_settings.BaseUrl);
+            if (baseUrl.EndsWith("/v1", StringComparison.OrdinalIgnoreCase))
+            {
+                return $"{baseUrl}/audio/transcriptions";
+            }
+
+            return $"{baseUrl}/v1/audio/transcriptions";
         }
 
         private static string NormalizeBaseUrl(string rawBaseUrl)
@@ -706,15 +746,16 @@ namespace Web_Project.Services.AI
             var value = (rawBaseUrl ?? string.Empty).Trim();
             if (string.IsNullOrWhiteSpace(value))
             {
-                return "https://generativelanguage.googleapis.com";
+                return "https://api.groq.com/openai";
             }
 
             if (!Uri.TryCreate(value, UriKind.Absolute, out var uri))
             {
-                return "https://generativelanguage.googleapis.com";
+                return "https://api.groq.com/openai";
             }
 
-            return $"{uri.Scheme}://{uri.Authority}";
+            var normalized = uri.GetLeftPart(UriPartial.Path).TrimEnd('/');
+            return string.IsNullOrWhiteSpace(normalized) ? "https://api.groq.com/openai" : normalized;
         }
 
         private async Task<bool> WaitForSlotAsync(CancellationToken cancellationToken)
@@ -796,10 +837,11 @@ namespace Web_Project.Services.AI
             }
 
             var message = (responseBody ?? string.Empty).ToLowerInvariant();
-            return message.Contains("quota exceeded") ||
-                   message.Contains("resource_exhausted") ||
-                   message.Contains("limit: 0") ||
-                   message.Contains("free_tier_requests");
+            return message.Contains("resource_exhausted") ||
+                   message.Contains("quota") ||
+                   message.Contains("rate limit") ||
+                   message.Contains("too many requests") ||
+                   message.Contains("tokens per minute");
         }
 
         private static bool ShouldRetrySameModel(HttpStatusCode statusCode, string responseBody)
@@ -820,7 +862,8 @@ namespace Web_Project.Services.AI
             var message = (responseBody ?? string.Empty).ToLowerInvariant();
             return message.Contains("high demand") ||
                    message.Contains("temporarily unavailable") ||
-                   message.Contains("try again later");
+                   message.Contains("try again later") ||
+                   message.Contains("overloaded");
         }
 
         private static TimeSpan ResolveRetryDelay(HttpResponseMessage response, string responseBody)
@@ -876,13 +919,15 @@ namespace Web_Project.Services.AI
                 return 0;
             }
 
-            return double.TryParse(match.Groups[1].Value, out var seconds) ? seconds : 0;
+            return double.TryParse(match.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var seconds)
+                ? seconds
+                : 0;
         }
 
-        private static string BuildGeminiErrorMessage(HttpStatusCode statusCode, string responseBody, string model)
+        private static string BuildProviderErrorMessage(HttpStatusCode statusCode, string responseBody, string model)
         {
             var providerCode = (int)statusCode;
-            var providerStatus = string.Empty;
+            var providerType = string.Empty;
             var providerMessage = string.Empty;
 
             if (!string.IsNullOrWhiteSpace(responseBody))
@@ -898,10 +943,10 @@ namespace Web_Project.Services.AI
                             providerCode = codeElement.GetInt32();
                         }
 
-                        if (errorElement.TryGetProperty("status", out var statusElement) &&
-                            statusElement.ValueKind == JsonValueKind.String)
+                        if (errorElement.TryGetProperty("type", out var typeElement) &&
+                            typeElement.ValueKind == JsonValueKind.String)
                         {
-                            providerStatus = statusElement.GetString() ?? string.Empty;
+                            providerType = typeElement.GetString() ?? string.Empty;
                         }
 
                         if (errorElement.TryGetProperty("message", out var messageElement) &&
@@ -917,7 +962,7 @@ namespace Web_Project.Services.AI
                 }
             }
 
-            var normalized = $"{providerStatus} {providerMessage}".ToLowerInvariant();
+            var normalized = $"{providerType} {providerMessage}".ToLowerInvariant();
             var isQuotaOrRateLimit = providerCode == 429 ||
                                      normalized.Contains("resource_exhausted") ||
                                      normalized.Contains("quota") ||
@@ -928,28 +973,29 @@ namespace Web_Project.Services.AI
             {
                 var retryHint = ExtractRetryHintSeconds(providerMessage);
                 return string.IsNullOrWhiteSpace(retryHint)
-                    ? "AI đang tạm quá tải hoặc vượt giới hạn sử dụng. Vui lòng thử lại sau ít phút."
-                    : $"AI đang tạm quá tải hoặc vượt giới hạn sử dụng. Vui lòng thử lại sau khoảng {retryHint}.";
+                    ? "Groq Cloud đang tạm quá tải hoặc vượt giới hạn sử dụng. Vui lòng thử lại sau ít phút."
+                    : $"Groq Cloud đang tạm quá tải hoặc vượt giới hạn sử dụng. Vui lòng thử lại sau khoảng {retryHint}.";
             }
 
             if (providerCode == 401 || providerCode == 403 ||
                 normalized.Contains("api key") ||
-                normalized.Contains("permission_denied") ||
-                normalized.Contains("unauthenticated"))
+                normalized.Contains("permission") ||
+                normalized.Contains("unauthorized"))
             {
-                return "AI chưa được cấu hình quyền truy cập hợp lệ. Vui lòng liên hệ quản trị viên.";
+                return "Groq API key không hợp lệ hoặc chưa đủ quyền. Vui lòng kiểm tra cấu hình.";
             }
 
-            if (providerCode == 404 || normalized.Contains("model not found") || normalized.Contains("not supported"))
+            if (providerCode == 404 || normalized.Contains("model") && normalized.Contains("not"))
             {
-                return "Model AI hiện không khả dụng. Hệ thống sẽ tự chuyển model khác, vui lòng thử lại.";
+                return $"Model AI '{model}' hiện không khả dụng trên Groq. Hệ thống sẽ thử model dự phòng.";
             }
 
             if (providerCode >= 500 ||
                 normalized.Contains("temporarily unavailable") ||
-                normalized.Contains("high demand"))
+                normalized.Contains("high demand") ||
+                normalized.Contains("overloaded"))
             {
-                return "Dịch vụ AI đang bận. Vui lòng thử lại sau ít phút.";
+                return "Dịch vụ Groq đang bận. Vui lòng thử lại sau ít phút.";
             }
 
             return $"Không thể xử lý yêu cầu AI lúc này (mã {providerCode}). Vui lòng thử lại.";
@@ -996,12 +1042,11 @@ namespace Web_Project.Services.AI
             }
 
             var message = responseBody.ToLowerInvariant();
-            return message.Contains("is not found") ||
-                   message.Contains("not supported for generatecontent") ||
-                   message.Contains("model not found") ||
+            return message.Contains("model") && message.Contains("not") ||
                    message.Contains("high demand") ||
                    message.Contains("try again later") ||
-                   message.Contains("temporarily unavailable");
+                   message.Contains("temporarily unavailable") ||
+                   message.Contains("overloaded");
         }
 
         private static string Trim(string value, int maxLength)

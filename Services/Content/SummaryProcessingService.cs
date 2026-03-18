@@ -33,19 +33,21 @@ namespace Web_Project.Services.Content
         };
 
         private const long MaxUploadBytes = 100L * 1024L * 1024L;
+        private static readonly Regex YoutubeWatchIdRegex = new(@"[?&]v=([A-Za-z0-9_-]{11})", RegexOptions.Compiled);
+        private static readonly Regex YoutubeShortIdRegex = new(@"^/([A-Za-z0-9_-]{11})(?:[/?#]|$)", RegexOptions.Compiled);
 
-        private readonly IGeminiSummaryService _geminiSummaryService;
+        private readonly IGroqSummaryService _groqSummaryService;
         private readonly AppDbContext _dbContext;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<SummaryProcessingService> _logger;
 
         public SummaryProcessingService(
-            IGeminiSummaryService geminiSummaryService,
+            IGroqSummaryService groqSummaryService,
             AppDbContext dbContext,
             IHttpClientFactory httpClientFactory,
             ILogger<SummaryProcessingService> logger)
         {
-            _geminiSummaryService = geminiSummaryService;
+            _groqSummaryService = groqSummaryService;
             _dbContext = dbContext;
             _httpClientFactory = httpClientFactory;
             _logger = logger;
@@ -138,6 +140,11 @@ namespace Web_Project.Services.Content
                 throw new InvalidOperationException("URL không được phép truy cập vì lý do bảo mật.");
             }
 
+            if (IsYouTubeUrl(uri))
+            {
+                return await SummarizeYouTubeUrlAsync(uri, url, userId, isGuest, cancellationToken);
+            }
+
             var client = _httpClientFactory.CreateClient();
             client.Timeout = TimeSpan.FromSeconds(45);
 
@@ -201,6 +208,352 @@ namespace Web_Project.Services.Content
                 KeyPoints = summarized.KeyPoints,
                 Preview = summarized.Preview
             };
+        }
+
+        private async Task<SummarizeUrlResponse> SummarizeYouTubeUrlAsync(
+            Uri uri,
+            string originalUrl,
+            int? userId,
+            bool isGuest,
+            CancellationToken cancellationToken)
+        {
+            var videoId = TryExtractYouTubeVideoId(uri);
+            if (string.IsNullOrWhiteSpace(videoId))
+            {
+                throw new InvalidOperationException("Không nhận diện được video YouTube hợp lệ từ URL đã nhập.");
+            }
+
+            var client = _httpClientFactory.CreateClient();
+            client.Timeout = TimeSpan.FromSeconds(45);
+
+            var metadata = await FetchYouTubeMetadataAsync(client, uri, videoId, cancellationToken);
+
+            var normalizedText = NormalizeText(metadata.BuildExtractionText(), ".txt", "text/plain");
+            if (string.IsNullOrWhiteSpace(normalizedText) || normalizedText.Length < 40)
+            {
+                throw new InvalidOperationException(
+                    "Không lấy được đủ dữ liệu từ video YouTube. Hãy thử video có mô tả/phụ đề hoặc tải file video trực tiếp.");
+            }
+
+            var fileName = !string.IsNullOrWhiteSpace(metadata.Title)
+                ? $"{BuildStemFromSummary(metadata.Title)}.txt"
+                : $"youtube-{videoId}.txt";
+
+            var summarized = await BuildTextSummaryResponseAsync(
+                fileName: fileName,
+                inputType: "video",
+                extractedText: normalizedText,
+                usedVisionModel: false,
+                usedTranscription: metadata.HasTranscript,
+                sourceUrl: originalUrl,
+                userId: userId,
+                isGuest: isGuest,
+                cancellationToken: cancellationToken);
+
+            return new SummarizeUrlResponse
+            {
+                ContentId = summarized.ContentId,
+                Url = originalUrl,
+                FileName = summarized.FileName,
+                InputType = summarized.InputType,
+                DetectedMimeType = "video/youtube",
+                ExtractedTextLength = summarized.ExtractedTextLength,
+                UsedVisionModel = summarized.UsedVisionModel,
+                UsedTranscription = summarized.UsedTranscription,
+                Summary = summarized.Summary,
+                KeyPoints = summarized.KeyPoints,
+                Preview = summarized.Preview
+            };
+        }
+
+        private static bool IsYouTubeUrl(Uri uri)
+        {
+            var host = uri.Host.ToLowerInvariant();
+            return host == "youtube.com" ||
+                   host == "www.youtube.com" ||
+                   host == "m.youtube.com" ||
+                   host == "youtu.be";
+        }
+
+        private static string TryExtractYouTubeVideoId(Uri uri)
+        {
+            var host = uri.Host.ToLowerInvariant();
+            var path = uri.AbsolutePath;
+
+            if (host == "youtu.be")
+            {
+                var shortMatch = YoutubeShortIdRegex.Match(path);
+                return shortMatch.Success ? shortMatch.Groups[1].Value : string.Empty;
+            }
+
+            if (path.Equals("/watch", StringComparison.OrdinalIgnoreCase))
+            {
+                var watchMatch = YoutubeWatchIdRegex.Match(uri.Query);
+                return watchMatch.Success ? watchMatch.Groups[1].Value : string.Empty;
+            }
+
+            if (path.StartsWith("/shorts/", StringComparison.OrdinalIgnoreCase) ||
+                path.StartsWith("/embed/", StringComparison.OrdinalIgnoreCase) ||
+                path.StartsWith("/live/", StringComparison.OrdinalIgnoreCase))
+            {
+                var segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+                if (segments.Length >= 2 && segments[1].Length == 11)
+                {
+                    return segments[1];
+                }
+            }
+
+            return string.Empty;
+        }
+
+        private async Task<YouTubeMetadata> FetchYouTubeMetadataAsync(
+            HttpClient client,
+            Uri originalUri,
+            string videoId,
+            CancellationToken cancellationToken)
+        {
+            var metadata = new YouTubeMetadata
+            {
+                VideoId = videoId,
+                VideoUrl = originalUri.ToString()
+            };
+
+            try
+            {
+                var oembedUrl = $"https://www.youtube.com/oembed?url={Uri.EscapeDataString(metadata.VideoUrl)}&format=json";
+                using var oembedResp = await client.GetAsync(oembedUrl, cancellationToken);
+                if (oembedResp.IsSuccessStatusCode)
+                {
+                    var oembedBody = await oembedResp.Content.ReadAsStringAsync(cancellationToken);
+                    using var oembedDoc = JsonDocument.Parse(oembedBody);
+                    if (oembedDoc.RootElement.TryGetProperty("title", out var titleElement))
+                    {
+                        metadata.Title = titleElement.GetString() ?? string.Empty;
+                    }
+
+                    if (oembedDoc.RootElement.TryGetProperty("author_name", out var authorElement))
+                    {
+                        metadata.Channel = authorElement.GetString() ?? string.Empty;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Không đọc được YouTube oEmbed cho video {VideoId}", videoId);
+            }
+
+            var watchUrl = $"https://www.youtube.com/watch?v={videoId}&hl=vi";
+            string html;
+            try
+            {
+                using var watchReq = new HttpRequestMessage(HttpMethod.Get, watchUrl);
+                watchReq.Headers.UserAgent.ParseAdd("Mozilla/5.0 (compatible; AI-Study-Summarizer/1.0)");
+                using var watchResp = await client.SendAsync(watchReq, cancellationToken);
+                if (!watchResp.IsSuccessStatusCode)
+                {
+                    return metadata;
+                }
+
+                html = await watchResp.Content.ReadAsStringAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Không đọc được YouTube watch page cho video {VideoId}", videoId);
+                return metadata;
+            }
+
+            metadata.Description = TryExtractJsonStringValue(html, "shortDescription");
+            if (string.IsNullOrWhiteSpace(metadata.Title))
+            {
+                metadata.Title = TryExtractJsonStringValue(html, "title");
+            }
+
+            var transcriptUrl = TryExtractCaptionUrl(html);
+            if (string.IsNullOrWhiteSpace(transcriptUrl))
+            {
+                return metadata;
+            }
+
+            try
+            {
+                var transcriptText = await FetchYouTubeTranscriptAsync(client, transcriptUrl, cancellationToken);
+                if (!string.IsNullOrWhiteSpace(transcriptText))
+                {
+                    metadata.Transcript = transcriptText;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Không đọc được phụ đề YouTube cho video {VideoId}", videoId);
+            }
+
+            return metadata;
+        }
+
+        private static string TryExtractJsonStringValue(string html, string fieldName)
+        {
+            if (string.IsNullOrWhiteSpace(html))
+            {
+                return string.Empty;
+            }
+
+            var match = Regex.Match(
+                html,
+                $"\\\"{Regex.Escape(fieldName)}\\\":\\\"(?<value>(?:\\\\.|[^\\\"])*)\\\"",
+                RegexOptions.IgnoreCase);
+
+            if (!match.Success)
+            {
+                return string.Empty;
+            }
+
+            return DecodeJsonEscapedString(match.Groups["value"].Value);
+        }
+
+        private static string TryExtractCaptionUrl(string html)
+        {
+            if (string.IsNullOrWhiteSpace(html))
+            {
+                return string.Empty;
+            }
+
+            var captionTracksMatch = Regex.Match(
+                html,
+                "\"captionTracks\":\\[(?<tracks>.*?)\\]",
+                RegexOptions.Singleline | RegexOptions.IgnoreCase);
+
+            if (!captionTracksMatch.Success)
+            {
+                return string.Empty;
+            }
+
+            var tracks = captionTracksMatch.Groups["tracks"].Value;
+            var baseUrlMatch = Regex.Match(
+                tracks,
+                "\"baseUrl\":\"(?<url>(?:\\\\.|[^\"])*)\"",
+                RegexOptions.IgnoreCase);
+
+            if (!baseUrlMatch.Success)
+            {
+                return string.Empty;
+            }
+
+            var decoded = DecodeJsonEscapedString(baseUrlMatch.Groups["url"].Value);
+            return WebUtility.HtmlDecode(decoded);
+        }
+
+        private static async Task<string> FetchYouTubeTranscriptAsync(
+            HttpClient client,
+            string transcriptUrl,
+            CancellationToken cancellationToken)
+        {
+            var normalizedUrl = transcriptUrl.Contains("fmt=", StringComparison.OrdinalIgnoreCase)
+                ? transcriptUrl
+                : $"{transcriptUrl}&fmt=srv3";
+
+            using var captionResp = await client.GetAsync(normalizedUrl, cancellationToken);
+            if (!captionResp.IsSuccessStatusCode)
+            {
+                return string.Empty;
+            }
+
+            var captionBody = await captionResp.Content.ReadAsStringAsync(cancellationToken);
+            if (string.IsNullOrWhiteSpace(captionBody))
+            {
+                return string.Empty;
+            }
+
+            try
+            {
+                var xml = XDocument.Parse(captionBody);
+                var lines = xml.Descendants("text")
+                    .Select(x => WebUtility.HtmlDecode(x.Value))
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Select(x => Regex.Replace(x.Trim(), "\\s+", " "))
+                    .ToList();
+
+                return string.Join(" ", lines);
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+
+        private static string DecodeJsonEscapedString(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                return string.Empty;
+            }
+
+            try
+            {
+                return JsonSerializer.Deserialize<string>($"\"{input}\"") ?? string.Empty;
+            }
+            catch
+            {
+                return input;
+            }
+        }
+
+        private sealed class YouTubeMetadata
+        {
+            public string VideoId { get; set; } = string.Empty;
+
+            public string VideoUrl { get; set; } = string.Empty;
+
+            public string Title { get; set; } = string.Empty;
+
+            public string Channel { get; set; } = string.Empty;
+
+            public string Description { get; set; } = string.Empty;
+
+            public string Transcript { get; set; } = string.Empty;
+
+            public bool HasTranscript => !string.IsNullOrWhiteSpace(Transcript);
+
+            public string BuildExtractionText()
+            {
+                var sb = new StringBuilder();
+                sb.AppendLine("Nguon: YouTube");
+                if (!string.IsNullOrWhiteSpace(VideoUrl))
+                {
+                    sb.AppendLine($"URL: {VideoUrl}");
+                }
+
+                if (!string.IsNullOrWhiteSpace(Title))
+                {
+                    sb.AppendLine($"Tieu de: {Title}");
+                }
+
+                if (!string.IsNullOrWhiteSpace(Channel))
+                {
+                    sb.AppendLine($"Kenh: {Channel}");
+                }
+
+                if (!string.IsNullOrWhiteSpace(Description))
+                {
+                    sb.AppendLine();
+                    sb.AppendLine("Mo ta video:");
+                    sb.AppendLine(Description);
+                }
+
+                if (!string.IsNullOrWhiteSpace(Transcript))
+                {
+                    sb.AppendLine();
+                    sb.AppendLine("Phu de / Loi thoai tu video:");
+                    sb.AppendLine(Transcript);
+                }
+
+                if (sb.Length < 80)
+                {
+                    sb.AppendLine();
+                    sb.AppendLine("Khong tim thay du metadata/phu de tu YouTube, nen tom tat co the khong day du.");
+                }
+
+                return sb.ToString();
+            }
         }
 
         private async Task<SummarizeUploadResponse> SummarizeFromBytesAsync(
@@ -343,7 +696,7 @@ namespace Web_Project.Services.Content
         {
             var startedAt = Stopwatch.StartNew();
             var mimeType = GetImageMimeType(extension);
-            var result = await _geminiSummaryService.SummarizeImageAsync(
+            var result = await _groqSummaryService.SummarizeImageAsync(
                 imageBytes: payload,
                 mimeType: mimeType,
                 fileName: fileName,
@@ -396,7 +749,7 @@ namespace Web_Project.Services.Content
                 await File.WriteAllBytesAsync(videoPath, payload, cancellationToken);
                 await ExtractAudioFromVideoAsync(videoPath, audioPath, cancellationToken);
 
-                var transcript = await _geminiSummaryService.TranscribeAudioAsync(audioPath, cancellationToken);
+                var transcript = await _groqSummaryService.TranscribeAudioAsync(audioPath, cancellationToken);
                 var normalized = NormalizeText(transcript, ".txt", "text/plain");
                 return await BuildTextSummaryResponseAsync(
                     fileName: fileName,
@@ -436,7 +789,7 @@ namespace Web_Project.Services.Content
             AiSummaryResult summary;
             try
             {
-                summary = await _geminiSummaryService.SummarizeTextAsync(
+                summary = await _groqSummaryService.SummarizeTextAsync(
                     text: extractedText,
                     sourceHint: inputType,
                     cancellationToken: cancellationToken);
@@ -444,7 +797,7 @@ namespace Web_Project.Services.Content
             catch (InvalidOperationException ex) when (IsAiUnavailable(ex.Message))
             {
                 _logger.LogWarning(
-                    "Gemini unavailable for summarize text. Falling back to local summary. Reason: {Message}",
+                    "Groq unavailable for summarize text. Falling back to local summary. Reason: {Message}",
                     ex.Message);
 
                 summary = BuildLocalFallbackSummary(extractedText, inputType);
