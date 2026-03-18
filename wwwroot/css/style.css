@@ -1,5 +1,5 @@
 ﻿/* ============================================================
-   style.css — AI Study
+   style.css — SynapLearn
    Global styles + per-page scoped styles
    Navbar styles: dùng #ai-navbar prefix — KHÔNG xung đột
    ============================================================ */
@@ -414,8 +414,6 @@ main {
   font-weight: 800;
   color: rgba(255, 255, 255, 0.92);
 }
-<<<<<<< HEAD
-
 .panel-expand-btn {
   width: 40px;
   height: 40px;
@@ -434,9 +432,6 @@ main {
   width: 22px;
   height: 22px;
 }
-
-=======
->>>>>>> origin/home
 .upload-summary-scroll {
   background: rgba(255, 255, 255, 0.04);
   max-height: 240px;
@@ -578,19 +573,11 @@ main {
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 14px;
   padding: 14px;
-<<<<<<< HEAD
   background: linear-gradient(135deg, rgba(30, 64, 175, 0.25), rgba(30, 41, 59, 0.36));
   position: sticky;
   top: 0;
   z-index: 5;
   box-shadow: 0 10px 22px rgba(2, 6, 23, 0.35);
-=======
-  background: linear-gradient(
-    135deg,
-    rgba(30, 64, 175, 0.25),
-    rgba(30, 41, 59, 0.36)
-  );
->>>>>>> origin/home
 }
 .quiz-score-label {
   font-size: 0.82rem;
@@ -638,7 +625,6 @@ main {
   border: 1px solid rgba(74, 222, 128, 0.45);
   background: rgba(20, 83, 45, 0.36);
 }
-<<<<<<< HEAD
 
 .quiz-wrong-title {
   font-weight: 700;
@@ -663,9 +649,6 @@ main {
   font-weight: 700;
   color: #86efac;
 }
-
-=======
->>>>>>> origin/home
 .quiz-result-modal-content {
   background: rgba(15, 23, 42, 0.98);
   border: 1px solid rgba(255, 255, 255, 0.14);
@@ -904,6 +887,29 @@ html.js .page-content.show {
   flex: 1;
   background: rgba(255, 255, 255, 0.2);
 }
+
+.google-login-host {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 52px;
+}
+
+.google-login-host > div {
+  width: auto;
+  display: flex;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.google-login-host iframe {
+  display: block;
+  margin: 0 auto;
+  transform: scale(1.06);
+  transform-origin: center center;
+}
+
 .glass h3,
 .glass h2 {
   font-weight: 600;
@@ -918,7 +924,7 @@ html.js .page-content.show {
 }
 
 /* ============================================================
-   #ai-navbar — AI Study Navbar + Avatar Dropdown
+   #ai-navbar — SynapLearn Navbar + Avatar Dropdown
    Prefix #ai-navbar: KHÔNG bao giờ xung đột với bất kỳ trang nào
    ============================================================ */
 

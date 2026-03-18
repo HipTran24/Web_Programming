@@ -14,6 +14,6 @@ namespace Web_Project.Models
 
         public string FromEmail { get; set; } = "no-reply@aistudy.local";
 
-        public string FromName { get; set; } = "AI Study";
+        public string FromName { get; set; } = "SynapLearn";
     }
 }

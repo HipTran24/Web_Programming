@@ -1,0 +1,210 @@
+.dashboard-page .container {
+  max-width: 1240px;
+}
+
+.dashboard-page .dash-hero {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 22px;
+  padding: 30px;
+  margin-bottom: 18px;
+}
+
+.dashboard-page .dash-eyebrow {
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(147, 197, 253, 0.95);
+}
+
+.dashboard-page .dash-title {
+  font-size: clamp(1.45rem, 3.2vw, 2.1rem);
+  font-weight: 800;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.dashboard-page .dash-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dashboard-page .dash-streak {
+  width: 210px;
+  min-height: 160px;
+  border: 1px solid rgba(125, 211, 252, 0.32);
+  border-radius: 18px;
+  background: linear-gradient(160deg, rgba(14, 116, 144, 0.22), rgba(15, 23, 42, 0.5));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  text-align: center;
+}
+
+.dashboard-page .dash-streak-icon {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(56, 189, 248, 0.18);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  color: #7dd3fc;
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.dashboard-page .dash-streak-label {
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.dashboard-page .dash-streak-note {
+  margin-top: 6px;
+  font-size: 0.84rem;
+  color: rgba(186, 230, 253, 0.84);
+}
+
+.dashboard-page .dash-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.dashboard-page .dash-kpi-card {
+  padding: 20px;
+}
+
+.dashboard-page .dash-kpi-label {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.dashboard-page .dash-kpi-value {
+  margin-top: 6px;
+  font-size: clamp(1.45rem, 2.6vw, 2rem);
+  font-weight: 800;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.dashboard-page .dash-kpi-meta {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.dashboard-page .dash-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.85fr);
+  gap: 14px;
+}
+
+.dashboard-page .dash-panel {
+  padding: 22px;
+}
+
+.dashboard-page .dash-continue-card {
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(140deg, rgba(30, 64, 175, 0.2), rgba(15, 23, 42, 0.34));
+}
+
+.dashboard-page .dash-continue-title {
+  font-size: 1.04rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.dashboard-page .dash-continue-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dashboard-page .dash-subtitle {
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.dashboard-page .dash-side-stack {
+  display: grid;
+  gap: 14px;
+}
+
+.dashboard-page .dash-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.dashboard-page .dash-list li {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  padding: 10px 11px;
+  font-size: 0.92rem;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.9);
+  display: grid;
+  gap: 3px;
+}
+
+.dashboard-page .dash-topic .progress {
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.dashboard-page .dash-topic .progress-bar {
+  border-radius: 999px;
+}
+
+@media (max-width: 1199px) {
+  .dashboard-page .dash-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-page .dash-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 991px) {
+  .dashboard-page .dash-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-page .dash-streak {
+    width: 100%;
+    min-height: 130px;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 12px;
+    text-align: left;
+  }
+
+  .dashboard-page .dash-actions .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-page .dash-kpis {
+    grid-template-columns: 1fr;
+  }
+}

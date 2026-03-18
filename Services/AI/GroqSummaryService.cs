@@ -71,7 +71,7 @@ namespace Web_Project.Services.AI
             var normalizedSourceHint = (sourceHint ?? string.Empty).Trim().ToLowerInvariant();
             var prompt = normalizedSourceHint == "video"
                 ?
-                "Bạn là trợ lý học tập AI Study chuyên phân tích video bài giảng. " +
+                "Bạn là trợ lý học tập SynapLearn chuyên phân tích video bài giảng. " +
                 "Từ dữ liệu video bên dưới, hãy tạo tóm tắt nội dung rõ ràng và dễ học. " +
                 "Bắt buộc trả về JSON hợp lệ theo định dạng: " +
                 "{\"summary\":\"...\",\"keyPoints\":[\"[Kiến thức] ...\",\"[Thông tin] ...\",\"[Thuật ngữ] ...\",\"[Mốc thời gian] ...\"]}. " +
@@ -80,7 +80,7 @@ namespace Web_Project.Services.AI
                 "không viết chung chung, không markdown, không code fence.\n\n" +
                 $"Nguồn: {sourceHint}\n\nNội dung video đã trích xuất:\n{normalized}"
                 :
-                "Bạn là trợ lý học tập AI Study. " +
+                "Bạn là trợ lý học tập SynapLearn. " +
                 "Hãy tóm tắt nội dung sau thành 1 đoạn văn tiếng Việt CHI TIẾT khoảng 280-450 từ, " +
                 "không được dưới 250 từ, giữ đủ ý chính theo trình tự nội dung, rõ ràng, không lan man. " +
                 "Bắt buộc trả về JSON hợp lệ đúng định dạng: " +
@@ -271,7 +271,7 @@ namespace Web_Project.Services.AI
             var normalizedQuizType = string.IsNullOrWhiteSpace(quizType) ? "multiple-choice" : quizType.Trim().ToLowerInvariant();
 
             var prompt =
-                "Bạn là trợ lý tạo đề cho hệ thống AI Study. " +
+                "Bạn là trợ lý tạo đề cho hệ thống SynapLearn. " +
                 $"Hãy tạo {boundedQuestionCount} câu hỏi dạng trắc nghiệm 4 lựa chọn (A/B/C/D) bằng tiếng Việt dựa trên nội dung dưới đây. " +
                 $"Độ khó yêu cầu: {normalizedDifficulty}. Loại bài: {normalizedQuizType}. " +
                 "Mỗi câu phải có 1 đáp án đúng duy nhất. " +

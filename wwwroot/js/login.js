@@ -13,21 +13,37 @@
   const loginButton = document.getElementById("loginButton");
   const alertBox = document.getElementById("alertBox");
   const alertMsg = document.getElementById("alertMsg");
-  let returnUrl = "/home/index.html";
+  let returnUrl = "/home/dashboard.html";
   let isSubmitting = false;
+
+  const getDefaultLandingByRole = (role) => {
+    const normalizedRole = String(role || "").trim().toLowerCase();
+    if (normalizedRole === "admin") {
+      return "/home/admin.html";
+    }
+
+    return "/home/dashboard.html";
+  };
 
   const normalizeReturnUrl = (value) => {
     const raw = String(value || "").trim();
     if (!raw) {
-      return "/home/index.html";
+      return "/home/dashboard.html";
     }
 
     if (!raw.startsWith("/") || raw.startsWith("//")) {
-      return "/home/index.html";
+      return "/home/dashboard.html";
     }
 
-    if (raw.startsWith("login.html")) {
-      return "/home/index.html";
+    const normalizedRaw = raw.toLowerCase();
+    if (
+      normalizedRaw === "/" ||
+      normalizedRaw === "/home" ||
+      normalizedRaw === "/home/" ||
+      normalizedRaw.startsWith("/home/login.html") ||
+      normalizedRaw.startsWith("/home/index.html")
+    ) {
+      return "/home/dashboard.html";
     }
 
     return raw;
@@ -86,6 +102,9 @@
     otherStorage.removeItem(userStorageKey);
 
     storage.setItem(tokenStorageKey, token);
+    storage.setItem("token", token);
+    storage.setItem("role", data?.role ?? "");
+    storage.setItem("name", data?.fullName || data?.username || data?.email || "");
     storage.setItem(
       userStorageKey,
       JSON.stringify({
@@ -99,6 +118,15 @@
     );
 
     return true;
+  };
+
+  const getTargetAfterLogin = (responseData) => {
+    const requestedUrl = normalizeReturnUrl(returnUrl);
+    if (requestedUrl) {
+      return requestedUrl;
+    }
+
+    return getDefaultLandingByRole(responseData?.role);
   };
 
   const setSubmitting = (submitting) => {
@@ -139,38 +167,6 @@
     }
 
     return false;
-  };
-
-  const ensureCustomGoogleButtonOverlay = (googleButton) => {
-    if (!googleButton) {
-      return;
-    }
-
-    googleButton.classList.add("google-login-host--customized");
-
-    const nativeButtonHost = googleButton.querySelector(":scope > div");
-    if (nativeButtonHost) {
-      nativeButtonHost.classList.add("google-login-native");
-    }
-
-    let overlay = googleButton.querySelector(".google-login-overlay");
-    if (!overlay) {
-      overlay = document.createElement("div");
-      overlay.className = "google-login-overlay";
-      overlay.setAttribute("aria-hidden", "true");
-      overlay.innerHTML = `
-        <span class="google-login-overlay__icon">
-          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
-            <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.3-1.6 3.9-5.5 3.9-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.2.8 3.9 1.5l2.7-2.6C17 3.3 14.7 2.4 12 2.4 6.7 2.4 2.4 6.7 2.4 12S6.7 21.6 12 21.6c6.9 0 9.1-4.8 9.1-7.3 0-.5-.1-.9-.1-1.2H12Z"/>
-            <path fill="#4285F4" d="M21.1 12.3c0-.5-.1-.9-.1-1.2H12v3.9h5.5c-.1.8-.6 2-1.7 2.8l2.6 2c1.6-1.5 2.7-3.8 2.7-6.5Z"/>
-            <path fill="#FBBC05" d="M6 14.3c-.2-.6-.3-1.2-.3-1.8s.1-1.3.3-1.8l-3-2.3C2.6 9.5 2.4 10.7 2.4 12s.2 2.5.6 3.6l3-2.3Z"/>
-            <path fill="#34A853" d="M12 21.6c2.7 0 5-.9 6.7-2.5l-3-2.3c-.8.6-1.9 1.1-3.7 1.1-2.6 0-4.9-1.8-5.7-4.1l-3 2.3c1.6 3.2 4.9 5.5 8.7 5.5Z"/>
-          </svg>
-        </span>
-        <span class="google-login-overlay__label">Đăng nhập với Google</span>
-      `;
-      googleButton.appendChild(overlay);
-    }
   };
 
   const setupPasswordToggle = () => {
@@ -226,7 +222,7 @@
       window.sessionStorage.removeItem("pendingEmailVerification");
       setMessage("Đăng nhập Google thành công. Đang chuyển trang...", true);
       window.setTimeout(() => {
-        window.location.href = returnUrl || "/home/index.html";
+        window.location.href = getTargetAfterLogin(data);
       }, 700);
     } catch (error) {
       console.error("google_login_failed", error);
@@ -289,7 +285,8 @@
       cancel_on_tap_outside: true,
     });
 
-    const width = Math.max(240, Math.min(googleButton.clientWidth || 360, 400));
+    const buttonWidth = Math.max(320, Math.min(googleButton.clientWidth || 420, 420));
+
     window.google.accounts.id.renderButton(googleButton, {
       type: "standard",
       theme: "outline",
@@ -297,13 +294,10 @@
       text: "signin_with",
       locale: "vi",
       shape: "pill",
-      width,
+      width: buttonWidth,
       logo_alignment: "left",
     });
 
-    window.setTimeout(() => {
-      ensureCustomGoogleButtonOverlay(googleButton);
-    }, 0);
   };
 
   const readJsonSafely = async (response) => {
@@ -425,7 +419,7 @@
       window.sessionStorage.removeItem("pendingEmailVerification");
       setMessage("Đăng nhập thành công. Đang chuyển trang...", true);
       window.setTimeout(() => {
-        window.location.href = returnUrl || "/home/index.html";
+        window.location.href = getTargetAfterLogin(data);
       }, 700);
     } catch (error) {
       console.error("login_failed", error);

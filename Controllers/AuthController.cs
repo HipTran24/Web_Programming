@@ -220,13 +220,21 @@ namespace Web_Project.Controllers
                         var raw = (value ?? string.Empty).Trim();
                         if (string.IsNullOrWhiteSpace(raw))
                         {
-                                return "/home/index.html";
+                        return "/home/dashboard.html";
                         }
 
                         if (!raw.StartsWith('/') || raw.StartsWith("//", StringComparison.Ordinal))
                         {
-                                return "/home/index.html";
+                        return "/home/dashboard.html";
                         }
+
+                    var normalizedRaw = raw.ToLowerInvariant();
+                    if (normalizedRaw is "/" or "/home" or "/home/" ||
+                        normalizedRaw.StartsWith("/home/login.html", StringComparison.Ordinal) ||
+                        normalizedRaw.StartsWith("/home/index.html", StringComparison.Ordinal))
+                    {
+                        return "/home/dashboard.html";
+                    }
 
                         return raw;
                 }
@@ -238,7 +246,7 @@ namespace Web_Project.Controllers
                         string redirectUrl)
                 {
                         var safeMessage = JsonSerializer.Serialize(message ?? string.Empty);
-                        var safeRedirectUrl = JsonSerializer.Serialize(redirectUrl ?? "/home/index.html");
+                        var safeRedirectUrl = JsonSerializer.Serialize(redirectUrl ?? "/home/dashboard.html");
                         var payload = JsonSerializer.Serialize(response);
 
                         var html = """
@@ -282,7 +290,7 @@ namespace Web_Project.Controllers
                     }
                 } catch (_) {}
 
-                window.location.replace(redirectUrl || "/home/index.html");
+                window.location.replace(redirectUrl || "/home/dashboard.html");
                 return;
             }
 

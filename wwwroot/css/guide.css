@@ -1,0 +1,31 @@
+    .search-mini{
+      position: relative;
+      min-width: 260px;
+    }
+    .search-mini input{
+      width: 100%;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.07);
+      color: #fff;
+      padding: 10px 40px 10px 14px;
+      outline: none;
+    }
+    .search-mini input::placeholder{
+      color: rgba(255,255,255,.45);
+    }
+    .search-mini svg{
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255,255,255,.55);
+    }
+    .guide-step{
+      border-left: 3px solid rgba(13,110,253,.45);
+      padding-left: 16px;
+      margin-bottom: 18px;
+    }
+    .guide-step h6{
+      margin-bottom: 6px;
+    }

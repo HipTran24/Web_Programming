@@ -121,7 +121,7 @@
         return null;
       }
 
-      window.location.href = "/home/index.html";
+      window.location.href = "/home/dashboard.html";
       return null;
     }
 

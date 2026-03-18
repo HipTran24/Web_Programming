@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Đăng nhập — AI Study</title>
+    <title>Đăng nhập — SynapLearn</title>
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -13,7 +13,8 @@
       rel="stylesheet"
     />
     <link href="../css/style.css" rel="stylesheet" />
-  </head>
+    <link href="../css/app-shell.css" rel="stylesheet" />
+</head>
   <body>
     <div id="page-loader" class="logo-loader">
       <div class="logo-loader-box">
@@ -22,29 +23,20 @@
         <div class="ai-logo-core">
           <span>AI</span>
         </div>
-        <h4>AI Study</h4>
+        <h4>SynapLearn</h4>
         <p>Hệ thống học tập thông minh đang khởi động</p>
       </div>
     </div>
 
     <div class="page-content">
-      <nav class="navbar navbar-expand-lg navbar-dark navbar-glass py-3">
-        <div class="container">
-          <a class="navbar-brand fw-semibold" href="../home/index.html">AI Study</a>
-          <div class="d-flex gap-2" data-auth-guest>
-            <a class="btn btn-outline-light" href="../home/register.html">Đăng ký</a>
-          </div>
-        </div>
-      </nav>
-
-      <main class="auth-page">
+<main class="auth-page">
         <div class="container">
           <div class="row justify-content-center">
             <div class="col-lg-5">
               <div class="glass p-4 login-card">
             <h3 class="fw-bold mb-2">Đăng nhập</h3>
             <p class="text-muted-2">
-              Chào mừng bạn quay lại, tiếp tục hành trình học tập ngay.
+               Đăng nhập để được trải nghiệm nhiều hơn hệ thống SynapLearn.
             </p>
 
             <div class="alert alert-danger d-none" id="alertBox">
@@ -97,8 +89,8 @@
               <div class="invalid-feedback d-block" id="passwordError"></div>
             </div>
 
-            <button id="loginButton" type="submit" class="btn btn-primary w-100">Đăng nhập</button>
-            <a class="text-muted-2 forgot-password-link" href="#">Quên mật khẩu?</a>
+            <a class="text-muted-2 forgot-password-link d-inline-block mt-2" href="#">Quên mật khẩu?</a>
+            <button id="loginButton" type="submit" class="btn btn-primary w-100 mt-3">Đăng nhập</button>
 
             <div class="auth-divider" role="separator" aria-label="Hoặc đăng nhập bằng tài khoản khác">
               <span>hoặc</span>
@@ -120,7 +112,7 @@
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="../js/auth.js"></script>
     <script src="../assets/js/main.js"></script>
-    <script src="../js/navbar-sidebar.js"></script>
     <script src="../js/login.js"></script>
-  </body>
+    <script src="../js/app-shell.js"></script>
+</body>
 </html>
