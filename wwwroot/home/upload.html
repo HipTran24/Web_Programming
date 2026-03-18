@@ -40,8 +40,6 @@
         <a class="btn btn-primary" href="../home/register.html">Đăng ký</a>
       </div>
     </div>
-  </div>
-</nav>
 
 <main class="container py-5">
   <div class="row g-4 upload-layout-row">
@@ -117,20 +115,338 @@
             class="p-3 rounded mb-3"
             style="background: rgba(255,255,255,0.04); border: 1px dashed rgba(255,255,255,0.2);"
           >
-            <span class="text-muted-2">Chưa có dữ liệu. Hãy kéo thả file hoặc dán text/url vào ô input để xử lý.</span>
-          </div>
-
-          <div class="mb-3">
-            <div class="small text-muted-2 mb-2">Tệp/Nguồn</div>
-            <div class="upload-source-card">
-              <div id="resultFileIcon" class="upload-source-icon" data-kind="file">FILE</div>
-              <div class="upload-source-text">
-                <div id="resultFileName" class="upload-source-name">-</div>
-                <div id="resultFileMeta" class="upload-source-meta">Chưa có tệp nguồn.</div>
-              </div>
-              <span id="resultFileBadge" class="upload-source-badge">-</span>
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="nav">
+            <ul class="navbar-nav me-auto gap-lg-2">
+              <li class="nav-item">
+                <a class="nav-link" href="dashboard.html">Dashboard</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link active" href="upload.html">Upload</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="content-list.html"
+                  >Nội dung của tôi</a
+                >
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="history.html">Lịch sử</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="analytics.html">Phân tích</a>
+              </li>
+            </ul>
+            <div class="d-flex gap-2" data-auth-guest>
+              <a class="btn btn-outline-light" href="/home/login.html"
+                >Đăng nhập</a
+              >
+              <a class="btn btn-primary" href="/home/register.html">Đăng ký</a>
             </div>
           </div>
+        </div>
+      </nav>
+
+      <main class="container py-5">
+        <div class="row g-4 upload-layout-row">
+          <div class="col-12">
+            <section class="glass p-4">
+              <div
+                class="d-flex flex-wrap justify-content-between align-items-start gap-2"
+              >
+                <div>
+                  <h3 class="fw-bold mb-1">Xử lý nội dung bằng AI</h3>
+                  <p class="text-muted-2 mb-0"></p>
+                </div>
+                <span class="badge badge-soft">Giới hạn file 100MB</span>
+              </div>
+
+              <form id="uploadForm" class="mt-4" novalidate>
+                <label class="form-label fw-semibold" for="unifiedInput">
+                  Kéo thả file hoặc dán text hoặc link vào
+                </label>
+
+                <div id="unifiedDropzone" class="upload-drop upload-drop-lg">
+                  <div
+                    class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3"
+                  >
+                    <div>
+                      <div class="fw-semibold">
+                        Kéo file vào đây hoặc bấm Chọn file
+                      </div>
+                      <div class="small text-muted-2">
+                        Bạn cũng có thể dán văn bản hoặc link trực tiếp trong ô
+                        bên dưới.
+                      </div>
+                    </div>
+                    <button
+                      id="pickFileButton"
+                      type="button"
+                      class="btn btn-primary"
+                    >
+                      Chọn file
+                    </button>
+                  </div>
+
+                  <input
+                    id="fileInput"
+                    class="d-none"
+                    type="file"
+                    accept=".txt,.md,.pdf,.docx,.jpg,.jpeg,.png,.bmp,.gif,.webp,.mp4,.mov,.avi,.mkv,.webm,.m4v"
+                  />
+
+                  <textarea
+                    id="unifiedInput"
+                    class="form-control"
+                    rows="12"
+                    placeholder="Dán văn bản hoặc URL vào đây nếu không dùng file..."
+                  ></textarea>
+
+                  <div
+                    class="d-flex justify-content-between align-items-center mt-2"
+                  >
+                    <div
+                      id="selectedFileChip"
+                      class="upload-file-chip d-none"
+                      aria-live="polite"
+                    >
+                      <span class="upload-file-chip-plus">+</span>
+                      <span
+                        id="selectedFileChipExt"
+                        class="upload-file-chip-ext"
+                        >FILE</span
+                      >
+                      <span
+                        id="selectedFileChipName"
+                        class="upload-file-chip-name"
+                      ></span>
+                    </div>
+                    <button
+                      id="clearFileButton"
+                      type="button"
+                      class="btn btn-link p-0 text-decoration-none d-none"
+                    >
+                      Bỏ file đã chọn
+                    </button>
+                  </div>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 mt-4">
+                  <button
+                    id="processButton"
+                    type="submit"
+                    class="btn btn-primary"
+                  >
+                    Bắt đầu xử lý AI
+                  </button>
+                  <a class="btn btn-outline-light" href="content-list.html"
+                    >Nội dung của tôi</a
+                  >
+                </div>
+
+                <div
+                  id="formMessage"
+                  class="alert d-none mt-3 mb-0"
+                  role="alert"
+                ></div>
+              </form>
+            </section>
+          </div>
+
+          <div class="col-12">
+            <section class="glass p-4 h-100">
+              <div
+                class="d-flex justify-content-between align-items-center mb-3"
+              >
+                <h5 class="fw-semibold mb-0">Kết quả xử lý</h5>
+                <span id="resultType" class="badge badge-soft">Chưa có</span>
+              </div>
+
+              <div id="resultPanel">
+                <div
+                  id="resultPlaceholderBox"
+                  class="p-3 rounded mb-3"
+                  style="
+                    background: rgba(255, 255, 255, 0.04);
+                    border: 1px dashed rgba(255, 255, 255, 0.2);
+                  "
+                >
+                  <span class="text-muted-2"
+                    >Chưa có dữ liệu. Hãy kéo thả file hoặc dán text/url vào ô
+                    input để xử lý.</span
+                  >
+                </div>
+
+                <div class="mb-3">
+                  <div class="small text-muted-2 mb-2">Tệp/Nguồn</div>
+                  <div class="upload-source-card">
+                    <div
+                      id="resultFileIcon"
+                      class="upload-source-icon"
+                      data-kind="file"
+                    >
+                      FILE
+                    </div>
+                    <div class="upload-source-text">
+                      <div id="resultFileName" class="upload-source-name">
+                        -
+                      </div>
+                      <div id="resultFileMeta" class="upload-source-meta">
+                        Chưa có tệp nguồn.
+                      </div>
+                    </div>
+                    <span id="resultFileBadge" class="upload-source-badge"
+                      >-</span
+                    >
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <div class="upload-section-title mb-1">Tóm tắt</div>
+                  <div
+                    id="resultSummary"
+                    class="p-3 rounded upload-summary-scroll"
+                  >
+                    Chưa có tóm tắt.
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <div class="upload-section-title mb-1">Ý chính</div>
+                  <div class="upload-keypoints-scroll p-3 rounded">
+                    <ul id="resultKeyPoints" class="mb-0 ps-3">
+                      <li>Chưa có ý chính.</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                  <a
+                    class="btn btn-outline-light btn-sm"
+                    href="content-list.html"
+                    >Xem danh sách nội dung</a
+                  >
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <section class="glass p-4 mt-4 quiz-studio">
+          <div
+            class="d-flex flex-wrap justify-content-between align-items-start gap-3"
+          >
+            <div>
+              <h4 class="fw-bold mb-1">Sinh và làm bài trắc nghiệm</h4>
+              <p class="text-muted-2 mb-0">
+                Tạo bộ câu hỏi từ nội dung vừa xử lý, làm bài và xem kết quả
+                ngay.
+              </p>
+            </div>
+            <span class="badge badge-soft">Quiz Studio</span>
+          </div>
+
+          <form id="quizConfigForm" class="row g-3 mt-1" novalidate>
+            <div class="col-md-4">
+              <label class="form-label" for="quizQuestionCount"
+                >Số câu hỏi (0-30)</label
+              >
+              <input
+                id="quizQuestionCount"
+                class="form-control"
+                type="number"
+                min="0"
+                max="30"
+                value="10"
+              />
+              <div class="form-text text-muted-2">
+                Để 0 sẽ tự động dùng 10 câu.
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="quizDifficulty">Độ khó</label>
+              <select id="quizDifficulty" class="form-select">
+                <option value="easy">Dễ</option>
+                <option value="medium" selected>Trung bình</option>
+                <option value="hard">Khó</option>
+              </select>
+            </div>
+            <div class="col-md-4 quiz-action-col quiz-action-col--top">
+              <div class="d-flex gap-2 quiz-action-buttons">
+                <button
+                  id="generateQuizButton"
+                  type="submit"
+                  class="btn btn-primary flex-fill"
+                  disabled
+                >
+                  Tạo bộ đề
+                </button>
+                <button
+                  id="reloadQuizButton"
+                  type="button"
+                  class="btn btn-outline-light flex-fill"
+                  disabled
+                >
+                  Reload đề mới
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <div
+            id="quizMessage"
+            class="alert d-none mt-3 mb-0"
+            role="alert"
+          ></div>
+
+          <div id="quizFormBlock" class="d-none mt-4">
+            <div
+              class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"
+            >
+              <div id="quizMeta" class="text-muted-2 small">Chưa có đề.</div>
+              <button id="submitQuizButton" type="button" class="btn btn-soft">
+                Nộp bài & chấm điểm
+              </button>
+            </div>
+            <div id="quizQuestions" class="quiz-question-list"></div>
+          </div>
+        </section>
+
+        <div
+          class="modal fade"
+          id="quizResultModal"
+          tabindex="-1"
+          aria-hidden="true"
+        >
+          <div
+            class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable"
+          >
+            <div class="modal-content quiz-result-modal-content">
+              <div class="modal-header border-0 pb-1">
+                <h5 class="modal-title fw-bold">Kết quả chấm điểm</h5>
+                <button
+                  type="button"
+                  class="btn-close btn-close-white"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div class="modal-body pt-2">
+                <div class="quiz-score-card mb-3">
+                  <div class="quiz-score-label">Kết quả</div>
+                  <div id="quizScoreHeadline" class="quiz-score-headline">
+                    0/0
+                  </div>
+                  <div id="quizScoreSubline" class="text-muted-2 small">
+                    Đúng 0 • Sai 0
+                  </div>
+                </div>
+
+                <div id="quizWrongList" class="quiz-wrong-list"></div>
+              </div>
+            </div>
+          </div>
+<<<<<<< HEAD
 
           <div class="mb-3">
             <div class="d-flex justify-content-between align-items-center mb-1">
@@ -164,9 +480,12 @@
           <div class="d-flex gap-2">
             <a class="btn btn-outline-light btn-sm" href="content-list.html">Xem danh sách nội dung</a>
           </div>
+=======
+>>>>>>> origin/home
         </div>
-      </section>
+      </main>
     </div>
+<<<<<<< HEAD
   </div>
 
   <section class="glass p-4 mt-4 quiz-studio">
@@ -269,4 +588,13 @@
 <script src="../js/navbar-sidebar.js"></script>
 <script src="../js/upload.js"></script>
 </body>
+=======
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../js/navbar-sidebar.js"></script>
+    <script src="../js/upload.js"></script>
+    <script src="../js/navbar.js"></script>
+  </body>
+>>>>>>> origin/home
 </html>
