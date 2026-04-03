@@ -26,6 +26,8 @@ namespace Web_Project.Models
 
         public int RoleId { get; set; }
 
+        public bool Status { get; set; } = true;
+
         public bool IsLocked { get; set; }
 
         public bool IsEmailVerified { get; set; }

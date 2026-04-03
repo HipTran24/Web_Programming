@@ -3,7 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SynapLearn – Xác thực OTP</title>
+        <style id="instant-page-bg">html,body{background:#08131b!important;color:#eef6f7;}</style>
+<title>SynapLearn – Xác thực OTP</title>
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg?v=20260402-tab3" />
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=20260402-tab3" />
     <link
       href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
@@ -12,30 +15,33 @@
     <link href="../css/app-shell.css" rel="stylesheet" />
 </head>
   <body>
-    <header>
-      <span class="logo">SynapLearn</span>
-      <a href="/home/login.html" class="btn-login" data-auth-guest>Đăng nhập</a>
-    </header>
+    <div class="page-content">
+      <header>
+        <span class="logo">SynapLearn</span>
+        <a href="/home/login.html" class="btn-login" data-auth-guest>Đăng nhập</a>
+      </header>
 
-    <main>
-      <div class="card">
-        <h1>Xác thực OTP</h1>
-        <p>Nhập mã 6 số vừa được gửi đến email của bạn</p>
-        <p class="verify-email" id="verifyEmail"></p>
-        <p class="status-message info" id="otpStatus" role="status" aria-live="polite"></p>
+      <main>
+        <div class="card">
+          <h1>Xác thực OTP</h1>
+          <p>Nhập mã 6 số vừa được gửi đến email của bạn</p>
+          <p class="verify-email" id="verifyEmail"></p>
+          <p class="status-message info" id="otpStatus" role="status" aria-live="polite"></p>
 
-        <div class="otp-row" id="otpRow"></div>
+          <div class="otp-row" id="otpRow"></div>
 
-        <button class="btn-confirm" id="confirmBtn" disabled>Xác nhận</button>
+          <button class="btn-confirm" id="confirmBtn" disabled>Xác nhận</button>
 
-        <p class="resend">
-          <span id="resendText">Chưa nhận được mã? </span
-          ><a href="#" id="resendLink">Gửi lại ngay</a>
-        </p>
-      </div>
-    </main>
+          <p class="resend">
+            <span id="resendText">Chưa nhận được mã? </span
+            ><a href="#" id="resendLink">Gửi lại ngay</a>
+          </p>
+        </div>
+      </main>
+    </div>
 
     <script src="../js/auth.js"></script>
+    <script src="../assets/js/main.js"></script>
     <script src="../js/otp.js"></script>
     <script src="../js/app-shell.js"></script>
 </body>

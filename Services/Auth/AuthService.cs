@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Web_Project.Models;
 using Web_Project.Security;
+using Web_Project.Services.Notifications;
 using Web_Project.Services.Otp;
 
 namespace Web_Project.Services.Auth
@@ -22,6 +23,7 @@ namespace Web_Project.Services.Auth
         private readonly JwtSettings _jwtSettings;
         private readonly JwtSigningMaterial _jwtSigningMaterial;
         private readonly ILogger<AuthService> _logger;
+        private readonly ISystemNotificationService? _systemNotificationService;
 
         public AuthService(
             AppDbContext dbContext,
@@ -29,7 +31,8 @@ namespace Web_Project.Services.Auth
             IOptions<GoogleAuthSettings> googleAuthSettings,
             IOptions<JwtSettings> jwtSettings,
             JwtSigningMaterial jwtSigningMaterial,
-            ILogger<AuthService> logger)
+            ILogger<AuthService> logger,
+            ISystemNotificationService? systemNotificationService = null)
         {
             _dbContext = dbContext;
             _emailOtpService = emailOtpService;
@@ -37,13 +40,15 @@ namespace Web_Project.Services.Auth
             _jwtSettings = jwtSettings.Value;
             _jwtSigningMaterial = jwtSigningMaterial;
             _logger = logger;
+            _systemNotificationService = systemNotificationService;
         }
 
         public async Task<LoginServiceResult> LoginAsync(
             LoginRequest request,
             CancellationToken cancellationToken)
         {
-            var identifier = request.EmailOrUsername.Trim();
+            var identifier = NormalizeText(request.EmailOrUsername);
+            var password = request.Password ?? string.Empty;
             var validationErrors = new Dictionary<string, string[]>();
 
             if (string.IsNullOrWhiteSpace(identifier))
@@ -51,7 +56,7 @@ namespace Web_Project.Services.Auth
                 validationErrors[nameof(LoginRequest.EmailOrUsername)] = ["Email hoặc tên đăng nhập không được để trống."];
             }
 
-            if (string.IsNullOrWhiteSpace(request.Password))
+            if (string.IsNullOrWhiteSpace(password))
             {
                 validationErrors[nameof(LoginRequest.Password)] = ["Mật khẩu không được để trống."];
             }
@@ -66,15 +71,15 @@ namespace Web_Project.Services.Auth
                 };
             }
 
-            var normalizedEmail = identifier.ToLowerInvariant();
+            var normalizedIdentifier = identifier.ToLowerInvariant();
             var user = await _dbContext.Users
                 .AsNoTracking()
                 .Include(x => x.Role)
                 .FirstOrDefaultAsync(
-                    x => x.Email == normalizedEmail || x.Username == identifier,
+                    x => x.Email.ToLower() == normalizedIdentifier || x.Username.ToLower() == normalizedIdentifier,
                     cancellationToken);
 
-            if (user is null || !PasswordHashUtility.VerifyPassword(request.Password, user.PasswordHash))
+            if (user is null || !PasswordHashUtility.VerifyPassword(password, user.PasswordHash))
             {
                 return new LoginServiceResult
                 {
@@ -116,12 +121,16 @@ namespace Web_Project.Services.Auth
             }
 
             _logger.LogInformation("User logged in successfully UserId={UserId}", user.UserId);
+            await TryDispatchNotificationAsync(
+                () => _systemNotificationService?.EnsureFirstLoginNotificationAsync(user, cancellationToken),
+                "first-login",
+                user.UserId);
 
             return new LoginServiceResult
             {
                 Success = true,
                 StatusCode = 200,
-                Response = CreateLoginResponse(user, accessToken, expiresAt)
+                Response = await CreateLoginResponseAsync(user, accessToken, expiresAt, cancellationToken)
             };
         }
 
@@ -248,12 +257,16 @@ namespace Web_Project.Services.Auth
             }
 
             _logger.LogInformation("User logged in with Google successfully UserId={UserId}", user.UserId);
+            await TryDispatchNotificationAsync(
+                () => _systemNotificationService?.EnsureFirstLoginNotificationAsync(user, cancellationToken),
+                "first-login-google",
+                user.UserId);
 
             return new LoginServiceResult
             {
                 Success = true,
                 StatusCode = 200,
-                Response = CreateLoginResponse(user, accessToken, expiresAt)
+                Response = await CreateLoginResponseAsync(user, accessToken, expiresAt, cancellationToken)
             };
         }
 
@@ -262,9 +275,10 @@ namespace Web_Project.Services.Auth
             string requestIp,
             CancellationToken cancellationToken)
         {
-            var username = request.Username.Trim();
-            var fullName = request.FullName.Trim();
-            var email = request.Email.Trim().ToLowerInvariant();
+            var username = NormalizeText(request.Username);
+            var fullName = NormalizeText(request.FullName);
+            var email = NormalizeEmail(request.Email);
+            var password = request.Password ?? string.Empty;
 
             var validationErrors = new Dictionary<string, string[]>();
 
@@ -283,26 +297,34 @@ namespace Web_Project.Services.Auth
                 validationErrors[nameof(RegisterRequest.AcceptTerms)] = ["Bạn cần đồng ý với điều khoản sử dụng."];
             }
 
-            if (!HasStrongPassword(request.Password))
+            if (!HasStrongPassword(password))
             {
                 validationErrors[nameof(RegisterRequest.Password)] =
                     ["Mật khẩu cần có ít nhất 8 ký tự, gồm chữ hoa, chữ thường và chữ số."];
             }
 
-            var usernameExists = await _dbContext.Users
-                .AnyAsync(x => x.Username == username, cancellationToken);
-
-            if (usernameExists)
+            if (!string.IsNullOrWhiteSpace(username))
             {
-                validationErrors[nameof(RegisterRequest.Username)] = ["Tên đăng nhập đã tồn tại."];
+                var usernameExists = await _dbContext.Users
+                    .IgnoreQueryFilters()
+                    .AnyAsync(x => x.Username == username, cancellationToken);
+
+                if (usernameExists)
+                {
+                    validationErrors[nameof(RegisterRequest.Username)] = ["Tên đăng nhập đã tồn tại."];
+                }
             }
 
-            var emailExists = await _dbContext.Users
-                .AnyAsync(x => x.Email == email, cancellationToken);
-
-            if (emailExists)
+            if (!string.IsNullOrWhiteSpace(email))
             {
-                validationErrors[nameof(RegisterRequest.Email)] = ["Email đã được sử dụng."];
+                var emailExists = await _dbContext.Users
+                    .IgnoreQueryFilters()
+                    .AnyAsync(x => x.Email == email, cancellationToken);
+
+                if (emailExists)
+                {
+                    validationErrors[nameof(RegisterRequest.Email)] = ["Email đã được sử dụng."];
+                }
             }
 
             if (validationErrors.Count > 0)
@@ -322,8 +344,9 @@ namespace Web_Project.Services.Auth
                 Username = username,
                 FullName = fullName,
                 Email = email,
-                PasswordHash = PasswordHashUtility.HashPassword(request.Password),
+                PasswordHash = PasswordHashUtility.HashPassword(password),
                 RoleId = roleId,
+                Status = true,
                 IsLocked = false,
                 IsEmailVerified = false,
                 CreatedAt = now
@@ -348,6 +371,10 @@ namespace Web_Project.Services.Auth
             _logger.LogInformation("Registered new user UserId={UserId} Username={Username}", user.UserId, user.Username);
 
             var otpDispatch = await _emailOtpService.IssueRegisterOtpAsync(user, requestIp, cancellationToken);
+            await TryDispatchNotificationAsync(
+                () => _systemNotificationService?.NotifyRegistrationCreatedAsync(user, adminInitiated: false, cancellationToken),
+                "registration-created",
+                user.UserId);
 
             return new RegisterServiceResult
             {
@@ -440,6 +467,7 @@ namespace Web_Project.Services.Auth
                     Email = email,
                     PasswordHash = PasswordHashUtility.HashPassword($"GOOGLE::{Guid.NewGuid():N}Aa1"),
                     RoleId = roleId,
+                    Status = true,
                     IsLocked = false,
                     IsEmailVerified = true,
                     CreatedAt = now
@@ -485,7 +513,7 @@ namespace Web_Project.Services.Auth
 
             var candidate = baseUsername;
             var suffix = 0;
-            while (await _dbContext.Users.AnyAsync(x => x.Username == candidate, cancellationToken))
+            while (await _dbContext.Users.IgnoreQueryFilters().AnyAsync(x => x.Username == candidate, cancellationToken))
             {
                 suffix++;
                 var suffixText = suffix.ToString();
@@ -511,10 +539,39 @@ namespace Web_Project.Services.Auth
             return hasUpper && hasLower && hasDigit;
         }
 
+        private async Task TryDispatchNotificationAsync(
+            Func<Task?> actionFactory,
+            string eventName,
+            int userId)
+        {
+            try
+            {
+                var task = actionFactory();
+                if (task is not null)
+                {
+                    await task;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to dispatch auth notification Event={EventName} UserId={UserId}", eventName, userId);
+            }
+        }
+
         private static bool IsUniqueConstraintViolation(DbUpdateException exception)
         {
             return exception.InnerException is SqlException sqlException &&
                    (sqlException.Number == 2601 || sqlException.Number == 2627);
+        }
+
+        private static string NormalizeText(string? value)
+        {
+            return (value ?? string.Empty).Trim();
+        }
+
+        private static string NormalizeEmail(string? value)
+        {
+            return NormalizeText(value).ToLowerInvariant();
         }
 
         private bool TryCreateAccessToken(
@@ -537,7 +594,8 @@ namespace Web_Project.Services.Auth
                 new(ClaimTypes.NameIdentifier, user.UserId.ToString()),
                 new(ClaimTypes.Name, user.Username),
                 new(ClaimTypes.Email, user.Email),
-                new(ClaimTypes.Role, user.Role?.RoleName ?? DefaultUserRoleName)
+                new(ClaimTypes.Role, user.Role?.RoleName ?? DefaultUserRoleName),
+                new("isAdmin", string.Equals(user.Role?.RoleName, "Admin", StringComparison.OrdinalIgnoreCase) ? "true" : "false")
             };
 
             var signingCredentials = _jwtSigningMaterial.CreateSigningCredentials();
@@ -554,19 +612,43 @@ namespace Web_Project.Services.Auth
             return true;
         }
 
-        private static LoginResponse CreateLoginResponse(User user, string accessToken, DateTime expiresAt)
+        private async Task<LoginResponse> CreateLoginResponseAsync(User user, string accessToken, DateTime expiresAt, CancellationToken cancellationToken)
         {
+            var avatarUrl = await _dbContext.SystemSettings
+                .AsNoTracking()
+                .Where(x => x.SettingKey == $"user:{user.UserId}:profile-meta")
+                .Select(x => x.SettingValue)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            string resolvedAvatarUrl = string.Empty;
+            if (!string.IsNullOrWhiteSpace(avatarUrl))
+            {
+                try
+                {
+                    using var document = System.Text.Json.JsonDocument.Parse(avatarUrl);
+                    if (document.RootElement.TryGetProperty("avatarUrl", out var avatarElement))
+                    {
+                        resolvedAvatarUrl = avatarElement.GetString()?.Trim() ?? string.Empty;
+                    }
+                }
+                catch
+                {
+                    resolvedAvatarUrl = string.Empty;
+                }
+            }
+
             return new LoginResponse
             {
                 UserId = user.UserId,
                 Username = user.Username,
                 FullName = user.FullName,
                 Email = user.Email,
+                AvatarUrl = resolvedAvatarUrl,
                 Role = user.Role?.RoleName ?? DefaultUserRoleName,
+                IsAdmin = string.Equals(user.Role?.RoleName, "Admin", StringComparison.OrdinalIgnoreCase),
                 AccessToken = accessToken,
                 ExpiresAt = expiresAt
             };
         }
     }
 }
-

@@ -45,6 +45,13 @@ namespace Web_Project.Models
                 .IsUnique();
 
             modelBuilder.Entity<User>()
+                .Property(x => x.Status)
+                .HasDefaultValue(true);
+
+            modelBuilder.Entity<User>()
+                .HasQueryFilter(x => x.Status);
+
+            modelBuilder.Entity<User>()
                 .HasIndex(x => x.Username)
                 .IsUnique();
 

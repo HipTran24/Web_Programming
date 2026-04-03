@@ -3,15 +3,19 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Đăng ký - SynapLearn</title>
+        <style id="instant-page-bg">html,body{background:#08131b!important;color:#eef6f7;}</style>
+<title>SynapLearn - Đăng ký</title>
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg?v=20260402-tab3" />
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=20260402-tab3" />
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
     <link href="../css/style.css" rel="stylesheet" />
     <link href="../css/app-shell.css" rel="stylesheet" />
+    <link href="../css/register.css" rel="stylesheet" />
 </head>
-  <body>
+  <body class="page-register">
     <div id="page-loader" class="logo-loader">
   <div class="logo-loader-box">
     <div class="ai-orbit orbit-1"></div>
@@ -25,78 +29,108 @@
 </div>
 
 <div class="page-content">
-<main class="container py-5">
-      <div class="row justify-content-center">
-        <div class="col-lg-6">
-          <div class="glass p-4">
-            <h3 class="fw-bold mb-2">Đăng ký</h3>
-            <p class="text-muted-2">
-              Tạo tài khoản để dùng đầy đủ: tùy chỉnh đề, lưu lịch sử, phân tích học tập.
-            </p>
+<main class="auth-page auth-page--register">
+      <div class="container register-shell">
+        <section class="register-card register-card--solo" aria-label="Biểu mẫu đăng ký">
+            <div class="register-card-head">
+              <h1 class="register-title mb-2">Đăng ký</h1>
+              <p class="register-head-sub mb-0">Tham gia SynapLearn để học tập tập trung và thông minh hơn mỗi ngày.</p>
+            </div>
 
-            <form id="registerForm" class="row g-3" novalidate>
+            <form id="registerForm" class="row g-3 register-form-grid" novalidate>
               <div class="col-12">
-                <label class="form-label" for="username">Tên đăng nhập</label>
-                <input
-                  id="username"
-                  name="username"
-                  class="form-control"
-                  placeholder="nguyenvana"
-                  maxlength="64"
-                  autocomplete="username"
-                  required
-                />
+                <div class="field-control">
+                  <span class="field-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <path d="M20 21a8 8 0 0 0-16 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                      <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8" />
+                    </svg>
+                  </span>
+                  <input
+                    id="username"
+                    name="username"
+                    class="floating-input"
+                    placeholder=" "
+                    maxlength="64"
+                    autocomplete="username"
+                    required
+                  />
+                  <label class="floating-label" for="username">Tên đăng nhập</label>
+                </div>
                 <div class="invalid-feedback" id="usernameError"></div>
               </div>
 
               <div class="col-12">
-                <label class="form-label" for="fullName">Họ tên</label>
-                <input
-                  id="fullName"
-                  name="fullName"
-                  class="form-control"
-                  placeholder="Nguyễn Văn A"
-                  maxlength="128"
-                  autocomplete="name"
-                  required
-                />
+                <div class="field-control">
+                  <span class="field-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <path d="M4 20v-1a7 7 0 0 1 14 0v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                      <circle cx="11" cy="8" r="4" stroke="currentColor" stroke-width="1.8" />
+                      <path d="M18 7h2m-1-1v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                    </svg>
+                  </span>
+                  <input
+                    id="fullName"
+                    name="fullName"
+                    class="floating-input"
+                    placeholder=" "
+                    maxlength="128"
+                    autocomplete="name"
+                    required
+                  />
+                  <label class="floating-label" for="fullName">Họ và tên</label>
+                </div>
                 <div class="invalid-feedback" id="fullNameError"></div>
               </div>
 
               <div class="col-12">
-                <label class="form-label" for="email">Email</label>
-                <input
-                  id="email"
-                  name="email"
-                  class="form-control"
-                  placeholder="name@email.com"
-                  type="email"
-                  maxlength="256"
-                  autocomplete="email"
-                  required
-                />
+                <div class="field-control">
+                  <span class="field-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <rect x="3" y="5" width="18" height="14" rx="3" stroke="currentColor" stroke-width="1.8" />
+                      <path d="m4 7.5 7.1 5.2a1.6 1.6 0 0 0 1.9 0L20 7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                    </svg>
+                  </span>
+                  <input
+                    id="email"
+                    name="email"
+                    class="floating-input"
+                    placeholder=" "
+                    type="email"
+                    maxlength="256"
+                    autocomplete="email"
+                    required
+                  />
+                  <label class="floating-label" for="email">Địa chỉ email</label>
+                </div>
                 <div class="invalid-feedback" id="emailError"></div>
               </div>
 
               <div class="col-12">
-                <label class="form-label" for="password">Mật khẩu</label>
-                <div class="position-relative">
+                <div class="field-control has-toggle">
+                  <span class="field-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <rect x="4" y="10" width="16" height="10" rx="3" stroke="currentColor" stroke-width="1.8" />
+                      <path d="M8 10V7a4 4 0 1 1 8 0v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                    </svg>
+                  </span>
                   <input
                     id="password"
                     name="password"
-                    class="form-control"
+                    class="floating-input"
                     type="password"
-                    placeholder="********"
+                    placeholder=" "
                     minlength="8"
                     maxlength="128"
                     autocomplete="new-password"
                     required
                   />
+                  <label class="floating-label" for="password">Mật khẩu</label>
                   <button
                     type="button"
-                    class="btn btn-link position-absolute top-50 end-0 translate-middle-y text-decoration-none password-toggle-btn"
+                    class="btn btn-link password-toggle-btn"
                     id="toggleRegisterPassword"
-                    aria-label="Hiện/ẩn mật khẩu"
+                    aria-label="Hiện hoặc ẩn mật khẩu"
                   >
                     <svg id="registerPasswordEyeIcon" width="18" height="18" fill="none" viewBox="0 0 24 24">
                       <path
@@ -108,28 +142,35 @@
                     </svg>
                   </button>
                 </div>
+                <div class="register-field-note">Tối thiểu 8 ký tự, nên có chữ và số để tăng bảo mật.</div>
                 <div class="invalid-feedback" id="passwordError"></div>
               </div>
 
               <div class="col-12">
-                <label class="form-label" for="confirmPassword">Nhập lại mật khẩu</label>
-                <div class="position-relative">
+                <div class="field-control has-toggle">
+                  <span class="field-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <rect x="4" y="10" width="16" height="10" rx="3" stroke="currentColor" stroke-width="1.8" />
+                      <path d="M8 10V7a4 4 0 1 1 8 0v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                    </svg>
+                  </span>
                   <input
                     id="confirmPassword"
                     name="confirmPassword"
-                    class="form-control"
+                    class="floating-input"
                     type="password"
-                    placeholder="********"
+                    placeholder=" "
                     minlength="8"
                     maxlength="128"
                     autocomplete="new-password"
                     required
                   />
+                  <label class="floating-label" for="confirmPassword">Nhập lại mật khẩu</label>
                   <button
                     type="button"
-                    class="btn btn-link position-absolute top-50 end-0 translate-middle-y text-decoration-none password-toggle-btn"
+                    class="btn btn-link password-toggle-btn"
                     id="toggleRegisterConfirmPassword"
-                    aria-label="Hiện/ẩn nhập lại mật khẩu"
+                    aria-label="Hiện hoặc ẩn nhập lại mật khẩu"
                   >
                     <svg id="registerConfirmPasswordEyeIcon" width="18" height="18" fill="none" viewBox="0 0 24 24">
                       <path
@@ -141,32 +182,32 @@
                     </svg>
                   </button>
                 </div>
+                <div class="register-field-note">Nhập lại chính xác mật khẩu để hoàn tất đăng ký.</div>
                 <div class="invalid-feedback" id="confirmPasswordError"></div>
               </div>
 
               <div class="col-12">
-                <div class="form-check">
+                <div class="form-check register-terms register-terms-wrapper">
                   <input class="form-check-input" type="checkbox" id="agree" />
                   <label class="form-check-label" for="agree">
-                    Tôi đồng ý với điều khoản sử dụng
+                    Tôi đồng ý với điều khoản sử dụng và chính sách bảo mật
                   </label>
                 </div>
                 <div class="invalid-feedback d-block" id="acceptTermsError"></div>
               </div>
 
               <div class="col-12">
-                <div id="registerMessage" class="small mb-3"></div>
-                <button id="registerButton" type="submit" class="btn btn-primary w-100">
-                  Tạo tài khoản
+                <div id="registerMessage" class="small mb-3 register-message"></div>
+                <button id="registerButton" type="submit" class="btn btn-primary w-100 register-submit-btn">
+                  Đăng ký
                 </button>
-                <div class="text-muted-2 small mt-3">
+                <div class="text-muted-2 small mt-3 register-footer-note">
                   Đã có tài khoản?
                   <a href="../home/login.html" class="text-white">Đăng nhập</a>
                 </div>
               </div>
             </form>
-          </div>
-        </div>
+        </section>
       </div>
     </main>
 

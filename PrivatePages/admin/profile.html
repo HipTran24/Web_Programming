@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <style id="instant-page-bg">html,body{background:#08131b!important;color:#eef6f7;}</style>
+<title>SynapLearn - Hồ sơ quản trị</title>
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg?v=20260402-tab3" />
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=20260402-tab3" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/style.css" rel="stylesheet" />
+    <link href="/css/admin.css" rel="stylesheet" />
+  </head>
+  <body class="page-admin" data-admin-page="profile">
+    <div class="page-content portal-shell">
+      <aside class="portal-sidebar">
+        <div class="portal-brand">
+          <span class="portal-brand-lockup">
+            <span class="portal-brand-logo" aria-hidden="true">
+              <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+                <defs>
+                  <linearGradient id="adminBrandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#65d9cb" />
+                    <stop offset="100%" stop-color="#f0b45a" />
+                  </linearGradient>
+                </defs>
+                <path d="M6 5.5C6 4.12 7.12 3 8.5 3h7C16.88 3 18 4.12 18 5.5v2.34c0 .66-.26 1.3-.73 1.77l-3.5 3.5a2.5 2.5 0 0 1-3.54 0l-3.5-3.5A2.5 2.5 0 0 1 6 7.84V5.5Z" fill="url(#adminBrandGradient)"/>
+                <path d="M6 18.5C6 19.88 7.12 21 8.5 21h7c1.38 0 2.5-1.12 2.5-2.5v-2.34c0-.66-.26-1.3-.73-1.77l-3.5-3.5a2.5 2.5 0 0 0-3.54 0l-3.5 3.5A2.5 2.5 0 0 0 6 16.16v2.34Z" fill="rgba(101, 217, 203, 0.18)" stroke="rgba(101, 217, 203, 0.65)" stroke-width="1.1"/>
+                <circle cx="12" cy="12" r="1.7" fill="#edf7f7"/>
+              </svg>
+            </span>
+            <span class="section-kicker">SynapLearn</span>
+          </span>
+          <strong>Cổng quản trị</strong>
+        </div>
+
+        <nav class="portal-nav" aria-label="Điều hướng quản trị">
+          <a href="/admin">Tổng quan</a>
+          <a href="/admin/users">Người dùng</a>
+          <a href="/admin/content">Nội dung</a>
+          <a href="/admin/reports">Báo cáo</a>
+          <a href="/admin/ai-system">AI System</a>
+          <a href="/admin/notifications">Thông báo</a>
+          <a href="/admin/settings">Thiết lập</a>
+          <a class="is-active" href="/admin/profile">Hồ sơ</a>
+        </nav>
+      </aside>
+
+      <div class="portal-main">
+        <header class="portal-topbar">
+          <div>
+            <p class="section-kicker mb-1">Trang quản trị</p>
+            <h1 class="hero-title mb-0" style="font-size: clamp(1.5rem, 2.3vw, 2rem);">Hồ sơ quản trị</h1>
+          </div>
+          <div class="portal-session">
+            <div class="portal-session-avatar" id="adminSessionAvatar">AD</div>
+            <div>
+              <div class="fw-semibold" id="adminSessionName">Quản trị viên</div>
+              <div class="row-meta" id="adminSessionRole">Quản trị viên</div>
+            </div>
+            <div class="admin-alerts-wrap">
+              <button id="adminAlertsToggle" type="button" class="admin-alerts-toggle" aria-expanded="false" aria-controls="adminAlertsFlyout" aria-label="Thông báo quản trị">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M12 3.75a4.5 4.5 0 0 0-4.5 4.5v1.09c0 1.17-.32 2.32-.92 3.32l-1.05 1.74a1.5 1.5 0 0 0 1.28 2.28h10.38a1.5 1.5 0 0 0 1.28-2.28l-1.05-1.74a6.37 6.37 0 0 1-.92-3.32V8.25a4.5 4.5 0 0 0-4.5-4.5Zm0 16.5a2.63 2.63 0 0 1-2.41-1.58h4.82A2.63 2.63 0 0 1 12 20.25Z" fill="currentColor"/>
+                </svg>
+                <span id="adminAlertsDot" class="admin-alerts-dot" hidden></span>
+              </button>
+              <div id="adminAlertsFlyout" class="admin-alerts-flyout" hidden>
+                <div class="admin-alerts-head">
+                  <div>
+                    <strong>Thông báo quản trị</strong>
+                    <p id="adminAlertsMeta" class="admin-alerts-meta">Đang tải cảnh báo hệ thống...</p>
+                  </div>
+                  <a href="/admin/notifications" class="admin-alerts-link">Lịch sử</a>
+                </div>
+                <div id="adminAlertsList" class="admin-alerts-list"></div>
+              </div>
+            </div>
+            <button id="adminPortalLogout" type="button" class="btn btn-admin-secondary">Đăng xuất</button>
+          </div>
+        </header>
+
+        <main class="portal-content">
+          <div id="adminToastStack" class="admin-toast-stack" aria-live="polite" aria-atomic="true"></div>
+
+          <section class="admin-hero card-surface profile-hero">
+            <div class="hero-copy">
+              <p class="hero-kicker mb-2">Hồ sơ quản trị</p>
+              <h2 class="hero-title mb-3">Thông tin cá nhân và bảo mật</h2>
+              <p class="hero-sub mb-0">Cập nhật hồ sơ cá nhân, quản lý bảo mật và tạo thêm tài khoản quản trị khi cần.</p>
+            </div>
+            <div class="hero-side hero-side-compact">
+              <div class="hero-actions">
+                <button id="openAdminCreatePanel" type="button" class="btn btn-admin-secondary" aria-expanded="false">Tạo tài khoản</button>
+                <button id="refreshAllBtn" type="button" class="btn btn-admin-primary">Làm mới trang</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="profile-page-shell">
+            <article class="card-surface operations-card profile-card-centered">
+              <div class="section-head">
+                <div>
+                  <p class="section-kicker">Cập nhật hồ sơ</p>
+                  <h2>Thông tin cá nhân</h2>
+                </div>
+                <span class="section-tag neutral">Hồ sơ</span>
+              </div>
+              <form id="adminProfileForm" class="admin-create-form" novalidate>
+                <div class="form-grid">
+                  <label class="field">
+                    <span>Username</span>
+                    <input id="adminProfileUsername" class="form-control" type="text" readonly />
+                  </label>
+                  <label class="field">
+                    <span>Vai trò</span>
+                    <input id="adminProfileRole" class="form-control" type="text" readonly />
+                  </label>
+                  <label class="field field-wide">
+                    <span>Ngày tạo tài khoản</span>
+                    <input id="adminProfileCreatedAt" class="form-control" type="text" readonly />
+                  </label>
+                  <label class="field">
+                    <span>Họ và tên</span>
+                    <input id="adminProfileFullName" class="form-control" type="text" maxlength="128" required />
+                  </label>
+                  <label class="field">
+                    <span>Email</span>
+                    <input id="adminProfileEmail" class="form-control" type="email" maxlength="256" required />
+                  </label>
+                  <label class="field field-wide">
+                    <span>Số điện thoại</span>
+                    <input id="adminProfilePhone" class="form-control" type="text" maxlength="32" placeholder="Nhập số điện thoại liên hệ" />
+                  </label>
+                  <label class="field field-wide">
+                    <span>Giới thiệu</span>
+                    <textarea id="adminProfileBio" class="form-control" rows="4" maxlength="1000" placeholder="Nhập mô tả ngắn về vai trò hoặc phạm vi phụ trách"></textarea>
+                  </label>
+                </div>
+                <div class="form-actions">
+                  <button id="adminProfileSubmit" type="submit" class="btn btn-admin-primary">Lưu hồ sơ</button>
+                  <button id="adminProfileReset" type="button" class="btn btn-admin-secondary">Khôi phục nội dung</button>
+                  <button id="openAdminPasswordModal" type="button" class="btn btn-admin-secondary ms-auto">Đổi mật khẩu</button>
+                  <p id="adminProfileInfoFeedback" class="inline-feedback" role="status" aria-live="polite"></p>
+                </div>
+              </form>
+            </article>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <div class="modal fade" id="adminCreateModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <form id="adminCreateForm" class="modal-content admin-modal-content">
+          <div class="modal-header border-0 pb-1">
+            <div>
+              <p class="modal-eyebrow mb-1">Tài khoản quản trị</p>
+              <h5 class="modal-title fw-bold">Tạo quản trị viên mới</h5>
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+          </div>
+          <div class="modal-body pt-2">
+            <div class="form-grid">
+              <label class="field">
+                <span>Tên đăng nhập</span>
+                <input id="adminUsername" class="form-control" type="text" maxlength="64" placeholder="Ví dụ: admin.operations" required />
+              </label>
+              <label class="field">
+                <span>Họ và tên</span>
+                <input id="adminFullName" class="form-control" type="text" maxlength="128" placeholder="Nhập tên người quản trị" required />
+              </label>
+              <label class="field field-wide">
+                <span>Email</span>
+                <input id="adminEmail" class="form-control" type="email" maxlength="256" placeholder="admin@example.com" required />
+              </label>
+              <label class="field">
+                <span>Mật khẩu</span>
+                <input id="adminPassword" class="form-control" type="password" placeholder="Tối thiểu 8 ký tự" required />
+              </label>
+              <label class="field">
+                <span>Nhập lại mật khẩu</span>
+                <input id="adminConfirmPassword" class="form-control" type="password" placeholder="Nhập lại mật khẩu" required />
+              </label>
+            </div>
+            <div class="form-note mt-3">Hệ thống sẽ kiểm tra quyền, email trùng và độ mạnh mật khẩu trước khi tạo.</div>
+            <p id="adminCreateFeedback" class="inline-feedback mt-3" role="status" aria-live="polite"></p>
+          </div>
+          <div class="modal-footer border-0 pt-1">
+            <button type="button" class="btn btn-admin-secondary" data-bs-dismiss="modal">Đóng</button>
+            <button id="adminCreateSubmit" type="submit" class="btn btn-admin-primary">Tạo quản trị viên</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal fade" id="adminPasswordModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <form id="adminPasswordForm" class="modal-content admin-modal-content">
+          <div class="modal-header border-0 pb-1">
+            <div>
+              <p class="modal-eyebrow mb-1">Bảo mật</p>
+              <h5 class="modal-title fw-bold">Đổi mật khẩu</h5>
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+          </div>
+          <div class="modal-body pt-2">
+            <div class="form-grid">
+              <label class="field field-wide">
+                <span>Mật khẩu hiện tại</span>
+                <input id="adminCurrentPassword" class="form-control" type="password" required />
+              </label>
+              <label class="field">
+                <span>Mật khẩu mới</span>
+                <input id="adminNewPassword" class="form-control" type="password" minlength="8" required />
+              </label>
+              <label class="field">
+                <span>Xác nhận mật khẩu mới</span>
+                <input id="adminConfirmPassword" class="form-control" type="password" minlength="8" required />
+              </label>
+            </div>
+            <div class="form-note mt-3">Mật khẩu mới phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường và chữ số.</div>
+            <p id="adminPasswordFeedback" class="inline-feedback mt-3" role="status" aria-live="polite"></p>
+          </div>
+          <div class="modal-footer border-0 pt-1">
+            <button type="button" class="btn btn-admin-secondary" data-bs-dismiss="modal">Đóng</button>
+            <button id="adminPasswordSubmit" type="submit" class="btn btn-admin-primary">Đổi mật khẩu</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/assets/js/main.js"></script>
+    <script src="/js/admin.js"></script>
+  </body>
+</html>

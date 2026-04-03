@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <style id="instant-page-bg">html,body{background:#08131b!important;color:#eef6f7;}</style>
+<title>SynapLearn - User Dashboard</title>
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg?v=20260402-tab3" />
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=20260402-tab3" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link href="/css/style.css" rel="stylesheet" />
+    <link href="/css/app-shell.css" rel="stylesheet" />
+    <link href="/css/dashboard-modern.css" rel="stylesheet" />
+  </head>
+  <body class="dashboard-page">
+    <div id="page-loader" class="logo-loader">
+      <div class="logo-loader-box">
+        <div class="ai-orbit orbit-1"></div>
+        <div class="ai-orbit orbit-2"></div>
+        <div class="ai-logo-core">
+          <span>AI</span>
+        </div>
+        <h4>SynapLearn</h4>
+        <p>Khu vực học tập cá nhân đang khởi động</p>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <main class="container py-5">
+        <section class="dash-hero glass" id="dashboardHero">
+          <div class="dash-hero-main">
+            <h1 class="dash-title">
+              Xin chào, <span data-auth-name>Người dùng</span>
+            </h1>
+            <p class="dash-subtitle mb-0">Không gian học tập dành riêng cho User, tập trung vào tiến độ, nội dung và kế hoạch học.</p>
+            <div class="dash-actions">
+              <a class="dash-btn dash-btn-primary" id="heroUploadButton" href="/home/upload.html">Tải nội dung mới</a>
+              <a class="dash-btn dash-btn-secondary" href="#dailyPlanSection">Xem kế hoạch hôm nay</a>
+            </div>
+          </div>
+          <aside class="dash-streak-card" aria-live="polite">
+            <div class="dash-streak-number" id="streakDays">0</div>
+            <div class="dash-streak-title">Ngày học liên tiếp</div>
+            <div class="dash-streak-note" id="streakDelta">Không đổi so với tuần trước</div>
+          </aside>
+        </section>
+
+        <section class="dash-continue-wrap glass" id="section-content">
+          <div class="dash-block-head">
+            <h5 class="fw-semibold mb-0">Tiếp tục học</h5>
+            <a class="dash-link" href="/home/history.html">Mở lịch sử</a>
+          </div>
+          <article class="dash-continue-card" id="continueCard">
+            <div class="dash-continue-main">
+              <div class="dash-continue-title" id="continueTitle">Chưa có nội dung gần đây</div>
+              <div class="dash-continue-meta" id="continueMeta">Hãy upload tài liệu đầu tiên để bắt đầu.</div>
+              <div class="dash-progress-shell" aria-label="Tiến độ học tập">
+                <div class="dash-progress-bar" id="continueProgressBar" style="width: 0%"></div>
+              </div>
+              <div class="dash-progress-text" id="continueProgressText">Tiến độ 0%</div>
+            </div>
+            <div class="dash-continue-actions">
+              <a class="dash-btn dash-btn-primary dash-btn-sm" id="continueViewLink" href="/home/history.html">Tiếp tục</a>
+              <a class="dash-btn dash-btn-soft dash-btn-sm" id="continueQuizLink" href="/home/upload.html">Làm quiz nhanh</a>
+            </div>
+          </article>
+        </section>
+
+        <section class="dash-kpis" id="section-overview">
+          <article class="dash-kpi-card glass">
+            <div class="dash-kpi-label">Nội dung đã xử lý</div>
+            <div class="dash-kpi-value" id="kpiContents">0</div>
+            <div class="dash-kpi-meta" id="kpiContentsMeta">+0 trong 7 ngày gần nhất</div>
+          </article>
+          <article class="dash-kpi-card glass">
+            <div class="dash-kpi-label">Quiz đã hoàn thành</div>
+            <div class="dash-kpi-value" id="kpiQuizzes">0</div>
+            <div class="dash-kpi-meta" id="kpiQuizzesMeta">Bắt đầu quiz đầu tiên để có thống kê</div>
+          </article>
+          <article class="dash-kpi-card glass">
+            <div class="dash-kpi-label">Tiến độ tuần</div>
+            <div class="dash-kpi-value" id="kpiGoal">0%</div>
+            <div class="dash-kpi-meta" id="kpiGoalMeta">Cần thêm 7 phiên học để đạt 100%</div>
+          </article>
+        </section>
+
+        <section class="dash-grid">
+          <article class="glass dash-panel">
+            <h6 class="fw-semibold mb-3">Gợi ý thông minh</h6>
+            <ul class="dash-suggestion-list" id="smartSuggestionsList">
+              <li><span class="dash-suggestion-icon">⚡</span><span>Đang phân tích dữ liệu học tập...</span></li>
+            </ul>
+          </article>
+
+          <article class="glass dash-panel" id="dailyPlanSection">
+            <h6 class="fw-semibold mb-3">Kế hoạch học hằng ngày</h6>
+            <ul class="dash-checklist" id="dailyPlanChecklist">
+              <li>
+                <label class="dash-check-item">
+                  <input type="checkbox" />
+                  <span>Đang tạo kế hoạch học hôm nay...</span>
+                </label>
+              </li>
+            </ul>
+          </article>
+        </section>
+
+        <div id="dashboardNotice" class="alert alert-danger d-none mt-4" role="alert"></div>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/assets/js/main.js"></script>
+    <script src="/js/dashboard.inline.js"></script>
+    <script src="/js/app-shell.js"></script>
+  </body>
+</html>

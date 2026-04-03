@@ -39,6 +39,32 @@ public sealed class AuthServiceRegisterTests
     }
 
     [Fact]
+    public async Task RegisterAsync_ReturnsValidationErrors_WhenRequiredFieldsAreNull()
+    {
+        using var dbContext = CreateDbContext();
+        var otpService = new FakeEmailOtpService();
+        var service = CreateService(dbContext, otpService);
+
+        var request = new RegisterRequest
+        {
+            Username = null!,
+            FullName = null!,
+            Email = null!,
+            Password = null!,
+            ConfirmPassword = null!,
+            AcceptTerms = false
+        };
+
+        var result = await service.RegisterAsync(request, "127.0.0.1", CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Contains(nameof(RegisterRequest.Username), result.ValidationErrors.Keys);
+        Assert.Contains(nameof(RegisterRequest.FullName), result.ValidationErrors.Keys);
+        Assert.Contains(nameof(RegisterRequest.Password), result.ValidationErrors.Keys);
+        Assert.Equal(0, otpService.IssueCallCount);
+    }
+
+    [Fact]
     public async Task RegisterAsync_ReturnsValidationError_WhenUsernameAlreadyExists()
     {
         using var dbContext = CreateDbContext();

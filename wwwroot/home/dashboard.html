@@ -3,7 +3,16 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Dashboard - SynapLearn</title>
+        <style id="instant-page-bg">html,body{background:#08131b!important;color:#eef6f7;}</style>
+<title>SynapLearn</title>
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg?v=20260402-tab3" />
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=20260402-tab3" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -27,158 +36,85 @@
 
     <div class="page-content">
       <main class="container py-5">
-        <section class="dash-hero glass">
+        <section class="dash-hero glass" id="dashboardHero">
           <div class="dash-hero-main">
-            <p class="dash-eyebrow mb-2">Workspace học tập cá nhân</p>
-            <h1 class="dash-title mb-2">
-              Xin chào, <span data-auth-name>Người dùng</span>
+            <h1 class="dash-title">
+              Xin chào, <span data-auth-name>Người dùng</span> <span aria-hidden="true">👋</span>
             </h1>
-            <p class="text-muted-2 mb-4">
-              Tập trung vào những gì quan trọng nhất hôm nay: tiếp tục bài đang dở,
-              ôn chủ đề yếu và tạo đề mới từ tài liệu vừa tải lên.
-            </p>
+            <p class="dash-subtitle mb-0">Hôm nay bạn muốn tiếp tục học hay tạo nội dung mới?</p>
             <div class="dash-actions">
-              <a class="btn btn-primary" href="upload.html">Upload nội dung mới</a>
-              <a class="btn btn-outline-light" href="history.html">Tiếp tục bài gần nhất</a>
+              <a class="dash-btn dash-btn-primary" id="heroUploadButton" href="upload.html">Tải nội dung mới</a>
+              <a class="dash-btn dash-btn-secondary" href="#dailyPlanSection">Xem kế hoạch hôm nay</a>
             </div>
           </div>
-          <aside class="dash-streak">
-            <div class="dash-streak-icon">7</div>
-            <div class="dash-streak-label">Ngày học liên tiếp</div>
-            <div class="dash-streak-note">+2 ngày so với tuần trước</div>
+          <aside class="dash-streak-card" aria-live="polite">
+            <div class="dash-streak-number" id="streakDays">0</div>
+            <div class="dash-streak-title">Ngày học liên tiếp</div>
+            <div class="dash-streak-note" id="streakDelta">Không đổi so với tuần trước</div>
           </aside>
+        </section>
+
+        <section class="dash-continue-wrap glass" id="section-content">
+          <div class="dash-block-head">
+            <h5 class="fw-semibold mb-0">Tiếp tục học</h5>
+            <a class="dash-link" href="history.html">Mở lịch sử</a>
+          </div>
+          <article class="dash-continue-card" id="continueCard">
+            <div class="dash-continue-main">
+              <div class="dash-continue-title" id="continueTitle">Chưa có nội dung gần đây</div>
+              <div class="dash-continue-meta" id="continueMeta">Hãy upload tài liệu đầu tiên để bắt đầu.</div>
+              <div class="dash-progress-shell" aria-label="Tiến độ học tập">
+                <div class="dash-progress-bar" id="continueProgressBar" style="width: 0%"></div>
+              </div>
+              <div class="dash-progress-text" id="continueProgressText">Tiến độ 0%</div>
+            </div>
+            <div class="dash-continue-actions">
+              <a class="dash-btn dash-btn-primary dash-btn-sm" id="continueViewLink" href="history.html">Tiếp tục</a>
+              <a class="dash-btn dash-btn-soft dash-btn-sm" id="continueQuizLink" href="upload.html">Làm quiz nhanh</a>
+            </div>
+          </article>
         </section>
 
         <section class="dash-kpis" id="section-overview">
           <article class="dash-kpi-card glass">
             <div class="dash-kpi-label">Nội dung đã xử lý</div>
-            <div class="dash-kpi-value">12</div>
-            <div class="dash-kpi-meta">+2 trong 7 ngày gần nhất</div>
+            <div class="dash-kpi-value" id="kpiContents">0</div>
+            <div class="dash-kpi-meta" id="kpiContentsMeta">+0 trong 7 ngày gần nhất</div>
           </article>
           <article class="dash-kpi-card glass">
             <div class="dash-kpi-label">Quiz đã hoàn thành</div>
-            <div class="dash-kpi-value">28</div>
-            <div class="dash-kpi-meta">Tỷ lệ đúng trung bình 76%</div>
+            <div class="dash-kpi-value" id="kpiQuizzes">0</div>
+            <div class="dash-kpi-meta" id="kpiQuizzesMeta">Bắt đầu quiz đầu tiên để có thống kê</div>
           </article>
           <article class="dash-kpi-card glass">
-            <div class="dash-kpi-label">Mục tiêu tuần</div>
-            <div class="dash-kpi-value">68%</div>
-            <div class="dash-kpi-meta">Còn 3 phiên học để đạt 100%</div>
-          </article>
-          <article class="dash-kpi-card glass">
-            <div class="dash-kpi-label">Điểm trung bình gần đây</div>
-            <div class="dash-kpi-value">8.1</div>
-            <div class="dash-kpi-meta">Tăng 0.6 so với tuần trước</div>
+            <div class="dash-kpi-label">Tiến độ tuần</div>
+            <div class="dash-kpi-value" id="kpiGoal">0%</div>
+            <div class="dash-kpi-meta" id="kpiGoalMeta">Cần thêm 7 phiên học để đạt 100%</div>
           </article>
         </section>
 
         <section class="dash-grid">
-          <article class="glass dash-panel" id="section-content">
-            <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
-              <h5 class="fw-semibold mb-0">Tiếp tục học</h5>
-              <a class="btn btn-outline-light btn-sm" href="content-list.html">Mở thư viện</a>
-            </div>
-            <div class="dash-continue-card">
-              <div>
-                <div class="dash-continue-title">Chương 3 - Khái niệm X</div>
-                <div class="text-muted-2 small">Dừng tại phần keypoint #6 • Cập nhật 2 giờ trước</div>
-              </div>
-              <div class="dash-continue-actions">
-                <a class="btn btn-primary btn-sm" href="content-detail.html">Tiếp tục đọc</a>
-                <a class="btn btn-soft btn-sm" href="quiz.html">Làm quiz nhanh</a>
-              </div>
-            </div>
-            <div class="dash-subtitle mt-4 mb-2">Hoạt động gần đây</div>
-            <div class="table-responsive">
-              <table class="table table-hover align-middle mb-0">
-                <thead>
-                  <tr>
-                    <th>Thời gian</th>
-                    <th>Nội dung</th>
-                    <th>Loại</th>
-                    <th>Kết quả</th>
-                    <th class="text-end">Hành động</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td class="text-muted-2">Hôm nay 10:20</td>
-                    <td>Chương 1 - Tổng quan</td>
-                    <td><span class="badge badge-soft">PDF</span></td>
-                    <td><span class="badge text-bg-success">8/10</span></td>
-                    <td class="text-end"><a class="btn btn-outline-light btn-sm" href="content-detail.html">Xem</a></td>
-                  </tr>
-                  <tr>
-                    <td class="text-muted-2">Hôm qua 21:05</td>
-                    <td>Bài giảng Video - Phần A</td>
-                    <td><span class="badge badge-soft">MP4</span></td>
-                    <td><span class="badge text-bg-primary">Tạo đề</span></td>
-                    <td class="text-end"><a class="btn btn-outline-light btn-sm" href="quiz.html">Làm bài</a></td>
-                  </tr>
-                  <tr>
-                    <td class="text-muted-2">2 ngày trước</td>
-                    <td>Nhóm công thức nhanh</td>
-                    <td><span class="badge badge-soft">TXT</span></td>
-                    <td><span class="badge text-bg-warning">6/10</span></td>
-                    <td class="text-end"><a class="btn btn-outline-light btn-sm" href="quiz-result.html">Ôn lại</a></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+          <article class="glass dash-panel">
+            <h6 class="fw-semibold mb-3">Gợi ý thông minh</h6>
+            <ul class="dash-suggestion-list" id="smartSuggestionsList">
+              <li><span class="dash-suggestion-icon">⚡</span><span>Đang phân tích dữ liệu học tập...</span></li>
+            </ul>
           </article>
 
-          <aside class="dash-side-stack">
-            <article class="glass dash-panel">
-              <h6 class="fw-semibold mb-2">Gợi ý thông minh hôm nay</h6>
-              <ul class="dash-list mb-0">
-                <li>
-                  Ôn lại <strong>Chương 3 - Khái niệm X</strong>
-                  <span class="text-muted-2">Độ ưu tiên cao</span>
-                </li>
-                <li>
-                  Tạo quiz 15 câu từ nội dung mới tải
-                  <span class="text-muted-2">Độ khó trung bình</span>
-                </li>
-                <li>
-                  Làm lại đề có điểm dưới 7.0
-                  <span class="text-muted-2">Mục tiêu cải thiện độ chính xác</span>
-                </li>
-              </ul>
-            </article>
-
-            <article class="glass dash-panel">
-              <h6 class="fw-semibold mb-3">Chủ đề yếu cần ôn</h6>
-              <div class="dash-topic">
-                <div class="d-flex justify-content-between small mb-1">
-                  <span>Khái niệm X</span>
-                  <span class="text-muted-2">42%</span>
-                </div>
-                <div class="progress" role="progressbar" aria-valuenow="42" aria-valuemin="0" aria-valuemax="100">
-                  <div class="progress-bar bg-danger" style="width: 42%"></div>
-                </div>
-              </div>
-              <div class="dash-topic mt-3">
-                <div class="d-flex justify-content-between small mb-1">
-                  <span>Nhóm công thức Y</span>
-                  <span class="text-muted-2">57%</span>
-                </div>
-                <div class="progress" role="progressbar" aria-valuenow="57" aria-valuemin="0" aria-valuemax="100">
-                  <div class="progress-bar bg-warning" style="width: 57%"></div>
-                </div>
-              </div>
-              <div class="dash-topic mt-3">
-                <div class="d-flex justify-content-between small mb-1">
-                  <span>Bài tập vận dụng</span>
-                  <span class="text-muted-2">71%</span>
-                </div>
-                <div class="progress" role="progressbar" aria-valuenow="71" aria-valuemin="0" aria-valuemax="100">
-                  <div class="progress-bar bg-info" style="width: 71%"></div>
-                </div>
-              </div>
-            </article>
-          </aside>
+          <article class="glass dash-panel" id="dailyPlanSection">
+            <h6 class="fw-semibold mb-3">Kế hoạch học hằng ngày</h6>
+            <ul class="dash-checklist" id="dailyPlanChecklist">
+              <li>
+                <label class="dash-check-item">
+                  <input type="checkbox" />
+                  <span>Đang tạo kế hoạch học hôm nay...</span>
+                </label>
+              </li>
+            </ul>
+          </article>
         </section>
-        </div>
+
+        <div id="dashboardNotice" class="alert alert-danger d-none mt-4" role="alert"></div>
       </main>
     </div>
 

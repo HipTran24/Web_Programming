@@ -3,14 +3,17 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Làm bài — SynapLearn</title>
+        <style id="instant-page-bg">html,body{background:#08131b!important;color:#eef6f7;}</style>
+<title>SynapLearn - Làm bài</title>
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg?v=20260402-tab3" />
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=20260402-tab3" />
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
     <link href="../css/style.css" rel="stylesheet" />
     <link href="../css/app-shell.css" rel="stylesheet" />
-</head>
+  </head>
   <body>
     <div id="page-loader" class="logo-loader">
       <div class="logo-loader-box">
@@ -25,121 +28,107 @@
     </div>
 
     <div class="page-content">
-<main class="container py-5">
+      <main class="container py-5">
+        <section class="glass p-4 mb-4">
+          <div class="d-flex justify-content-between flex-wrap gap-3 align-items-start">
+            <div>
+              <h3 class="fw-bold mb-1">Quiz Workspace</h3>
+              <div id="quizWorkspaceSubline" class="text-muted-2">Tạo đề từ nội dung đã xử lý, làm bài và nhận phân tích ngay.</div>
+            </div>
+            <a class="btn btn-outline-light" href="quiz-result.html">Xem kết quả gần nhất</a>
+          </div>
+          <div id="quizWorkspaceNotice" class="alert d-none mt-3 mb-0" role="alert"></div>
+        </section>
+
         <div class="row g-4">
           <div class="col-lg-8">
-            <div class="glass p-4">
-              <div class="d-flex justify-content-between flex-wrap gap-2">
-                <div>
-                  <h4 class="fw-bold mb-1">Bài kiểm tra: Chương 1</h4>
-                  <div class="text-muted-2">10 câu • Độ khó: Trung bình</div>
+            <section class="glass p-4">
+              <h5 class="fw-semibold mb-3">Cấu hình tạo đề</h5>
+              <div class="row g-3">
+                <div class="col-md-7">
+                  <label class="form-label" for="quizContentSelect">Chọn nội dung</label>
+                  <select id="quizContentSelect" class="form-select"></select>
                 </div>
-                <span class="badge text-bg-primary">Câu 3/10</span>
+                <div class="col-md-2">
+                  <label class="form-label" for="quizQuestionCountInput">Số câu</label>
+                  <input id="quizQuestionCountInput" class="form-control" type="number" min="0" max="30" step="1" value="10" />
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label" for="quizDifficultySelect">Độ khó</label>
+                  <select id="quizDifficultySelect" class="form-select">
+                    <option value="easy">Dễ</option>
+                    <option value="medium" selected>Trung bình</option>
+                    <option value="hard">Khó</option>
+                  </select>
+                </div>
               </div>
 
-              <hr class="border opacity-25 my-4" />
-
-              <h5 class="fw-semibold">
-                Câu 3: (Demo) Nội dung câu hỏi đặt tại đây?
-              </h5>
-              <div class="mt-3 d-grid gap-2">
-                <label class="glass-2 p-3">
-                  <input class="form-check-input me-2" type="radio" name="q3" />
-                  A. Phương án A
-                </label>
-                <label class="glass-2 p-3">
-                  <input class="form-check-input me-2" type="radio" name="q3" />
-                  B. Phương án B
-                </label>
-                <label class="glass-2 p-3">
-                  <input class="form-check-input me-2" type="radio" name="q3" />
-                  C. Phương án C
-                </label>
-                <label class="glass-2 p-3">
-                  <input class="form-check-input me-2" type="radio" name="q3" />
-                  D. Phương án D
-                </label>
+              <div class="d-flex flex-wrap gap-2 mt-3">
+                <button id="quizGenerateButton" class="btn btn-primary" type="button">Tạo bộ đề</button>
+                <button id="quizReloadButton" class="btn btn-outline-light" type="button" disabled>Reload đề mới</button>
+                <a class="btn btn-soft" href="upload.html">Đi tới Upload</a>
               </div>
+            </section>
 
-              <div class="d-flex justify-content-between mt-4">
-                <button class="btn btn-outline-light">← Câu trước</button>
-                <button class="btn btn-primary">Câu tiếp →</button>
+            <section id="quizQuestionSection" class="glass p-4 mt-4 d-none">
+              <div class="d-flex justify-content-between flex-wrap gap-2 align-items-center mb-3">
+                <h5 class="fw-semibold mb-0">Bộ câu hỏi</h5>
+                <div id="quizQuestionMeta" class="text-muted-2 small">0 câu</div>
               </div>
-            </div>
+              <div id="quizQuestionList" class="quiz-question-list"></div>
+            </section>
+
+            <section class="glass p-4 mt-4 d-none" id="quizResultInlinePlaceholder">
+              <div class="small text-muted-2">Kết quả sẽ hiển thị dưới dạng popup đè lên màn hình sau khi nộp bài.</div>
+            </section>
           </div>
 
           <div class="col-lg-4">
-            <div class="glass p-4">
-              <h6 class="fw-semibold mb-3">Bảng câu hỏi</h6>
-              <div class="d-flex flex-wrap gap-2">
-                <a class="btn btn-outline-light btn-sm">1</a>
-                <a class="btn btn-outline-light btn-sm">2</a>
-                <a class="btn btn-primary btn-sm">3</a>
-                <a class="btn btn-outline-light btn-sm">4</a>
-                <a class="btn btn-outline-light btn-sm">5</a>
-                <a class="btn btn-outline-light btn-sm">6</a>
-                <a class="btn btn-outline-light btn-sm">7</a>
-                <a class="btn btn-outline-light btn-sm">8</a>
-                <a class="btn btn-outline-light btn-sm">9</a>
-                <a class="btn btn-outline-light btn-sm">10</a>
-              </div>
+            <section class="glass p-4">
+              <h6 class="fw-semibold mb-3">Điều hướng câu hỏi</h6>
+              <div id="quizNavigator" class="d-flex flex-wrap gap-2"></div>
 
               <hr class="border opacity-25 my-4" />
 
-              <h6 class="fw-semibold mb-2">Gợi ý ôn tập (User)</h6>
-              <div class="text-muted-2 small">
-                (Demo) Hiển thị chủ đề đang yếu hoặc nhắc lại keypoints liên
-                quan.
-              </div>
+              <h6 class="fw-semibold mb-2">Gợi ý</h6>
+              <div class="text-muted-2 small">Hãy trả lời hết trước khi nộp để kết quả phân tích chính xác hơn.</div>
 
               <div class="d-grid gap-2 mt-3">
-                <button class="btn btn-soft">Đánh dấu câu này</button>
-                <button class="btn btn-outline-light">
-                  Xem lại câu sai (sau khi nộp)
-                </button>
+                <button id="quizSubmitButton" class="btn btn-soft" type="button" disabled>Nộp bài & chấm điểm</button>
+                <a class="btn btn-outline-light" href="history.html">Quay lại lịch sử nội dung</a>
               </div>
-            </div>
+            </section>
           </div>
         </div>
       </main>
+    </div>
 
-      </div>
-
-    <div class="col-lg-4">
-      <div class="glass p-4">
-        <h6 class="fw-semibold mb-3">Bảng câu hỏi</h6>
-        <div class="d-flex flex-wrap gap-2">
-          <a class="btn btn-outline-light btn-sm">1</a>
-          <a class="btn btn-outline-light btn-sm">2</a>
-          <a class="btn btn-primary btn-sm">3</a>
-          <a class="btn btn-outline-light btn-sm">4</a>
-          <a class="btn btn-outline-light btn-sm">5</a>
-          <a class="btn btn-outline-light btn-sm">6</a>
-          <a class="btn btn-outline-light btn-sm">7</a>
-          <a class="btn btn-outline-light btn-sm">8</a>
-          <a class="btn btn-outline-light btn-sm">9</a>
-          <a class="btn btn-outline-light btn-sm">10</a>
-        </div>
-
-        <hr class="border opacity-25 my-4">
-
-        <h6 class="fw-semibold mb-2">Gợi ý ôn tập (User)</h6>
-        <div class="text-muted-2 small">
-          (Demo) Hiển thị chủ đề đang yếu hoặc nhắc lại keypoints liên quan.
-        </div>
-
-        <div class="d-grid gap-2 mt-3">
-          <button class="btn btn-soft">Đánh dấu câu này</button>
-          <button class="btn btn-outline-light">Xem lại câu sai (sau khi nộp)</button>
+    <div class="modal fade" id="quizResultModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content quiz-result-modal-content">
+          <div class="modal-header border-0 pb-1">
+            <h5 class="modal-title fw-bold">Kết quả chấm điểm</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body pt-2">
+            <div class="quiz-score-card mb-3">
+              <div class="quiz-score-label">Kết quả</div>
+              <div id="quizResultHeadline" class="quiz-score-headline">0/0</div>
+              <div id="quizResultSubline" class="text-muted-2 small">Đúng 0 • Sai 0</div>
+            </div>
+            <div id="quizReviewList" class="quiz-wrong-list"></div>
+            <div class="d-flex justify-content-end mt-3">
+              <a class="btn btn-outline-light btn-sm" href="quiz-result.html">Mở trang phân tích chi tiết</a>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-</main>
 
-</div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../assets/js/main.js"></script>
-  <script src="../js/app-shell.js"></script>
-</body>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../js/quiz.js"></script>
+    <script src="../js/app-shell.js"></script>
+  </body>
 </html>

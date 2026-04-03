@@ -23,5 +23,9 @@ namespace Web_Project.Services.Content
             int? userId,
             bool isGuest,
             CancellationToken cancellationToken);
+
+        Task<bool> GenerateApprovedContentSummaryAsync(
+            int contentId,
+            CancellationToken cancellationToken);
     }
 }

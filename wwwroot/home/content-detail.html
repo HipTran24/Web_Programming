@@ -3,7 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Kết quả AI — SynapLearn</title>
+        <style id="instant-page-bg">html,body{background:#08131b!important;color:#eef6f7;}</style>
+<title>SynapLearn - Kết quả AI</title>
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg?v=20260402-tab3" />
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=20260402-tab3" />
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -21,7 +24,7 @@
     </div>
 
     <div class="page-content">
-<main class="container py-5">
+      <main class="container py-5">
         <div class="row g-4">
           <div class="col-lg-8">
             <div class="glass p-4">
@@ -29,29 +32,22 @@
                 class="d-flex flex-wrap justify-content-between align-items-start gap-2"
               >
                 <div>
-                  <h3 class="fw-bold mb-1">
-                    Bài học: “Chương 1 — Tổng quan …”
-                  </h3>
-                  <div class="text-muted-2">
-                    Nguồn: PDF • 12 trang • Xử lý lúc 10:20
-                  </div>
+                  <h3 id="contentDetailTitle" class="fw-bold mb-1">Đang tải nội dung...</h3>
+                  <div id="contentDetailMeta" class="text-muted-2">-</div>
                 </div>
-                <span class="badge text-bg-success">Hoàn tất</span>
+                <span id="contentDetailStatus" class="badge text-bg-secondary">-</span>
               </div>
+
+              <div id="contentDetailNotice" class="alert d-none mt-3 mb-0" role="alert"></div>
 
               <hr class="border opacity-25 my-4" />
 
               <h5 class="fw-semibold">Tóm tắt</h5>
-              <p class="text-muted-2">
-                (Demo) AI tóm tắt 5–7 dòng nội dung chính… Sau này backend sẽ đổ
-                dữ liệu thật vào đây.
-              </p>
+              <p id="contentDetailSummary" class="text-muted-2">Chưa có tóm tắt.</p>
 
               <h5 class="fw-semibold mt-4">Ý chính</h5>
-              <ul class="text-muted-2 mb-0">
-                <li>Ý chính 1…</li>
-                <li>Ý chính 2…</li>
-                <li>Ý chính 3…</li>
+              <ul id="contentDetailKeyPoints" class="mb-0 ps-0 panel-expand-keypoints-list">
+                <li>Chưa có ý chính.</li>
               </ul>
             </div>
 
@@ -64,47 +60,25 @@
                     Nội dung đã chuyển đổi (Text)
                   </h5>
                   <div class="text-muted-2 small">
-                    Có thể cho phép copy / tải xuống .txt
+                    Bạn có thể copy hoặc tải xuống file .txt
                   </div>
                 </div>
-                <button class="btn btn-outline-light btn-sm">Tải .txt</button>
+                <button id="contentDetailDownloadButton" class="btn btn-outline-light btn-sm">Tải .txt</button>
               </div>
-              <textarea class="form-control mt-3" rows="10">
-(Demo) Văn bản đã trích xuất từ nội dung…</textarea
-              >
+              <textarea id="contentDetailTextArea" class="form-control mt-3" rows="10" readonly>Chưa có nội dung trích xuất.</textarea>
             </div>
           </div>
 
           <div class="col-lg-4">
             <div class="glass p-4">
-              <h5 class="fw-semibold mb-3">Tạo bài kiểm tra</h5>
+              <h5 class="fw-semibold mb-3">Hành động nhanh</h5>
               <div class="row g-3">
                 <div class="col-12">
-                  <label class="form-label">Số câu hỏi</label>
-                  <select class="form-select">
-                    <option selected>10</option>
-                    <option>5</option>
-                    <option>15</option>
-                    <option>20</option>
-                    <option>30</option>
-                  </select>
-                </div>
-                <div class="col-12">
-                  <label class="form-label">Độ khó</label>
-                  <select class="form-select">
-                    <option>Dễ</option>
-                    <option selected>Trung bình</option>
-                    <option>Khó</option>
-                  </select>
-                </div>
-                <div class="col-12">
-                  <label class="form-label">Loại bài</label>
                   <div class="d-grid gap-2">
-                    <button class="btn btn-primary">Sinh trắc nghiệm</button>
-                    <button class="btn btn-soft">Sinh flashcard</button>
-                    <button class="btn btn-outline-light">
-                      Tạo lại bộ câu hỏi
-                    </button>
+                    <a id="contentDetailQuizButton" class="btn btn-primary" href="quiz.html">Làm quiz với nội dung này</a>
+                    <a class="btn btn-primary" href="upload.html">Làm quiz từ nội dung mới</a>
+                    <a class="btn btn-soft" href="history.html">Quay lại lịch sử nội dung</a>
+                    <button id="contentDetailDeleteButton" type="button" class="btn btn-outline-danger">Xoá nội dung này</button>
                   </div>
                 </div>
               </div>
@@ -112,11 +86,9 @@
               <hr class="border opacity-25 my-4" />
 
               <h6 class="fw-semibold mb-2">Thông tin xử lý AI</h6>
-              <div class="small text-muted-2">Thời gian xử lý: ~ 8.2s</div>
-              <div class="small text-muted-2">
-                Số token/chi phí (nếu tính): —
-              </div>
-              <div class="small text-muted-2">Trạng thái: OK</div>
+              <div id="contentDetailAiTime" class="small text-muted-2">Thời gian xử lý: -</div>
+              <div id="contentDetailQuizCount" class="small text-muted-2">Số quiz đã tạo: 0</div>
+              <div id="contentDetailSourceType" class="small text-muted-2">Nguồn: -</div>
             </div>
           </div>
         </div>
@@ -124,7 +96,10 @@
 
       </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/auth.js"></script>
     <script src="../assets/js/main.js"></script>
+    <script src="../js/ui-dialog.js"></script>
+    <script src="../js/content-detail.js"></script>
     <script src="../js/app-shell.js"></script>
 </body>
 </html>

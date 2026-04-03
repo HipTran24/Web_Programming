@@ -1,5 +1,10 @@
 (function () {
   const guestQuizTokenKey = "quiz.guestToken";
+  const guestTokenHeaderName = "X-Guest-Token";
+  const latestQuizResultStorageKey = "quiz.latestResult.v1";
+  const quizQuestionMin = 0;
+  const quizQuestionMax = 30;
+  const defaultQuizQuestionCount = 10;
   const form = document.getElementById("uploadForm");
   if (!form) {
     return;
@@ -20,6 +25,7 @@
   const resultType = document.getElementById("resultType");
   const resultPlaceholderBox = document.getElementById("resultPlaceholderBox");
   const resultPanel = document.getElementById("resultPanel");
+  const resultModerationAlert = document.getElementById("resultModerationAlert");
   const resultFileName = document.getElementById("resultFileName");
   const resultFileMeta = document.getElementById("resultFileMeta");
   const resultFileIcon = document.getElementById("resultFileIcon");
@@ -58,6 +64,7 @@
   const quizScoreHeadline = document.getElementById("quizScoreHeadline");
   const quizScoreSubline = document.getElementById("quizScoreSubline");
   const quizWrongList = document.getElementById("quizWrongList");
+  const openQuizResultPageButton = document.getElementById("openQuizResultPageButton");
   const quizResultModalInstance =
     quizResultModal && window.bootstrap?.Modal
       ? new window.bootstrap.Modal(quizResultModal)
@@ -69,6 +76,7 @@
   let generatingQuiz = false;
   let submittingQuiz = false;
   let currentQuiz = null;
+  let currentRequiresAdminReview = false;
   let latestExpandedSummary = "";
   let latestExpandedKeyPointsHtml = "";
   let latestExpandedKeyPointsHint = "";
@@ -94,6 +102,19 @@
     }
   };
 
+  const syncGuestTokenFromResponse = (response) => {
+    if (isAuthenticated() || !response?.headers) {
+      return;
+    }
+
+    const token = String(response.headers.get(guestTokenHeaderName) || "").trim();
+    if (!token) {
+      return;
+    }
+
+    window.localStorage.setItem(guestQuizTokenKey, token);
+  };
+
   const setMessage = (message, type) => {
     if (!formMessage) {
       return;
@@ -105,7 +126,12 @@
       return;
     }
 
-    formMessage.className = `alert ${type === "success" ? "alert-success" : "alert-danger"} mt-3 mb-0`;
+    const alertClass = type === "success"
+      ? "alert-success"
+      : type === "warning"
+        ? "alert-warning"
+        : "alert-danger";
+    formMessage.className = `alert ${alertClass} mt-3 mb-0`;
     formMessage.textContent = message;
   };
 
@@ -133,7 +159,7 @@
   };
 
   const setQuizButtonsState = () => {
-    const canGenerate = latestContentId > 0 && !generatingQuiz;
+    const canGenerate = latestContentId > 0 && !generatingQuiz && !currentRequiresAdminReview;
     const hasQuiz = !!currentQuiz;
 
     if (generateQuizButton) {
@@ -149,6 +175,19 @@
       submitQuizButton.disabled = !(hasQuiz && !submittingQuiz);
       submitQuizButton.textContent = submittingQuiz ? "Đang chấm điểm..." : "Nộp bài & chấm điểm";
     }
+  };
+
+  const scrollToGeneratedQuiz = () => {
+    if (!quizFormBlock) {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      quizFormBlock.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
   };
 
   const setSelectedFile = (file) => {
@@ -232,6 +271,16 @@
   };
 
   const normalizeSummaryPayload = (data) => {
+    if (data?.requiresAdminReview) {
+      return {
+        summary: "Nội dung đã bị chặn phân tích tạm thời vì có dấu hiệu vi phạm chính sách hệ thống và đang chờ admin duyệt.",
+        keyPoints: [
+          "Hệ thống chưa tạo bản tóm tắt cho nội dung này.",
+          "Bạn sẽ nhận thông báo khi quản trị viên duyệt hoặc từ chối.",
+        ],
+      };
+    }
+
     const summary = String(data?.summary || "").trim() || "Không có tóm tắt.";
     const keyPoints = Array.isArray(data?.keyPoints)
       ? data.keyPoints.map((point) => String(point || "").trim()).filter(Boolean)
@@ -320,8 +369,11 @@
 
   const parsePointWithProfile = (point, dominantProfile) => {
     const parsed = parseTaggedPoint(point);
-    const normalizedTag = String(parsed.tag || "").toLowerCase();
+    if (!dominantProfile) {
+      return parsed;
+    }
 
+    const normalizedTag = String(parsed.tag || "").toLowerCase();
     if (normalizedTag === "thuật ngữ" || normalizedTag === "mốc thời gian") {
       return parsed;
     }
@@ -377,6 +429,66 @@
     }
   };
 
+  const resetResultUi = () => {
+    latestContentId = 0;
+    currentRequiresAdminReview = false;
+
+    if (resultPlaceholderBox) {
+      resultPlaceholderBox.classList.remove("d-none");
+    }
+    if (resultType) {
+      resultType.textContent = "Chưa có";
+    }
+    if (resultFileName) {
+      resultFileName.textContent = "-";
+    }
+    if (resultFileMeta) {
+      resultFileMeta.textContent = "Chưa có tệp nguồn.";
+    }
+    if (resultFileIcon) {
+      resultFileIcon.textContent = "FILE";
+      resultFileIcon.setAttribute("data-kind", "file");
+    }
+    if (resultFileBadge) {
+      resultFileBadge.textContent = "-";
+    }
+    if (resultSummary) {
+      resultSummary.textContent = "Chưa có tóm tắt.";
+    }
+    if (resultKeyPoints) {
+      resultKeyPoints.innerHTML = "<li>Chưa có ý chính.</li>";
+    }
+    if (resultKeyPointsTitle) {
+      resultKeyPointsTitle.textContent = "Ý chính";
+    }
+    if (resultKnowledgeHint) {
+      resultKnowledgeHint.classList.add("d-none");
+      resultKnowledgeHint.textContent = "";
+    }
+    if (resultModerationAlert) {
+      resultModerationAlert.classList.add("d-none");
+      resultModerationAlert.textContent = "";
+    }
+
+    resetQuizUi();
+    resetExpandPanels();
+    setQuizMessage("", "error");
+    setQuizButtonsState();
+  };
+
+  const clearSelectedFileInput = () => {
+    if (fileInput) {
+      fileInput.value = "";
+    }
+    setSelectedFile(null);
+  };
+
+  const clearUnifiedTextInput = () => {
+    if (unifiedInput) {
+      unifiedInput.value = "";
+    }
+  };
+
   const showResult = (data, mode) => {
     if (!resultPanel) {
       return;
@@ -425,14 +537,23 @@
     }
     let keyPointsHintText = "";
     if (resultKnowledgeHint) {
-      resultKnowledgeHint.classList.remove("d-none");
-      keyPointsHintText = `Phân loại nội dung: ${dominantProfile}. Nhãn đã được đồng nhất để tránh lộn xộn.`;
-      resultKnowledgeHint.textContent = keyPointsHintText;
+      if (isVideo) {
+        resultKnowledgeHint.classList.remove("d-none");
+        keyPointsHintText = `Phân loại nội dung: ${dominantProfile}. Các ý được giữ nguyên theo từng nhãn.`;
+        resultKnowledgeHint.textContent = keyPointsHintText;
+      } else {
+        resultKnowledgeHint.classList.add("d-none");
+        resultKnowledgeHint.textContent = "";
+      }
     }
 
     if (resultKeyPoints) {
       const keyPointsHtml = normalized.keyPoints
         .map((point) => {
+          if (!isVideo) {
+            return `<li>${escapeHtml(point)}</li>`;
+          }
+
           const parsed = parsePointWithProfile(point, dominantProfile);
           const tagClass = parsed.tag === "Thông tin"
             ? "upload-keypoint-tag upload-keypoint-tag--info"
@@ -470,9 +591,31 @@
       }
     }
 
+    currentRequiresAdminReview = Boolean(data?.requiresAdminReview);
+    if (resultModerationAlert) {
+      if (currentRequiresAdminReview) {
+        const flags = Array.isArray(data?.moderationFlags)
+          ? data.moderationFlags.map((flag) => `- ${String(flag || "").trim()}`).filter(Boolean)
+          : [];
+        const message = String(data?.moderationMessage || "Nội dung này đã được chuyển sang trạng thái chờ admin duyệt.");
+        resultModerationAlert.classList.remove("d-none");
+        resultModerationAlert.innerHTML = `
+          <strong>Cảnh báo kiểm duyệt:</strong> ${escapeHtml(message)}
+          ${flags.length ? `<div class="mt-2">${flags.map((flag) => escapeHtml(flag)).join("<br />")}</div>` : ""}
+        `;
+      } else {
+        resultModerationAlert.classList.add("d-none");
+        resultModerationAlert.textContent = "";
+      }
+    }
+
     latestContentId = Number(data?.contentId || 0);
     resetQuizUi();
-    setQuizMessage("", "error");
+    if (currentRequiresAdminReview) {
+      setQuizMessage("Nội dung đang chờ admin duyệt nên tạm thời chưa thể tạo quiz.", "error");
+    } else {
+      setQuizMessage("", "error");
+    }
     setQuizButtonsState();
   };
 
@@ -613,28 +756,140 @@
     return token ? { Authorization: `Bearer ${token}` } : {};
   };
 
+  const isAuthenticated = () => {
+    return !!(window.AuthClient?.isAuthenticated?.() && window.AuthClient?.getAccessToken?.());
+  };
+
+  const createGuestToken = () => {
+    if (window.crypto?.randomUUID) {
+      return window.crypto.randomUUID().replaceAll("-", "");
+    }
+
+    return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 12)}`;
+  };
+
+  const ensureGuestToken = () => {
+    const existing = window.localStorage.getItem(guestQuizTokenKey) || "";
+    if (existing) {
+      return existing;
+    }
+
+    const token = createGuestToken();
+    window.localStorage.setItem(guestQuizTokenKey, token);
+    return token;
+  };
+
+  const buildGuestHeaders = () => {
+    if (isAuthenticated()) {
+      return {};
+    }
+
+    return {
+      [guestTokenHeaderName]: ensureGuestToken(),
+    };
+  };
+
+  const normalizeQuizQuestionCount = (raw, fallback = defaultQuizQuestionCount) => {
+    const numeric = Number(raw);
+    if (!Number.isFinite(numeric)) {
+      return fallback;
+    }
+
+    return Math.min(quizQuestionMax, Math.max(quizQuestionMin, Math.trunc(numeric)));
+  };
+
+  const syncQuizQuestionCountInput = () => {
+    if (!quizQuestionCount) {
+      return defaultQuizQuestionCount;
+    }
+
+    const raw = String(quizQuestionCount.value || "").trim();
+    if (!raw) {
+      quizQuestionCount.value = String(defaultQuizQuestionCount);
+      return defaultQuizQuestionCount;
+    }
+
+    const normalized = normalizeQuizQuestionCount(raw, defaultQuizQuestionCount);
+    quizQuestionCount.value = String(normalized);
+    return normalized;
+  };
+
+  const persistLatestQuizResult = (result, submittedAnswers) => {
+    const payload = {
+      savedAt: new Date().toISOString(),
+      content: {
+        id: Number(latestContentId || 0),
+        name: String(resultFileName?.textContent || "").trim(),
+      },
+      quiz: {
+        quizId: Number(currentQuiz?.quizId || 0),
+        difficulty: String(currentQuiz?.difficulty || "medium"),
+        totalQuestions: Number(currentQuiz?.totalQuestions || 0),
+        questions: Array.isArray(currentQuiz?.questions)
+          ? currentQuiz.questions.map((question) => ({
+            questionId: Number(question?.questionId || 0),
+            questionText: String(question?.questionText || ""),
+            optionA: String(question?.optionA || ""),
+            optionB: String(question?.optionB || ""),
+            optionC: String(question?.optionC || ""),
+            optionD: String(question?.optionD || ""),
+            correctAnswer: String(question?.correctAnswer || ""),
+          }))
+          : [],
+      },
+      result: {
+        quizId: Number(result?.quizId || 0),
+        attemptId: Number(result?.attemptId || 0),
+        totalQuestions: Number(result?.totalQuestions || 0),
+        correctCount: Number(result?.correctCount || 0),
+        wrongCount: Number(result?.wrongCount || 0),
+        score: Number(result?.score || 0),
+        wrongQuestions: Array.isArray(result?.wrongQuestions)
+          ? result.wrongQuestions.map((item) => ({
+            questionId: Number(item?.questionId || 0),
+            questionText: String(item?.questionText || ""),
+            selectedAnswer: String(item?.selectedAnswer || ""),
+            correctAnswer: String(item?.correctAnswer || ""),
+            explanation: String(item?.explanation || ""),
+          }))
+          : [],
+      },
+      submittedAnswers: Array.isArray(submittedAnswers)
+        ? submittedAnswers.map((answer) => ({
+          questionId: Number(answer?.questionId || 0),
+          selectedAnswer: String(answer?.selectedAnswer || ""),
+        }))
+        : [],
+    };
+
+    const serialized = JSON.stringify(payload);
+    window.sessionStorage.setItem(latestQuizResultStorageKey, serialized);
+    window.localStorage.setItem(latestQuizResultStorageKey, serialized);
+  };
+
   const generateQuiz = async (useReloadNonce) => {
     if (latestContentId <= 0) {
       throw new Error("Bạn cần xử lý nội dung trước khi tạo đề trắc nghiệm.");
     }
 
-    const count = Math.max(0, Math.min(30, Number(quizQuestionCount?.value || 10)));
+    const count = syncQuizQuestionCountInput();
     const difficulty = String(quizDifficulty?.value || "medium");
     const variationNonce = useReloadNonce ? `${Date.now()}-${Math.random().toString(36).slice(2, 8)}` : `${Date.now()}`;
 
     const response = await fetch("/api/quiz/generate", {
       method: "POST",
-      headers: getAuthHeaders(),
+      headers: { ...getAuthHeaders(), ...buildGuestHeaders() },
       body: JSON.stringify({
         contentId: latestContentId,
         totalQuestions: count,
         difficulty,
         variationNonce,
-        guestToken: window.localStorage.getItem(guestQuizTokenKey) || "",
+        guestToken: isAuthenticated() ? "" : ensureGuestToken(),
       }),
     });
 
     const data = await readJson(response);
+    syncGuestTokenFromResponse(response);
     if (!response.ok) {
       throw new Error(data?.message || "Không thể tạo đề trắc nghiệm.");
     }
@@ -649,6 +904,7 @@
       quizResultModalInstance.hide();
     }
     setQuizMessage("Đã tạo bộ đề mới thành công.", "success");
+    scrollToGeneratedQuiz();
   };
 
   const submitQuiz = async () => {
@@ -660,19 +916,21 @@
 
     const response = await fetch("/api/quiz/submit", {
       method: "POST",
-      headers: getAuthHeaders(),
+      headers: { ...getAuthHeaders(), ...buildGuestHeaders() },
       body: JSON.stringify({
         quizId: currentQuiz.quizId,
-        guestToken: window.localStorage.getItem(guestQuizTokenKey) || "",
+        guestToken: isAuthenticated() ? "" : ensureGuestToken(),
         answers: submittedAnswers,
       }),
     });
 
     const data = await readJson(response);
+    syncGuestTokenFromResponse(response);
     if (!response.ok) {
       throw new Error(data?.message || "Không thể nộp bài.");
     }
 
+    persistLatestQuizResult(data, submittedAnswers);
     renderQuizResult(data, submittedAnswers);
     setQuizMessage("Đã chấm điểm thành công.", "success");
   };
@@ -687,17 +945,22 @@
 
     const response = await fetch("/api/summary/upload", {
       method: "POST",
-      headers: getAuthTokenHeader(),
+      headers: { ...getAuthTokenHeader(), ...buildGuestHeaders() },
       body: formData,
     });
 
     const data = await readJson(response);
+    syncGuestTokenFromResponse(response);
     if (!response.ok) {
       throw new Error(data?.message || "Upload thất bại.");
     }
 
     showResult(data, "file");
-    setMessage("Xử lý file thành công.", "success");
+    setMessage(
+      data?.requiresAdminReview
+        ? String(data?.moderationMessage || "Nội dung đã được chuyển sang chờ admin duyệt.")
+        : "Xử lý file thành công.",
+      data?.requiresAdminReview ? "warning" : "success");
   };
 
   const submitText = async () => {
@@ -708,17 +971,22 @@
 
     const response = await fetch("/api/summary/text", {
       method: "POST",
-      headers: { ...getAuthTokenHeader(), "Content-Type": "application/json" },
+      headers: { ...getAuthTokenHeader(), ...buildGuestHeaders(), "Content-Type": "application/json" },
       body: JSON.stringify({ text, sourceHint: "unified-input" }),
     });
 
     const data = await readJson(response);
+    syncGuestTokenFromResponse(response);
     if (!response.ok) {
       throw new Error(data?.message || "Xử lý văn bản thất bại.");
     }
 
     showResult(data, "text");
-    setMessage("Xử lý văn bản thành công.", "success");
+    setMessage(
+      data?.requiresAdminReview
+        ? String(data?.moderationMessage || "Nội dung đã được chuyển sang chờ admin duyệt.")
+        : "Xử lý văn bản thành công.",
+      data?.requiresAdminReview ? "warning" : "success");
   };
 
   const submitUrl = async () => {
@@ -729,17 +997,22 @@
 
     const response = await fetch("/api/summary/from-url", {
       method: "POST",
-      headers: { ...getAuthTokenHeader(), "Content-Type": "application/json" },
+      headers: { ...getAuthTokenHeader(), ...buildGuestHeaders(), "Content-Type": "application/json" },
       body: JSON.stringify({ url }),
     });
 
     const data = await readJson(response);
+    syncGuestTokenFromResponse(response);
     if (!response.ok) {
       throw new Error(data?.message || "Xử lý URL thất bại.");
     }
 
     showResult(data, "url");
-    setMessage("Xử lý URL thành công.", "success");
+    setMessage(
+      data?.requiresAdminReview
+        ? String(data?.moderationMessage || "Nội dung đã được chuyển sang chờ admin duyệt.")
+        : "Xử lý URL thành công.",
+      data?.requiresAdminReview ? "warning" : "success");
   };
 
   form.addEventListener("submit", async (event) => {
@@ -750,6 +1023,9 @@
 
     setPending(true);
     setMessage("", "error");
+    resetQuizUi();
+    setQuizMessage("", "error");
+    setQuizButtonsState();
     try {
       if (selectedFile) {
         await submitFile();
@@ -787,6 +1063,34 @@
         setQuizButtonsState();
       }
     });
+  }
+
+  if (quizQuestionCount) {
+    quizQuestionCount.min = String(quizQuestionMin);
+    quizQuestionCount.max = String(quizQuestionMax);
+    quizQuestionCount.step = "1";
+    quizQuestionCount.inputMode = "numeric";
+
+    quizQuestionCount.addEventListener("input", () => {
+      const raw = String(quizQuestionCount.value || "");
+      const digitsOnly = raw.replace(/[^\d]/g, "");
+      if (digitsOnly !== raw) {
+        quizQuestionCount.value = digitsOnly;
+      }
+
+      if (!quizQuestionCount.value) {
+        return;
+      }
+
+      const normalized = normalizeQuizQuestionCount(quizQuestionCount.value, quizQuestionMin);
+      quizQuestionCount.value = String(normalized);
+    });
+
+    quizQuestionCount.addEventListener("blur", () => {
+      syncQuizQuestionCountInput();
+    });
+
+    syncQuizQuestionCountInput();
   }
 
   if (reloadQuizButton) {
@@ -836,14 +1140,18 @@
   if (fileInput) {
     fileInput.addEventListener("change", () => {
       const file = fileInput.files && fileInput.files.length > 0 ? fileInput.files[0] : null;
+      if (file) {
+        clearUnifiedTextInput();
+      }
       setSelectedFile(file);
+      resetResultUi();
     });
   }
 
   if (clearFileButton && fileInput) {
     clearFileButton.addEventListener("click", () => {
-      fileInput.value = "";
-      setSelectedFile(null);
+      clearSelectedFileInput();
+      resetResultUi();
     });
   }
 
@@ -863,15 +1171,27 @@
 
       const files = event.dataTransfer && event.dataTransfer.files ? event.dataTransfer.files : null;
       if (files && files.length > 0) {
+        clearUnifiedTextInput();
         setSelectedFile(files[0]);
         if (fileInput) {
           fileInput.files = files;
         }
+        resetResultUi();
       }
     });
   }
 
   if (unifiedInput) {
+    unifiedInput.addEventListener("input", () => {
+      if (selectedFile && String(unifiedInput.value || "").trim()) {
+        clearSelectedFileInput();
+      }
+
+      if (latestContentId > 0 || currentQuiz || currentRequiresAdminReview) {
+        resetResultUi();
+      }
+    });
+
     unifiedInput.addEventListener("paste", (event) => {
       const clipboard = event.clipboardData;
       if (!clipboard || !clipboard.files || clipboard.files.length === 0) {
@@ -884,12 +1204,14 @@
       }
 
       event.preventDefault();
+      clearUnifiedTextInput();
       setSelectedFile(file);
       if (fileInput) {
         const transfer = new DataTransfer();
         transfer.items.add(file);
         fileInput.files = transfer.files;
       }
+      resetResultUi();
     });
   }
 
@@ -920,8 +1242,14 @@
     });
   }
 
+  if (openQuizResultPageButton) {
+    openQuizResultPageButton.addEventListener("click", () => {
+      if (quizResultModalInstance) {
+        quizResultModalInstance.hide();
+      }
+    });
+  }
+
   setSelectedFile(null);
-  resetQuizUi();
-  resetExpandPanels();
-  setQuizButtonsState();
+  resetResultUi();
 })();

@@ -1,5 +1,5 @@
       :root {
-        --bg: #080e1a;
+        --bg: #08131b;
         --surface: rgba(255, 255, 255, 0.055);
         --surface-2: rgba(255, 255, 255, 0.09);
         --border: rgba(255, 255, 255, 0.12);
@@ -29,21 +29,9 @@
         font-family: "DM Sans", sans-serif;
         font-size: 15px;
         background:
-          radial-gradient(
-            ellipse 1000px 700px at 0% 0%,
-            rgba(30, 80, 200, 0.15),
-            transparent 55%
-          ),
-          radial-gradient(
-            ellipse 800px 600px at 100% 20%,
-            rgba(16, 120, 80, 0.12),
-            transparent 55%
-          ),
-          radial-gradient(
-            ellipse 900px 800px at 50% 100%,
-            rgba(180, 30, 50, 0.09),
-            transparent 60%
-          ),
+          radial-gradient(circle at 8% 10%, rgba(103, 216, 203, 0.14), transparent 26%),
+          radial-gradient(circle at 84% 10%, rgba(243, 195, 108, 0.14), transparent 24%),
+          radial-gradient(circle at 50% 90%, rgba(93, 159, 255, 0.1), transparent 30%),
           var(--bg);
         color: var(--text);
         display: flex;
@@ -580,4 +568,62 @@
       }
       .hist-card {
         animation: up 0.32s 0.29s ease both;
+      }
+
+      @media (max-width: 1180px) {
+        main {
+          padding: 24px 20px 48px;
+        }
+
+        .layout {
+          grid-template-columns: 1fr;
+        }
+
+        .welcome,
+        .table-hd {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .stats-row {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .mid-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .type-row,
+        .pill-grp,
+        .tab-row {
+          flex-wrap: wrap;
+        }
+      }
+
+      @media (max-width: 760px) {
+        main {
+          padding: 18px 14px 32px;
+        }
+
+        .welcome,
+        .card {
+          padding: 18px;
+        }
+
+        .stats-row {
+          grid-template-columns: 1fr;
+        }
+
+        .topic-meta {
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .hist-card {
+          overflow-x: auto;
+        }
+
+        .hist-card table {
+          min-width: 620px;
+        }
       }

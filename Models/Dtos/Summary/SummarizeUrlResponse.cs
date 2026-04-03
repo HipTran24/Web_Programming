@@ -23,5 +23,13 @@ namespace Web_Project.Models
         public List<string> KeyPoints { get; set; } = [];
 
         public string? Preview { get; set; }
+
+        public bool RequiresAdminReview { get; set; }
+
+        public string ModerationStatus { get; set; } = string.Empty;
+
+        public string ModerationMessage { get; set; } = string.Empty;
+
+        public List<string> ModerationFlags { get; set; } = [];
     }
 }

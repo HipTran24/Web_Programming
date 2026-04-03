@@ -658,6 +658,11 @@ namespace Web_Project.Migrations
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("Status")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasMaxLength(64)

@@ -12,5 +12,14 @@ namespace Web_Project.Models.Dtos.User
         [EmailAddress]
         [MaxLength(256)]
         public string Email { get; set; } = string.Empty;
+
+        [MaxLength(32)]
+        public string Phone { get; set; } = string.Empty;
+
+        [MaxLength(1000)]
+        public string Bio { get; set; } = string.Empty;
+
+        [MaxLength(3000000)]
+        public string AvatarUrl { get; set; } = string.Empty;
     }
 }

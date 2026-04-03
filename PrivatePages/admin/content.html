@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <style id="instant-page-bg">html,body{background:#08131b!important;color:#eef6f7;}</style>
+<title>SynapLearn - Kiểm duyệt nội dung</title>
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg?v=20260402-tab3" />
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=20260402-tab3" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/style.css" rel="stylesheet" />
+    <link href="/css/admin.css" rel="stylesheet" />
+  </head>
+  <body class="page-admin" data-admin-page="content">
+    <div class="page-content portal-shell">
+      <aside class="portal-sidebar">
+        <div class="portal-brand">
+          <span class="portal-brand-lockup">
+            <span class="portal-brand-logo" aria-hidden="true">
+              <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+                <defs>
+                  <linearGradient id="adminBrandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#65d9cb" />
+                    <stop offset="100%" stop-color="#f0b45a" />
+                  </linearGradient>
+                </defs>
+                <path d="M6 5.5C6 4.12 7.12 3 8.5 3h7C16.88 3 18 4.12 18 5.5v2.34c0 .66-.26 1.3-.73 1.77l-3.5 3.5a2.5 2.5 0 0 1-3.54 0l-3.5-3.5A2.5 2.5 0 0 1 6 7.84V5.5Z" fill="url(#adminBrandGradient)"/>
+                <path d="M6 18.5C6 19.88 7.12 21 8.5 21h7c1.38 0 2.5-1.12 2.5-2.5v-2.34c0-.66-.26-1.3-.73-1.77l-3.5-3.5a2.5 2.5 0 0 0-3.54 0l-3.5 3.5A2.5 2.5 0 0 0 6 16.16v2.34Z" fill="rgba(101, 217, 203, 0.18)" stroke="rgba(101, 217, 203, 0.65)" stroke-width="1.1"/>
+                <circle cx="12" cy="12" r="1.7" fill="#edf7f7"/>
+              </svg>
+            </span>
+            <span class="section-kicker">SynapLearn</span>
+          </span>
+          <strong>Cổng quản trị</strong>
+        </div>
+        <nav class="portal-nav" aria-label="Điều hướng quản trị">
+          <a href="/admin">Tổng quan</a>
+          <a href="/admin/users">Người dùng</a>
+          <a class="is-active" href="/admin/content">Nội dung</a>
+          <a href="/admin/reports">Báo cáo</a>
+          <a href="/admin/ai-system">AI System</a>
+          <a href="/admin/notifications">Thông báo</a>
+          <a href="/admin/settings">Thiết lập</a>
+          <a href="/admin/profile">Hồ sơ</a>
+        </nav>
+      </aside>
+
+      <div class="portal-main">
+        <header class="portal-topbar">
+          <div>
+            <p class="section-kicker mb-1">Trang quản trị</p>
+            <h1 class="hero-title mb-0" style="font-size: clamp(1.5rem, 2.3vw, 2rem);">Kiểm duyệt nội dung</h1>
+          </div>
+          <div class="portal-session">
+            <div class="portal-session-avatar" id="adminSessionAvatar">AD</div>
+            <div>
+              <div class="fw-semibold" id="adminSessionName">Quản trị viên</div>
+              <div class="row-meta" id="adminSessionRole">Quản trị viên</div>
+            </div>
+            <div class="admin-alerts-wrap">
+              <button id="adminAlertsToggle" type="button" class="admin-alerts-toggle" aria-expanded="false" aria-controls="adminAlertsFlyout" aria-label="Thông báo quản trị">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M12 3.75a4.5 4.5 0 0 0-4.5 4.5v1.09c0 1.17-.32 2.32-.92 3.32l-1.05 1.74a1.5 1.5 0 0 0 1.28 2.28h10.38a1.5 1.5 0 0 0 1.28-2.28l-1.05-1.74a6.37 6.37 0 0 1-.92-3.32V8.25a4.5 4.5 0 0 0-4.5-4.5Zm0 16.5a2.63 2.63 0 0 1-2.41-1.58h4.82A2.63 2.63 0 0 1 12 20.25Z" fill="currentColor"/>
+                </svg>
+                <span id="adminAlertsDot" class="admin-alerts-dot" hidden></span>
+              </button>
+              <div id="adminAlertsFlyout" class="admin-alerts-flyout" hidden>
+                <div class="admin-alerts-head">
+                  <div>
+                    <strong>Thông báo quản trị</strong>
+                    <p id="adminAlertsMeta" class="admin-alerts-meta">Đang tải cảnh báo hệ thống...</p>
+                  </div>
+                  <a href="/admin/notifications" class="admin-alerts-link">Lịch sử</a>
+                </div>
+                <div id="adminAlertsList" class="admin-alerts-list"></div>
+              </div>
+            </div>
+            <button id="adminPortalLogout" type="button" class="btn btn-admin-secondary">Đăng xuất</button>
+          </div>
+        </header>
+
+        <main class="portal-content">
+          <div id="adminToastStack" class="admin-toast-stack" aria-live="polite" aria-atomic="true"></div>
+
+          <section class="admin-hero card-surface">
+            <div class="hero-copy">
+              <p class="hero-kicker mb-2">Kiểm duyệt nội dung</p>
+              <h2 class="hero-title mb-3">Xem và xử lý nội dung chờ duyệt</h2>
+              <p class="hero-sub mb-0">Theo dõi nguồn nội dung, trạng thái xử lý và quyết định duyệt hoặc từ chối trong một trang riêng.</p>
+            </div>
+            <div class="hero-side">
+              <div class="live-badge-wrap">
+                <span class="health-badge">Kiểm duyệt</span>
+                <p class="hero-meta">Mọi thay đổi đều được lưu lại trong nhật ký quản trị.</p>
+              </div>
+              <div class="hero-actions">
+                <a href="/admin/reports" class="btn btn-admin-secondary">Mở báo cáo AI</a>
+                <button id="refreshAllBtn" type="button" class="btn btn-admin-primary">Làm mới trang</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="card-surface admin-workspace">
+            <div class="workspace-head">
+                <div>
+                  <p class="section-kicker">Danh sách nội dung</p>
+                  <h2>Lọc nội dung cần xử lý</h2>
+                </div>
+              <p class="workspace-meta">Lọc theo trạng thái và tìm nhanh theo tên nội dung hoặc người tạo.</p>
+            </div>
+
+            <div class="toolbar">
+              <input id="contentQuery" class="form-control" type="search" placeholder="Tìm theo tên nội dung hoặc người tạo" />
+              <select id="contentStatus" class="form-select">
+                <option value="all">Tất cả trạng thái duyệt</option>
+                <option value="pending">Chờ duyệt</option>
+                <option value="approved">Đã duyệt</option>
+                <option value="rejected">Từ chối</option>
+                <option value="none">Chưa có kiểm duyệt</option>
+              </select>
+              <button id="applyContentFilter" class="btn btn-admin-secondary" type="button">Áp dụng</button>
+            </div>
+
+            <div class="table-shell">
+              <div class="table-responsive">
+                <table class="table admin-table align-middle" id="contentsTable">
+                  <thead>
+                    <tr>
+                      <th>Nội dung</th>
+                      <th>Người tạo</th>
+                      <th>Nguồn</th>
+                      <th>Kiểm duyệt</th>
+                      <th>Tạo lúc</th>
+                      <th class="text-end">Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="pager" id="contentsPager"></div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <div class="modal fade" id="adminActionModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <form id="adminActionForm" class="modal-content admin-modal-content">
+          <div class="modal-header border-0 pb-1">
+            <div>
+              <p id="adminActionEyebrow" class="modal-eyebrow mb-1">Thao tác quản trị</p>
+              <h5 id="adminActionTitle" class="modal-title fw-bold">Xác nhận thao tác</h5>
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body pt-2">
+            <p id="adminActionDescription" class="modal-description"></p>
+            <input id="adminActionKind" type="hidden" />
+            <input id="adminActionTargetId" type="hidden" />
+            <label class="field">
+              <span id="adminActionReasonLabel">Ghi chú</span>
+              <textarea id="adminActionReason" class="form-control" rows="4" placeholder="Nhập ghi chú để lưu vào nhật ký quản trị"></textarea>
+            </label>
+            <p id="adminActionFeedback" class="inline-feedback mt-3" role="status" aria-live="polite"></p>
+          </div>
+          <div class="modal-footer border-0 pt-1">
+            <button type="button" class="btn btn-admin-secondary" data-bs-dismiss="modal">Huỷ</button>
+            <button id="adminActionSubmit" type="submit" class="btn btn-admin-primary">Xác nhận</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/assets/js/main.js"></script>
+    <script src="/js/admin.js"></script>
+  </body>
+</html>

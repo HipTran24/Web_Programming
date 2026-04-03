@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <style id="instant-page-bg">html,body{background:#08131b!important;color:#eef6f7;}</style>
+<title>SynapLearn - Tổng quan quản trị</title>
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg?v=20260402-tab3" />
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=20260402-tab3" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/style.css" rel="stylesheet" />
+    <link href="/css/admin.css" rel="stylesheet" />
+  </head>
+  <body class="page-admin" data-admin-page="dashboard">
+    <div id="page-loader" class="logo-loader">
+      <div class="logo-loader-box">
+        <div class="ai-orbit orbit-1"></div>
+        <div class="ai-orbit orbit-2"></div>
+        <div class="ai-logo-core"><span>AI</span></div>
+        <h4>SynapLearn</h4>
+        <p>Đang tải trang tổng quan quản trị</p>
+      </div>
+    </div>
+
+    <div class="page-content portal-shell">
+      <aside class="portal-sidebar">
+        <div class="portal-brand">
+          <span class="portal-brand-lockup">
+            <span class="portal-brand-logo" aria-hidden="true">
+              <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+                <defs>
+                  <linearGradient id="adminBrandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#65d9cb" />
+                    <stop offset="100%" stop-color="#f0b45a" />
+                  </linearGradient>
+                </defs>
+                <path d="M6 5.5C6 4.12 7.12 3 8.5 3h7C16.88 3 18 4.12 18 5.5v2.34c0 .66-.26 1.3-.73 1.77l-3.5 3.5a2.5 2.5 0 0 1-3.54 0l-3.5-3.5A2.5 2.5 0 0 1 6 7.84V5.5Z" fill="url(#adminBrandGradient)"/>
+                <path d="M6 18.5C6 19.88 7.12 21 8.5 21h7c1.38 0 2.5-1.12 2.5-2.5v-2.34c0-.66-.26-1.3-.73-1.77l-3.5-3.5a2.5 2.5 0 0 0-3.54 0l-3.5 3.5A2.5 2.5 0 0 0 6 16.16v2.34Z" fill="rgba(101, 217, 203, 0.18)" stroke="rgba(101, 217, 203, 0.65)" stroke-width="1.1"/>
+                <circle cx="12" cy="12" r="1.7" fill="#edf7f7"/>
+              </svg>
+            </span>
+            <span class="section-kicker">SynapLearn</span>
+          </span>
+          <strong>Cổng quản trị</strong>
+        </div>
+
+        <nav class="portal-nav" aria-label="Điều hướng quản trị">
+          <a class="is-active" href="/admin">Tổng quan</a>
+          <a href="/admin/users">Người dùng</a>
+          <a href="/admin/content">Nội dung</a>
+          <a href="/admin/reports">Báo cáo</a>
+          <a href="/admin/ai-system">AI System</a>
+          <a href="/admin/notifications">Thông báo</a>
+          <a href="/admin/settings">Thiết lập</a>
+          <a href="/admin/profile">Hồ sơ</a>
+        </nav>
+      </aside>
+
+      <div class="portal-main">
+        <header class="portal-topbar">
+          <div>
+            <p class="section-kicker mb-1">Trang quản trị</p>
+            <h1 class="hero-title mb-0" style="font-size: clamp(1.5rem, 2.3vw, 2rem);">Tổng quan hệ thống</h1>
+          </div>
+          <div class="portal-session">
+            <div class="portal-session-avatar" id="adminSessionAvatar">AD</div>
+            <div>
+              <div class="fw-semibold" id="adminSessionName">Quản trị viên</div>
+              <div class="row-meta" id="adminSessionRole">Quản trị viên</div>
+            </div>
+            <div class="admin-alerts-wrap">
+              <button id="adminAlertsToggle" type="button" class="admin-alerts-toggle" aria-expanded="false" aria-controls="adminAlertsFlyout" aria-label="Thông báo quản trị">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M12 3.75a4.5 4.5 0 0 0-4.5 4.5v1.09c0 1.17-.32 2.32-.92 3.32l-1.05 1.74a1.5 1.5 0 0 0 1.28 2.28h10.38a1.5 1.5 0 0 0 1.28-2.28l-1.05-1.74a6.37 6.37 0 0 1-.92-3.32V8.25a4.5 4.5 0 0 0-4.5-4.5Zm0 16.5a2.63 2.63 0 0 1-2.41-1.58h4.82A2.63 2.63 0 0 1 12 20.25Z" fill="currentColor"/>
+                </svg>
+                <span id="adminAlertsDot" class="admin-alerts-dot" hidden></span>
+              </button>
+              <div id="adminAlertsFlyout" class="admin-alerts-flyout" hidden>
+                <div class="admin-alerts-head">
+                  <div>
+                    <strong>Thông báo quản trị</strong>
+                    <p id="adminAlertsMeta" class="admin-alerts-meta">Đang tải cảnh báo hệ thống...</p>
+                  </div>
+                  <a href="/admin/notifications" class="admin-alerts-link">Lịch sử</a>
+                </div>
+                <div id="adminAlertsList" class="admin-alerts-list"></div>
+              </div>
+            </div>
+            <button id="adminPortalLogout" type="button" class="btn btn-admin-secondary">Đăng xuất</button>
+          </div>
+        </header>
+
+        <main class="portal-content">
+          <div id="adminToastStack" class="admin-toast-stack" aria-live="polite" aria-atomic="true"></div>
+
+          <section class="admin-hero card-surface">
+            <div class="hero-copy">
+              <p class="hero-kicker mb-2">Tổng quan hệ thống</p>
+              <h2 class="hero-title mb-3">Theo dõi nhanh toàn bộ hoạt động</h2>
+              <p class="hero-sub mb-0">
+                Xem nhanh sức khỏe hệ thống, mức sử dụng, dữ liệu AI và các hoạt động gần đây. Mọi chỉ số bên dưới đều lấy trực tiếp từ dữ liệu thật hiện có.
+              </p>
+            </div>
+            <div class="hero-side">
+              <div class="live-badge-wrap">
+                <span id="healthBadge" class="health-badge">Đang đồng bộ</span>
+                <p class="hero-meta">Cập nhật gần nhất: <strong id="lastUpdatedValue">--</strong></p>
+              </div>
+              <div class="hero-actions">
+                <a href="/admin/users" class="btn btn-admin-secondary">Quản lý người dùng</a>
+                <button id="refreshAllBtn" type="button" class="btn btn-admin-primary">Làm mới trang</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="overview-toolbar card-surface">
+            <div>
+              <p class="section-kicker mb-1">Bộ lọc thời gian</p>
+              <h2 class="mb-2">Phân tích theo từng tuần hoặc cụm 7 ngày</h2>
+              <p class="workspace-meta mb-0">
+                Chọn mốc thời gian để xem lại hiệu năng hệ thống ở các tuần trước, không chỉ dữ liệu hiện tại.
+              </p>
+            </div>
+            <div class="overview-toolbar-actions">
+              <div id="overviewWindowLabel" class="overview-window-label">Tuần này</div>
+              <button id="openOverviewWindowModal" type="button" class="btn btn-admin-primary">Chọn thời gian</button>
+            </div>
+          </section>
+
+          <section class="mission-grid">
+            <article class="card-surface mission-panel mission-panel-wide">
+              <div class="section-head">
+                <div>
+                  <p class="section-kicker">Điều hành máy chủ</p>
+                  <h2>Năng lực đáp ứng và độ ổn định hệ thống</h2>
+                </div>
+                <span id="serverHealthTag" class="section-tag accent">Đang phân tích</span>
+              </div>
+
+              <div class="mission-panel-grid">
+                <div class="mission-metric-grid">
+                  <article class="mission-metric-card">
+                    <p>Yêu cầu AI trong kỳ</p>
+                    <strong id="serverMetricRequests">--</strong>
+                    <span id="serverMetricRequestsMeta">Lưu lượng hệ thống đang được đồng bộ.</span>
+                  </article>
+                  <article class="mission-metric-card">
+                    <p>Phản hồi trung bình</p>
+                    <strong id="serverMetricAvgLatency">--</strong>
+                    <span id="serverMetricAvgLatencyMeta">Độ trễ trung bình từ log AI.</span>
+                  </article>
+                  <article class="mission-metric-card">
+                    <p>Phản hồi P95</p>
+                    <strong id="serverMetricP95Latency">--</strong>
+                    <span id="serverMetricP95LatencyMeta">Ngưỡng phản hồi khi tải tăng cao.</span>
+                  </article>
+                  <article class="mission-metric-card">
+                    <p>Độ sẵn sàng ước tính</p>
+                    <strong id="serverMetricAvailability">--</strong>
+                    <span id="serverMetricAvailabilityMeta">Kết hợp yêu cầu, lỗi và độ trễ.</span>
+                  </article>
+                </div>
+
+                <div class="mission-gauge-card">
+                  <div class="mission-gauge-head">
+                    <div>
+                      <p class="section-kicker">Chỉ số ổn định</p>
+                      <h3 id="serverStabilityScore">--</h3>
+                    </div>
+                    <span id="serverStabilityPill" class="status-pill status-neutral">Đang đánh giá</span>
+                  </div>
+                  <div id="serverReliabilityGauge" class="server-reliability-gauge"></div>
+                  <p id="serverHealthSummary" class="mission-summary-text">
+                    Hệ thống đang chờ dữ liệu thực để đánh giá áp lực yêu cầu và độ mượt của phản hồi.
+                  </p>
+                </div>
+              </div>
+            </article>
+          </section>
+
+          <section class="overview-chart-grid">
+            <article class="card-surface intel-panel top-chart-panel">
+              <div class="section-head">
+                <div>
+                  <p class="section-kicker">Yêu cầu và phản hồi</p>
+                  <h2>Áp lực yêu cầu và thời gian phản hồi</h2>
+                </div>
+              </div>
+              <div id="usageTrend" class="chart-surface chart-surface-lg"></div>
+              <div id="usageTrendSummary" class="chart-summary-grid"></div>
+            </article>
+
+            <article class="card-surface intel-panel top-chart-panel">
+              <div class="section-head">
+                <div>
+                  <p class="section-kicker">Độ ổn định AI</p>
+                  <h2>Độ ổn định log xử lý AI</h2>
+                </div>
+              </div>
+              <div id="aiStabilityChart" class="chart-surface chart-surface-lg"></div>
+              <div id="aiStabilitySummary" class="chart-summary-grid"></div>
+            </article>
+          </section>
+
+          <section class="admin-page-grid">
+            <article class="card-surface operations-card operations-card-wide pulse-card">
+              <div class="section-head">
+                <div>
+                  <p class="section-kicker">Tình trạng hệ thống</p>
+                  <h2>Các chỉ báo chính</h2>
+                </div>
+                <span class="section-tag">Trực tiếp</span>
+              </div>
+              <div id="healthSignals" class="health-signals"></div>
+            </article>
+          </section>
+
+          <section class="analytics-grid">
+            <article class="card-surface intel-panel">
+              <div class="section-head">
+                <div>
+                  <p class="section-kicker">Cơ cấu tác vụ</p>
+                  <h2>Phân rã tải tác vụ AI</h2>
+                </div>
+              </div>
+              <div id="serviceBreakdown" class="service-breakdown"></div>
+            </article>
+
+            <article class="card-surface intel-panel">
+              <div class="section-head">
+                <div>
+                  <p class="section-kicker">Người dùng nổi bật</p>
+                  <h2>Đóng góp nhiều nhất</h2>
+                </div>
+              </div>
+              <div id="topContributors" class="contributors-list"></div>
+            </article>
+
+            <article class="card-surface intel-panel intel-panel-wide">
+              <div class="section-head">
+                <div>
+                  <p class="section-kicker">Dòng sự kiện</p>
+                  <h2>Hoạt động hệ thống gần đây</h2>
+                </div>
+                <span id="recentActivityCount" class="section-tag neutral">0 sự kiện</span>
+              </div>
+              <div class="activity-scroll-shell">
+                <div id="recentActivities" class="activity-list activity-stream"></div>
+              </div>
+            </article>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <div class="modal fade" id="overviewWindowModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <form id="overviewWindowForm" class="modal-content admin-modal-content">
+          <div class="modal-header border-0 pb-1">
+            <div>
+              <p class="modal-eyebrow mb-1">Bộ lọc thời gian</p>
+              <h5 class="modal-title fw-bold">Chọn khoảng thời gian cho dashboard</h5>
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body pt-2">
+            <label class="field mb-3">
+              <span>Kiểu thời gian</span>
+              <select id="overviewWindowPreset" class="form-select">
+                <option value="week_current">Tuần này</option>
+                <option value="week_previous">Tuần trước</option>
+                <option value="rolling_7">7 ngày gần nhất</option>
+                <option value="rolling_30">30 ngày gần nhất</option>
+                <option value="custom">Tùy chỉnh từ ngày đến ngày</option>
+              </select>
+            </label>
+
+            <div class="form-grid">
+              <label class="field">
+                <span>Từ ngày</span>
+                <input id="overviewStartDate" class="form-control" type="text" inputmode="numeric" placeholder="dd/MM/yyyy" />
+              </label>
+              <label class="field">
+                <span>Đến ngày</span>
+                <input id="overviewEndDate" class="form-control" type="text" inputmode="numeric" placeholder="dd/MM/yyyy" />
+              </label>
+            </div>
+
+            <p class="form-note mt-3 mb-0">
+              Chế độ tùy chỉnh sẽ áp dụng trực tiếp cho hai biểu đồ đầu trang và cụm phân tích vận hành.
+            </p>
+            <p id="overviewWindowFeedback" class="inline-feedback mt-3" role="status" aria-live="polite"></p>
+          </div>
+          <div class="modal-footer border-0 pt-1">
+            <button type="button" class="btn btn-admin-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="submit" class="btn btn-admin-primary">Áp dụng</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <script src="/js/auth.js"></script>
+    <script src="/assets/js/main.js"></script>
+    <script src="/js/admin.js"></script>
+  </body>
+</html>

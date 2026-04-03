@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
   const form = document.getElementById("loginForm");
   if (!form) {
     return;
@@ -7,32 +7,43 @@
   const tokenStorageKey = "auth.accessToken";
   const userStorageKey = "auth.currentUser";
   const googleIdentitySdkUrl = "https://accounts.google.com/gsi/client";
-  const identifierInput = document.getElementById("email");
+  const identifierInput = document.getElementById("username") || document.getElementById("email");
   const passwordInput = document.getElementById("password");
   const rememberMeInput = document.getElementById("rememberMe");
+  const passwordToggleBtn = document.getElementById("passwordToggleBtn");
+  const passwordToggleIcon = document.getElementById("loginPasswordEyeIcon");
+    // Toggle show/hide password
+    if (passwordToggleBtn && passwordInput) {
+      passwordToggleBtn.addEventListener("click", function () {
+        const isVisible = passwordInput.type === "text";
+        passwordInput.type = isVisible ? "password" : "text";
+        passwordToggleBtn.classList.toggle("is-visible", !isVisible);
+        // Optional: change icon if you want (not required for basic eye)
+      });
+    }
   const loginButton = document.getElementById("loginButton");
   const alertBox = document.getElementById("alertBox");
   const alertMsg = document.getElementById("alertMsg");
-  let returnUrl = "/home/dashboard.html";
+  let returnUrl = "/dashboard";
   let isSubmitting = false;
 
   const getDefaultLandingByRole = (role) => {
     const normalizedRole = String(role || "").trim().toLowerCase();
     if (normalizedRole === "admin") {
-      return "/home/admin.html";
+      return "/admin";
     }
 
-    return "/home/dashboard.html";
+    return "/dashboard";
   };
 
   const normalizeReturnUrl = (value) => {
     const raw = String(value || "").trim();
     if (!raw) {
-      return "/home/dashboard.html";
+      return "/dashboard";
     }
 
     if (!raw.startsWith("/") || raw.startsWith("//")) {
-      return "/home/dashboard.html";
+      return "/dashboard";
     }
 
     const normalizedRaw = raw.toLowerCase();
@@ -43,10 +54,31 @@
       normalizedRaw.startsWith("/home/login.html") ||
       normalizedRaw.startsWith("/home/index.html")
     ) {
-      return "/home/dashboard.html";
+      return "/dashboard";
     }
 
     return raw;
+  };
+
+  const resolveReturnUrlForRole = (role, requestedUrl) => {
+    const normalizedRole = String(role || "").trim().toLowerCase();
+    const normalizedRequestedUrl = normalizeReturnUrl(requestedUrl);
+    const isAdminRequest = normalizedRequestedUrl === "/admin" || normalizedRequestedUrl.startsWith("/admin/");
+    const isUserDashboardRequest = normalizedRequestedUrl === "/dashboard" || normalizedRequestedUrl.startsWith("/dashboard/");
+
+    if (normalizedRole === "admin") {
+      if (isUserDashboardRequest) {
+        return "/admin";
+      }
+
+      return normalizedRequestedUrl || "/admin";
+    }
+
+    if (isAdminRequest) {
+      return "/dashboard";
+    }
+
+    return normalizedRequestedUrl || "/dashboard";
   };
 
   const setMessage = (message, isSuccess) => {
@@ -63,6 +95,7 @@
     const error = document.getElementById(`${fieldId}Error`);
 
     if (input) {
+      input.classList.remove("is-valid");
       input.classList.add("is-invalid");
     }
 
@@ -77,6 +110,7 @@
 
     if (input) {
       input.classList.remove("is-invalid");
+      input.classList.remove("is-valid");
     }
 
     if (error) {
@@ -84,11 +118,17 @@
     }
   };
 
+  const getIdentifierFieldId = () => (document.getElementById("username") ? "username" : "email");
+
   const clearErrors = () => {
-    ["email", "password"].forEach(clearFieldError);
+    [getIdentifierFieldId(), "password"].forEach(clearFieldError);
   };
 
   const persistSession = (data, rememberMe) => {
+    if (window.AuthClient?.storeSession) {
+      return Boolean(window.AuthClient.storeSession(data, rememberMe));
+    }
+
     const token = data?.accessToken || "";
     if (!token) {
       return false;
@@ -121,12 +161,7 @@
   };
 
   const getTargetAfterLogin = (responseData) => {
-    const requestedUrl = normalizeReturnUrl(returnUrl);
-    if (requestedUrl) {
-      return requestedUrl;
-    }
-
-    return getDefaultLandingByRole(responseData?.role);
+    return resolveReturnUrlForRole(responseData?.role, returnUrl || getDefaultLandingByRole(responseData?.role));
   };
 
   const setSubmitting = (submitting) => {
@@ -135,6 +170,8 @@
     }
 
     loginButton.disabled = submitting;
+    loginButton.classList.toggle("is-loading", submitting);
+    loginButton.setAttribute("aria-busy", submitting ? "true" : "false");
     loginButton.textContent = submitting ? "Đang đăng nhập..." : "Đăng nhập";
   };
 
@@ -180,6 +217,7 @@
     toggleButton.addEventListener("click", () => {
       const show = passwordInput.type === "password";
       passwordInput.type = show ? "text" : "password";
+      toggleButton.classList.toggle("is-visible", show);
       eyeIcon.innerHTML = show
         ? '<path stroke="currentColor" stroke-width="2" d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22"/>'
         : '<path stroke="currentColor" stroke-width="2" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>';
@@ -222,7 +260,7 @@
       window.sessionStorage.removeItem("pendingEmailVerification");
       setMessage("Đăng nhập Google thành công. Đang chuyển trang...", true);
       window.setTimeout(() => {
-        window.location.href = getTargetAfterLogin(data);
+        window.location.replace(getTargetAfterLogin(data));
       }, 700);
     } catch (error) {
       console.error("google_login_failed", error);
@@ -338,6 +376,18 @@
     }
   };
 
+  const setupPostLogoutBackBehavior = () => {
+    const query = new URLSearchParams(window.location.search);
+    if (query.get("loggedOut") !== "1") {
+      return;
+    }
+
+    window.history.pushState({ loggedOutLanding: true }, "", window.location.href);
+    window.addEventListener("popstate", () => {
+      window.location.replace("/home/index.html");
+    }, { once: true });
+  };
+
   const handleLogin = async () => {
     if (isSubmitting) {
       return;
@@ -351,7 +401,7 @@
     const rememberMe = !!rememberMeInput?.checked;
 
     if (!emailOrUsername) {
-      setFieldError("email", "Vui lòng nhập email hoặc tên đăng nhập.");
+      setFieldError(getIdentifierFieldId(), "Vui lòng nhập email hoặc tên đăng nhập.");
       return;
     }
 
@@ -391,7 +441,7 @@
               key.includes("username")
             ) {
               setFieldError(
-                "email",
+                getIdentifierFieldId(),
                 firstMessage || "Thông tin đăng nhập chưa hợp lệ.",
               );
             }
@@ -419,7 +469,7 @@
       window.sessionStorage.removeItem("pendingEmailVerification");
       setMessage("Đăng nhập thành công. Đang chuyển trang...", true);
       window.setTimeout(() => {
-        window.location.href = getTargetAfterLogin(data);
+        window.location.replace(getTargetAfterLogin(data));
       }, 700);
     } catch (error) {
       console.error("login_failed", error);
@@ -436,14 +486,25 @@
   });
 
   if (identifierInput) {
-    identifierInput.addEventListener("input", () => clearFieldError("email"));
+    identifierInput.addEventListener("input", () => {
+      clearFieldError(getIdentifierFieldId());
+      if ((identifierInput.value || "").trim()) {
+        identifierInput.classList.add("is-valid");
+      }
+    });
   }
 
   if (passwordInput) {
-    passwordInput.addEventListener("input", () => clearFieldError("password"));
+    passwordInput.addEventListener("input", () => {
+      clearFieldError("password");
+      if ((passwordInput.value || "").trim()) {
+        passwordInput.classList.add("is-valid");
+      }
+    });
   }
 
   prefillFromQuery();
+  setupPostLogoutBackBehavior();
   setupPasswordToggle();
   void setupGoogleLogin();
 })();

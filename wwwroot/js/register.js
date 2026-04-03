@@ -16,6 +16,18 @@
 
   const messageElement = document.getElementById("registerMessage");
   const registerButton = document.getElementById("registerButton");
+  const termsWrapper = document.querySelector(".register-terms-wrapper");
+
+  const validationRules = {
+    username: (value) => value.trim().length >= 3,
+    fullName: (value) => value.trim().length >= 2,
+    email: (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()),
+    password: (value) => value.length >= 8,
+    confirmPassword: (value) => {
+      const passwordValue = document.getElementById("password")?.value || "";
+      return value.length >= 8 && value === passwordValue;
+    },
+  };
 
   const clearErrors = () => {
     for (const fieldId of fieldIds) {
@@ -29,7 +41,12 @@
       const input = document.getElementById(inputId);
       if (input) {
         input.classList.remove("is-invalid");
+        input.classList.remove("is-valid");
       }
+    }
+
+    if (termsWrapper) {
+      termsWrapper.classList.remove("is-invalid");
     }
   };
 
@@ -42,8 +59,29 @@
     if (fieldName !== "acceptTerms") {
       const input = document.getElementById(fieldName);
       if (input) {
+        input.classList.remove("is-valid");
         input.classList.add("is-invalid");
       }
+      return;
+    }
+
+    if (termsWrapper) {
+      termsWrapper.classList.add("is-invalid");
+    }
+  };
+
+  const setFieldSuccess = (fieldName) => {
+    const input = document.getElementById(fieldName);
+    if (!input) {
+      return;
+    }
+
+    input.classList.remove("is-invalid");
+    input.classList.add("is-valid");
+
+    const errorElement = document.getElementById(`${fieldName}Error`);
+    if (errorElement) {
+      errorElement.textContent = "";
     }
   };
 
@@ -62,7 +100,68 @@
     }
 
     registerButton.disabled = isSubmitting;
-    registerButton.textContent = isSubmitting ? "Đang tạo tài khoản..." : "Tạo tài khoản";
+    registerButton.textContent = isSubmitting ? "Đang tạo tài khoản..." : "Đăng ký";
+  };
+
+  const setupFieldValidation = () => {
+    const validateField = (fieldId) => {
+      const input = document.getElementById(fieldId);
+      const validator = validationRules[fieldId];
+      if (!input || !validator) {
+        return;
+      }
+
+      const value = input.value || "";
+      if (!value.trim()) {
+        input.classList.remove("is-invalid");
+        input.classList.remove("is-valid");
+
+        const errorElement = document.getElementById(`${fieldId}Error`);
+        if (errorElement) {
+          errorElement.textContent = "";
+        }
+        return;
+      }
+
+      if (validator(value)) {
+        setFieldSuccess(fieldId);
+        return;
+      }
+
+      input.classList.remove("is-valid");
+      input.classList.add("is-invalid");
+    };
+
+    for (const fieldId of Object.keys(validationRules)) {
+      const input = document.getElementById(fieldId);
+      if (!input) {
+        continue;
+      }
+
+      input.addEventListener("input", () => {
+        validateField(fieldId);
+        if (fieldId === "password") {
+          validateField("confirmPassword");
+        }
+      });
+
+      input.addEventListener("blur", () => {
+        validateField(fieldId);
+      });
+    }
+
+    const agree = document.getElementById("agree");
+    if (agree) {
+      agree.addEventListener("change", () => {
+        if (agree.checked && termsWrapper) {
+          termsWrapper.classList.remove("is-invalid");
+          const termsError = document.getElementById("acceptTermsError");
+          if (termsError) {
+            termsError.textContent = "";
+          }
+        }
+      });
+    }
   };
 
   const setupPasswordToggle = () => {
@@ -229,6 +328,7 @@
 
       const emailForVerification = savePendingVerification(data, payload.email);
       form.reset();
+      clearErrors();
       setMessage(
         data?.message || "Đăng ký thành công. Đang chuyển sang trang xác thực OTP...",
         true
@@ -251,4 +351,5 @@
   });
 
   setupPasswordToggle();
+  setupFieldValidation();
 })();

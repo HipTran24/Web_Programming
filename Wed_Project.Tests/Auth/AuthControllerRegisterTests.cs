@@ -1,6 +1,7 @@
 using System.Net;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Web_Project.Controllers;
 using Web_Project.Models;
 using Web_Project.Services.Auth;
@@ -152,7 +153,12 @@ public sealed class AuthControllerRegisterTests
             httpContext.Connection.RemoteIpAddress = IPAddress.Parse(remoteIp);
         }
 
-        return new AuthController(authService)
+        var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase($"auth-controller-tests-{Guid.NewGuid()}")
+            .Options;
+        var dbContext = new AppDbContext(dbOptions);
+
+        return new AuthController(authService, dbContext)
         {
             ControllerContext = new ControllerContext
             {

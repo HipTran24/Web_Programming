@@ -2,8 +2,10 @@ using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Web_Project.Models;
+using Web_Project.Security;
 using Web_Project.Services.Auth;
 
 namespace Web_Project.Controllers
@@ -13,11 +15,14 @@ namespace Web_Project.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly AppDbContext _dbContext;
 
         public AuthController(
-            IAuthService authService)
+            IAuthService authService,
+            AppDbContext dbContext)
         {
             _authService = authService;
+            _dbContext = dbContext;
         }
 
         [HttpPost("login")]
@@ -42,6 +47,7 @@ namespace Web_Project.Controllers
                 return StatusCode(result.StatusCode, new { message = result.Message });
             }
 
+            AppendAuthCookie(result.Response, request.RememberMe);
             return Ok(result.Response);
         }
 
@@ -67,6 +73,7 @@ namespace Web_Project.Controllers
                 return StatusCode(result.StatusCode, new { message = result.Message });
             }
 
+            AppendAuthCookie(result.Response, request.RememberMe);
             return Ok(result.Response);
         }
 
@@ -93,6 +100,7 @@ namespace Web_Project.Controllers
             }
 
             var safeReturnUrl = NormalizeReturnUrl(returnUrl);
+            AppendAuthCookie(result.Response, rememberMe: true);
             return BuildGoogleRedirectPage(true, "Đăng nhập Google thành công.", result.Response, safeReturnUrl);
         }
 
@@ -110,20 +118,53 @@ namespace Web_Project.Controllers
 
         [Authorize]
         [HttpGet("me")]
-        public IActionResult Me()
+        public async Task<IActionResult> Me(CancellationToken cancellationToken)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var username = User.FindFirstValue(ClaimTypes.Name);
+            var userIdRaw = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var email = User.FindFirstValue(ClaimTypes.Email);
             var role = User.FindFirstValue(ClaimTypes.Role);
 
+            if (!int.TryParse(userIdRaw, out var userId))
+            {
+                return Unauthorized(new { message = "Phiên đăng nhập không hợp lệ." });
+            }
+
+            var user = await _dbContext.Users
+                .Where(x => x.UserId == userId)
+                .Select(x => new
+                {
+                    x.UserId,
+                    x.Username,
+                    x.FullName,
+                    x.Email,
+                    RoleName = x.Role.RoleName
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (user is null)
+            {
+                return NotFound(new { message = "Không tìm thấy người dùng." });
+            }
+
+            var avatarUrl = await LoadAvatarUrlAsync(userId, cancellationToken);
+
             return Ok(new
             {
-                userId,
-                username,
-                email,
-                role
+                userId = user.UserId,
+                username = user.Username,
+                fullName = user.FullName,
+                email = string.IsNullOrWhiteSpace(user.Email) ? email : user.Email,
+                avatarUrl,
+                role = string.IsNullOrWhiteSpace(user.RoleName) ? role : user.RoleName,
+                isAdmin = string.Equals(string.IsNullOrWhiteSpace(user.RoleName) ? role : user.RoleName, "Admin", StringComparison.OrdinalIgnoreCase)
             });
+        }
+
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            AuthCookieHelper.DeleteAuthCookie(HttpContext);
+            return Ok(new { message = "Đã đăng xuất." });
         }
 
         [HttpPost("register")]
@@ -220,12 +261,12 @@ namespace Web_Project.Controllers
                         var raw = (value ?? string.Empty).Trim();
                         if (string.IsNullOrWhiteSpace(raw))
                         {
-                        return "/home/dashboard.html";
+                        return "/dashboard";
                         }
 
                         if (!raw.StartsWith('/') || raw.StartsWith("//", StringComparison.Ordinal))
                         {
-                        return "/home/dashboard.html";
+                        return "/dashboard";
                         }
 
                     var normalizedRaw = raw.ToLowerInvariant();
@@ -233,7 +274,7 @@ namespace Web_Project.Controllers
                         normalizedRaw.StartsWith("/home/login.html", StringComparison.Ordinal) ||
                         normalizedRaw.StartsWith("/home/index.html", StringComparison.Ordinal))
                     {
-                        return "/home/dashboard.html";
+                        return "/dashboard";
                     }
 
                         return raw;
@@ -246,7 +287,7 @@ namespace Web_Project.Controllers
                         string redirectUrl)
                 {
                         var safeMessage = JsonSerializer.Serialize(message ?? string.Empty);
-                        var safeRedirectUrl = JsonSerializer.Serialize(redirectUrl ?? "/home/dashboard.html");
+                        var safeRedirectUrl = JsonSerializer.Serialize(redirectUrl ?? "/dashboard");
                         var payload = JsonSerializer.Serialize(response);
 
                         var html = """
@@ -290,7 +331,7 @@ namespace Web_Project.Controllers
                     }
                 } catch (_) {}
 
-                window.location.replace(redirectUrl || "/home/dashboard.html");
+                window.location.replace(redirectUrl || "/dashboard");
                 return;
             }
 
@@ -318,5 +359,44 @@ namespace Web_Project.Controllers
                                 StatusCode = 200
                         };
                 }
+
+        private void AppendAuthCookie(LoginResponse? response, bool rememberMe)
+        {
+            if (response is null || string.IsNullOrWhiteSpace(response.AccessToken))
+            {
+                return;
+            }
+
+            AuthCookieHelper.AppendAuthCookie(HttpContext, response.AccessToken, response.ExpiresAt, rememberMe);
+        }
+
+        private async Task<string> LoadAvatarUrlAsync(int userId, CancellationToken cancellationToken)
+        {
+            var raw = await _dbContext.SystemSettings
+                .AsNoTracking()
+                .Where(x => x.SettingKey == $"user:{userId}:profile-meta")
+                .Select(x => x.SettingValue)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (string.IsNullOrWhiteSpace(raw))
+            {
+                return string.Empty;
+            }
+
+            try
+            {
+                using var document = JsonDocument.Parse(raw);
+                if (document.RootElement.TryGetProperty("avatarUrl", out var avatarElement))
+                {
+                    return avatarElement.GetString()?.Trim() ?? string.Empty;
+                }
+            }
+            catch
+            {
+                // Ignore malformed profile meta payloads.
+            }
+
+            return string.Empty;
+        }
     }
 }

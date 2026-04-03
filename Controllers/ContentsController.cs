@@ -1,6 +1,9 @@
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Claims;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Web_Project.Models;
 
@@ -34,6 +37,181 @@ namespace Web_Project.Controllers
             _logger = logger;
         }
 
+        [Authorize(Policy = "UserOnly")]
+        [HttpGet]
+        public async Task<ActionResult<object>> GetMyContents(
+            [FromQuery] string? query,
+            [FromQuery] string? sourceType,
+            [FromQuery] string? sort,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 20,
+            CancellationToken cancellationToken = default)
+        {
+            var userIdRaw = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdRaw, out var userId))
+            {
+                return Unauthorized(new { message = "Vui lòng đăng nhập để xem nội dung." });
+            }
+
+            var safePage = page < 1 ? 1 : page;
+            var safePageSize = Math.Clamp(pageSize, 1, 100);
+            var normalizedSort = string.Equals(sort, "oldest", StringComparison.OrdinalIgnoreCase)
+                ? "oldest"
+                : "latest";
+            var trimmedQuery = (query ?? string.Empty).Trim();
+            var trimmedSourceType = (sourceType ?? string.Empty).Trim();
+
+            var baseQuery = _dbContext.Contents
+                .AsNoTracking()
+                .Where(x => x.UserId == userId && !x.IsGuest);
+
+            if (!string.IsNullOrWhiteSpace(trimmedQuery))
+            {
+                var loweredQuery = trimmedQuery.ToLower();
+                baseQuery = baseQuery.Where(x =>
+                    (x.FileName ?? string.Empty).ToLower().Contains(loweredQuery) ||
+                    (x.FileType ?? string.Empty).ToLower().Contains(loweredQuery) ||
+                    (x.SourceType ?? string.Empty).ToLower().Contains(loweredQuery) ||
+                    (x.AIProcess != null && (x.AIProcess.Summary ?? string.Empty).ToLower().Contains(loweredQuery)));
+            }
+
+            if (!string.IsNullOrWhiteSpace(trimmedSourceType) &&
+                !string.Equals(trimmedSourceType, "all", StringComparison.OrdinalIgnoreCase))
+            {
+                baseQuery = baseQuery.Where(x => x.SourceType == trimmedSourceType);
+            }
+
+            var totalItems = await baseQuery.CountAsync(cancellationToken);
+
+            var ordered = normalizedSort == "oldest"
+                ? baseQuery.OrderBy(x => x.CreatedAt)
+                : baseQuery.OrderByDescending(x => x.CreatedAt);
+
+            var rows = await ordered
+                .Skip((safePage - 1) * safePageSize)
+                .Take(safePageSize)
+                .Select(x => new
+                {
+                    x.ContentId,
+                    x.FileName,
+                    x.FileType,
+                    x.SourceType,
+                    x.FetchStatus,
+                    x.FetchError,
+                    x.CreatedAt,
+                    HasAiProcess = x.AIProcess != null,
+                    Moderation = x.ContentModeration == null
+                        ? null
+                        : new
+                        {
+                            x.ContentModeration.Status,
+                            x.ContentModeration.Reason
+                        },
+                    SummaryPreview = x.AIProcess != null
+                        ? (x.AIProcess.Summary.Length > 220
+                            ? x.AIProcess.Summary.Substring(0, 220)
+                            : x.AIProcess.Summary)
+                        : string.Empty
+                })
+                .ToListAsync(cancellationToken);
+
+            return Ok(new
+            {
+                page = safePage,
+                pageSize = safePageSize,
+                totalItems,
+                totalPages = (int)Math.Ceiling(totalItems / (double)safePageSize),
+                items = rows
+            });
+        }
+
+        [Authorize(Policy = "UserOnly")]
+        [HttpGet("{contentId:int}")]
+        public async Task<ActionResult<object>> GetContentDetail(
+            int contentId,
+            CancellationToken cancellationToken = default)
+        {
+            var userIdRaw = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdRaw, out var userId))
+            {
+                return Unauthorized(new { message = "Vui lòng đăng nhập để xem chi tiết nội dung." });
+            }
+
+            var item = await _dbContext.Contents
+                .AsNoTracking()
+                .Where(x => x.ContentId == contentId && x.UserId == userId && !x.IsGuest)
+                .Select(x => new
+                {
+                    x.ContentId,
+                    x.FileName,
+                    x.FileType,
+                    x.SourceType,
+                    x.SourceUrl,
+                    x.FetchStatus,
+                    x.FetchError,
+                    x.CreatedAt,
+                    x.ExtractedText,
+                    x.AI_DetectedSubject,
+                    x.AI_DetectedGrade,
+                    Moderation = x.ContentModeration == null
+                        ? null
+                        : new
+                        {
+                            x.ContentModeration.Status,
+                            x.ContentModeration.Reason
+                        },
+                    AiProcess = x.AIProcess == null
+                        ? null
+                        : new
+                        {
+                            x.AIProcess.Summary,
+                            x.AIProcess.KeyPoints,
+                            x.AIProcess.ProcessingTime,
+                            x.AIProcess.CreatedAt
+                        },
+                    QuizCount = x.Quizzes.Count
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (item is null)
+            {
+                return NotFound(new { message = "Không tìm thấy nội dung." });
+            }
+
+            return Ok(item);
+        }
+
+        [Authorize(Policy = "UserOnly")]
+        [HttpDelete("{contentId:int}")]
+        public async Task<ActionResult<object>> DeleteContent(
+            int contentId,
+            CancellationToken cancellationToken = default)
+        {
+            var userIdRaw = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdRaw, out var userId))
+            {
+                return Unauthorized(new { message = "Vui lòng đăng nhập để xoá nội dung." });
+            }
+
+            var content = await _dbContext.Contents
+                .FirstOrDefaultAsync(x => x.ContentId == contentId && x.UserId == userId && !x.IsGuest, cancellationToken);
+
+            if (content is null)
+            {
+                return NotFound(new { message = "Không tìm thấy nội dung để xoá." });
+            }
+
+            _dbContext.Contents.Remove(content);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            return Ok(new
+            {
+                contentId,
+                message = "Đã xoá nội dung thành công."
+            });
+        }
+
+        [Authorize(Policy = "UserOnly")]
         [HttpPost("from-url")]
         public async Task<ActionResult<ContentFromUrlResponse>> CreateFromUrl(
             [FromBody] CreateContentFromUrlRequest request,
@@ -42,6 +220,12 @@ namespace Web_Project.Controllers
             if (!ModelState.IsValid)
             {
                 return ValidationProblem(ModelState);
+            }
+
+            var userIdRaw = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdRaw, out var userId))
+            {
+                return Unauthorized(new { message = "Vui lòng đăng nhập để lưu nội dung từ URL." });
             }
 
             if (!Uri.TryCreate(request.Url, UriKind.Absolute, out var uri) ||
@@ -59,8 +243,8 @@ namespace Web_Project.Controllers
             var initialSourceType = InferSourceType(uri, string.Empty);
             var content = new Content
             {
-                UserId = request.UserId,
-                IsGuest = request.IsGuest,
+                UserId = userId,
+                IsGuest = false,
                 FileName = GetFileNameFromUrl(uri),
                 FileType = initialSourceType,
                 FilePath = request.Url,

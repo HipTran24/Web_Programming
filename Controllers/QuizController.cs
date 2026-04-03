@@ -50,7 +50,7 @@ namespace Web_Project.Controllers
             }
         }
 
-        [Authorize]
+        [Authorize(Policy = "UserOnly")]
         [HttpGet("{quizId:int}")]
         public async Task<ActionResult<GenerateQuizResponse>> GetQuiz(
             int quizId,

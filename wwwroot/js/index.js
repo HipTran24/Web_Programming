@@ -1,32 +1,28 @@
 (function () {
-  if (window.AuthClient && window.AuthClient.isAuthenticated()) {
-    const guest = document.querySelector("[data-auth-guest]");
-    const user = document.querySelector("[data-auth-user]");
+  let scrollListener = null;
+  let revealObserver = null;
 
-    if (guest) {
-      guest.style.display = "none";
-    }
-
-    if (user) {
-      user.style.display = "inline-flex";
-    }
-
-    const current = window.AuthClient.getCurrentUser();
-    if (current) {
-      window.AuthClient.bindUserUi(current);
-    }
+  if (window.AuthClient?.whenReady) {
+    window.AuthClient.whenReady().then(() => {
+      const current = window.AuthClient.getCurrentUser?.();
+      if (current) {
+        window.AuthClient.bindUserUi(current);
+      }
+    });
   }
 
   const navbar = document.getElementById("navbar");
   if (navbar) {
-    window.addEventListener("scroll", () => {
+    scrollListener = () => {
       navbar.classList.toggle("scrolled", window.scrollY > 40);
-    });
+    };
+
+    window.addEventListener("scroll", scrollListener);
   }
 
   const reveals = document.querySelectorAll(".reveal");
   if (reveals.length > 0) {
-    const io = new IntersectionObserver(
+    revealObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
@@ -37,6 +33,21 @@
       { threshold: 0.12 }
     );
 
-    reveals.forEach((element) => io.observe(element));
+    reveals.forEach((element) => revealObserver.observe(element));
   }
+
+  const disposePage = () => {
+    if (scrollListener) {
+      window.removeEventListener("scroll", scrollListener);
+      scrollListener = null;
+    }
+
+    if (revealObserver) {
+      revealObserver.disconnect();
+      revealObserver = null;
+    }
+  };
+
+  document.addEventListener("ajax:before-swap", disposePage, { once: true });
 })();
+

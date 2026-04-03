@@ -1,158 +1,388 @@
 :root {
-  --shell-border: rgba(255, 255, 255, 0.14);
+  --shell-max-width: 1240px;
+  --shell-page-pad: 18px;
+  --shell-viewport-gutter: 16px;
+  --shell-border: rgba(255, 255, 255, 0.16);
+  --shell-border-strong: rgba(255, 255, 255, 0.24);
   --shell-text: #ffffff;
   --shell-muted: rgba(255, 255, 255, 0.72);
+  --shell-muted-2: rgba(255, 255, 255, 0.48);
   --shell-primary: #1a7ef7;
   --shell-primary-2: #0d6efd;
+  --shell-surface:
+    linear-gradient(135deg, rgba(10, 22, 40, 0.62), rgba(11, 31, 55, 0.46)),
+    rgba(255, 255, 255, 0.02);
+  --shell-shadow:
+    0 14px 34px rgba(2, 10, 24, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 #app-shell-navbar {
   position: fixed;
-  top: 12px;
+  top: 16px;
   left: 0;
   right: 0;
-  z-index: 1100;
+  z-index: 1030;
+}
+
+#app-shell-navbar .app-shell-frame {
+  max-width: calc(var(--shell-max-width) + (var(--shell-page-pad) * 2));
+  margin: 0 auto;
+  padding: 0 var(--shell-page-pad);
 }
 
 #app-shell-navbar .app-shell-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 32px;
-  display: flex;
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 18px;
+  min-height: 72px;
+  padding: 0 18px;
+  border: 1px solid rgba(160, 204, 255, 0.12);
+  border-radius: 24px;
+  background:
+    linear-gradient(135deg, rgba(8, 19, 29, 0.98), rgba(12, 29, 44, 0.96)),
+    rgba(255, 255, 255, 0.02);
+  box-shadow:
+    0 18px 42px rgba(2, 10, 24, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+#app-shell-navbar .app-shell-start {
+  display: inline-flex;
   align-items: center;
   gap: 24px;
+  min-width: 0;
 }
 
 #app-shell-navbar .app-shell-brand {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 12px;
   color: var(--shell-text);
   text-decoration: none;
   font-weight: 800;
   font-size: 1.08rem;
   line-height: 1;
   white-space: nowrap;
-  min-height: 48px;
+  min-height: 54px;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+#app-shell-navbar .app-shell-brand-text {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.12rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  transform: translateY(1px);
 }
 
 #app-shell-navbar .app-shell-logo-slot {
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  background-image: url('/images/Logo.png');
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
+    rgba(8, 25, 46, 0.68);
+  border: 1px solid rgba(101, 217, 203, 0.18);
+  box-shadow:
+    0 10px 24px rgba(2, 10, 24, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transform: translateY(1px);
 }
 
-/* Add your logo by setting background-image, example:
-   #app-shell-navbar .app-shell-logo-slot { background-image: url('/images/Logo.png'); }
-*/
+#app-shell-navbar .app-shell-logo-slot svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+  filter: drop-shadow(0 6px 12px rgba(26, 126, 247, 0.22));
+}
 
 #app-shell-navbar .app-shell-links {
   list-style: none;
   display: flex;
   align-items: center;
-  gap: 24px;
+  justify-self: center;
+  gap: 6px;
   margin: 0;
-  padding: 0;
+  padding: 6px;
   white-space: nowrap;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: rgba(9, 22, 33, 0.86);
 }
 
 #app-shell-navbar .app-shell-links a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 999px;
   color: var(--shell-muted);
   text-decoration: none;
-  font-size: 0.98rem;
-  font-weight: 500;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition:
+    color 0.18s ease,
+    background-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
 #app-shell-navbar .app-shell-links a:hover,
 #app-shell-navbar .app-shell-links a.active {
   color: #fff;
+  background: rgba(31, 78, 125, 0.52);
+  box-shadow: inset 0 0 0 1px rgba(145, 197, 255, 0.14);
 }
 
 #app-shell-navbar .app-shell-search {
   position: relative;
-  flex: 0 1 360px;
-  max-width: 360px;
-  min-width: 220px;
-  margin-left: 8px;
+  width: min(340px, 30vw);
+  min-width: 260px;
 }
 
 #app-shell-navbar .app-shell-search input {
   width: 100%;
-  height: 42px;
+  height: 46px;
   border-radius: 999px;
   border: 1px solid var(--shell-border);
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(12, 24, 37, 0.94);
   color: #fff;
-  padding: 0 44px 0 16px;
+  padding: 0 46px 0 46px;
   outline: none;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+#app-shell-navbar .app-shell-search input:focus {
+  border-color: rgba(77, 159, 255, 0.48);
+  background: rgba(14, 27, 42, 0.98);
+  box-shadow: 0 0 0 4px rgba(26, 126, 247, 0.12);
 }
 
 #app-shell-navbar .app-shell-search input::placeholder {
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--shell-muted-2);
 }
 
 #app-shell-navbar .app-shell-search svg {
   position: absolute;
-  right: 14px;
+  left: 16px;
   top: 50%;
   transform: translateY(-50%);
   color: rgba(255, 255, 255, 0.55);
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+}
+
+#app-shell-navbar .app-shell-search .app-shell-search-clear {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer !important;
+  user-select: none;
+  z-index: 2;
+}
+
+#app-shell-navbar .app-shell-search .app-shell-search-clear[hidden] {
+  display: none !important;
+}
+
+#app-shell-navbar .app-shell-search .app-shell-search-clear:hover {
+  background: rgba(45, 100, 173, 0.66);
+  color: #fff;
+}
+
+#app-shell-navbar .app-shell-search .app-shell-search-clear svg {
+  position: static;
+  transform: none;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+
+#app-shell-navbar .app-shell-search .app-shell-search-results {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 8px);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(160deg, rgba(9, 20, 38, 0.98), rgba(11, 34, 61, 0.98));
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.36);
+  overflow: hidden;
+  z-index: 15;
+}
+
+#app-shell-navbar .app-shell-search .app-shell-search-results-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  max-height: min(55vh, 320px);
+  overflow-y: auto;
+}
+
+#app-shell-navbar .app-shell-search .app-shell-search-result {
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  padding: 10px 12px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+}
+
+#app-shell-navbar .app-shell-search .app-shell-search-result:hover,
+#app-shell-navbar .app-shell-search .app-shell-search-result.active {
+  background: rgba(77, 159, 255, 0.2);
+  color: #fff;
+}
+
+#app-shell-navbar .app-shell-search .app-shell-search-result-label {
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+#app-shell-navbar .app-shell-search .app-shell-search-result-meta {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.62);
+  white-space: nowrap;
+}
+
+#app-shell-navbar .app-shell-search .app-shell-search-result:hover .app-shell-search-result-meta,
+#app-shell-navbar .app-shell-search .app-shell-search-result.active .app-shell-search-result-meta {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+#app-shell-navbar .app-shell-search svg path,
+#app-shell-navbar .app-shell-menu-toggle svg path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 #app-shell-navbar .app-shell-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-left: auto;
+  justify-self: end;
+  gap: 12px;
   flex-shrink: 0;
+  min-width: 0;
 }
 
 @media (max-width: 1320px) and (min-width: 992px) {
   #app-shell-navbar .app-shell-inner {
-    gap: 16px;
+    gap: 14px;
   }
 
   #app-shell-navbar .app-shell-links {
-    gap: 16px;
+    gap: 4px;
   }
 
   #app-shell-navbar .app-shell-search {
-    flex-basis: 240px;
-    min-width: 180px;
+    width: min(300px, 26vw);
+    min-width: 220px;
   }
+}
+
+@media (max-width: 991px) {
+  #app-shell-navbar .app-shell-search .app-shell-search-results {
+    top: calc(100% + 6px);
+  }
+
+  #app-shell-navbar .app-shell-search .app-shell-search-results-list {
+    max-height: min(48vh, 280px);
+  }
+
+  #app-shell-navbar .app-shell-search .app-shell-search-result-meta {
+    display: none;
+  }
+}
+
+#app-shell-navbar .app-shell-action-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 #app-shell-navbar .app-shell-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-height: 44px;
   text-decoration: none;
   border-radius: 999px;
-  padding: 10px 20px;
-  font-size: 0.96rem;
-  font-weight: 600;
+  padding: 0 18px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease,
+    background-color 0.18s ease;
 }
 
 #app-shell-navbar .app-shell-btn.ghost {
   color: rgba(255, 255, 255, 0.85);
   border: 1px solid var(--shell-border);
-  background: transparent;
+  background: rgba(12, 24, 37, 0.92);
+}
+
+#app-shell-navbar .app-shell-btn.ghost:hover {
+  color: #fff;
+  border-color: rgba(139, 194, 255, 0.5);
+  background: rgba(37, 86, 143, 0.76);
 }
 
 #app-shell-navbar .app-shell-btn.primary {
   background: linear-gradient(135deg, var(--shell-primary), var(--shell-primary-2));
   color: #fff;
   border: 1px solid transparent;
+  box-shadow: 0 12px 24px rgba(13, 110, 253, 0.24);
+}
+
+#app-shell-navbar .app-shell-btn.primary:hover,
+#app-shell-navbar .app-shell-btn.ghost:hover {
+  transform: translateY(-1px);
 }
 
 #app-shell-navbar .app-shell-avatar {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background: linear-gradient(135deg, #4f8cff, #34d399);
   color: #fff;
@@ -164,8 +394,8 @@
 }
 
 #app-shell-navbar .app-shell-avatar-img {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   object-fit: cover;
   display: block;
@@ -177,23 +407,24 @@
 }
 
 #app-shell-navbar .app-shell-profile-toggle {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  border-radius: 18px;
   border: 1px solid rgba(255, 255, 255, 0.24);
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(12, 25, 39, 0.94);
   padding: 0;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+  position: relative;
 }
 
 #app-shell-navbar .app-shell-profile-toggle:hover,
 #app-shell-navbar .app-shell-profile-toggle[aria-expanded="true"] {
-  border-color: rgba(76, 201, 240, 0.8);
-  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(77, 159, 255, 0.8);
+  background: rgba(35, 84, 140, 0.78);
 }
 
 #app-shell-navbar .app-shell-profile-toggle:active {
@@ -204,12 +435,13 @@
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
-  width: min(86vw, 260px);
-  border-radius: 14px;
+  width: min(calc(100vw - (var(--shell-viewport-gutter) * 2)), 260px);
+  max-width: calc(100vw - (var(--shell-viewport-gutter) * 2));
+  border-radius: 18px;
   border: 1px solid rgba(255, 255, 255, 0.16);
-  background: linear-gradient(160deg, rgba(8, 20, 39, 0.98), rgba(10, 36, 66, 0.98));
-  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.38);
-  padding: 8px;
+  background: linear-gradient(160deg, rgba(8, 20, 39, 0.98), rgba(10, 36, 66, 0.97));
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.36);
+  padding: 10px;
   opacity: 0;
   transform: translateY(-8px);
   pointer-events: none;
@@ -268,19 +500,27 @@
   width: 100%;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   color: rgba(255, 255, 255, 0.86);
   text-decoration: none;
   background: transparent;
   border: 0;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 10px 12px;
   font-size: 0.9rem;
   font-weight: 500;
   text-align: left;
+  overflow-wrap: anywhere;
+}
+
+#app-shell-navbar .app-shell-profile-item-label {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
 }
 
 #app-shell-navbar .app-shell-profile-item:hover {
-  background: rgba(255, 255, 255, 0.11);
+  background: rgba(37, 86, 143, 0.56);
   color: #fff;
 }
 
@@ -296,70 +536,364 @@
   color: #ffd7d7;
 }
 
-#app-shell-navbar .app-shell-menu-toggle {
-  display: inline-flex !important;
-  align-items: center;
-  justify-content: center;
-  width: 50px;
-  height: 50px;
-  border: 1px solid var(--shell-border);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.04);
-  color: #fff;
+#app-shell-navbar .app-shell-profile-item--notify {
   cursor: pointer;
-  visibility: visible;
-  opacity: 1;
-  font-size: 28px;
-  line-height: 1;
+}
+
+#app-shell-navbar .app-shell-notification-dot,
+#app-shell-navbar .app-shell-item-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #ff5d73;
+  box-shadow: 0 0 0 3px rgba(255, 93, 115, 0.16);
   flex-shrink: 0;
 }
 
-.app-shell-menu-toggle-floating {
+#app-shell-navbar .app-shell-notification-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+#app-shell-navbar .app-shell-notify-flyout {
   position: fixed;
-  top: 26px !important;
-  left: max(8px, calc((100vw - 1200px) / 2 + 32px - 70px));
-  width: 44px;
-  height: 44px;
-  border: 1px solid var(--shell-border);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.08);
+  top: 0;
+  left: 0;
+  right: auto;
+  width: min(calc(100vw - (var(--shell-viewport-gutter) * 2)), 336px);
+  max-width: calc(100vw - (var(--shell-viewport-gutter) * 2));
+  max-height: min(70vh, 560px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(160deg, rgba(8, 20, 39, 0.985), rgba(10, 36, 66, 0.98));
+  box-shadow: 0 30px 52px rgba(0, 0, 0, 0.38);
+  padding: 11px;
+  opacity: 0;
+  transform: translateY(-6px) translateX(4px);
+  transform-origin: left top;
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  --app-shell-notify-pointer-top: 48px;
+}
+
+#app-shell-navbar .app-shell-notify-flyout.show {
+  opacity: 1;
+  transform: translateY(0) translateX(0);
+  pointer-events: auto;
+}
+
+#app-shell-navbar .app-shell-notify-flyout::before {
+  content: "";
+  position: absolute;
+  top: var(--app-shell-notify-pointer-top);
+  left: -8px;
+  width: 16px;
+  height: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  border-left: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(9, 25, 47, 0.98);
+  transform: rotate(-45deg);
+  pointer-events: none;
+}
+
+#app-shell-navbar .app-shell-notify-flyout-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 8px 10px;
+}
+
+#app-shell-navbar .app-shell-notify-title {
   color: #fff;
+  font-size: 0.96rem;
+  font-weight: 700;
+}
+
+#app-shell-navbar .app-shell-notify-meta {
+  margin-top: 4px;
+  color: rgba(219, 231, 247, 0.72);
+  font-size: 0.78rem;
+}
+
+#app-shell-navbar .app-shell-notify-refresh {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(245, 249, 255, 0.9);
+}
+
+#app-shell-navbar .app-shell-notify-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 8px 10px;
+}
+
+#app-shell-navbar .app-shell-notify-secondary,
+#app-shell-navbar .app-shell-notify-primary {
+  border-radius: 12px;
+  padding: 9px 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+#app-shell-navbar .app-shell-notify-secondary {
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(243, 247, 255, 0.88);
+}
+
+#app-shell-navbar .app-shell-notify-primary {
+  background: linear-gradient(135deg, #1a7ef7, #0d6efd);
+  color: #fff;
+}
+
+#app-shell-navbar .app-shell-notify-list {
+  display: grid;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 420px;
+  overflow: auto;
+  padding: 4px;
+}
+
+#app-shell-navbar .app-shell-notify-item {
+  width: 100%;
+  text-align: left;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.035);
+  color: #f5f9ff;
+  padding: 12px 13px;
+}
+
+#app-shell-navbar .app-shell-notify-item.is-unread {
+  border-color: rgba(97, 172, 255, 0.36);
+  background: rgba(18, 55, 98, 0.28);
+}
+
+#app-shell-navbar .app-shell-notify-item:hover {
+  background: rgba(37, 86, 143, 0.52);
+}
+
+#app-shell-navbar .app-shell-notify-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+#app-shell-navbar .app-shell-notify-item-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+#app-shell-navbar .app-shell-notify-item-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #ff6378;
+  box-shadow: 0 0 0 3px rgba(255, 99, 120, 0.16);
+  flex-shrink: 0;
+}
+
+#app-shell-navbar .app-shell-notify-item-message {
+  display: block;
+  margin-top: 8px;
+  color: rgba(225, 236, 249, 0.84);
+  font-size: 0.82rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+#app-shell-navbar .app-shell-notify-item-meta {
+  display: block;
+  margin-top: 8px;
+  color: rgba(201, 216, 236, 0.58);
+  font-size: 0.74rem;
+  overflow-wrap: anywhere;
+}
+
+#app-shell-navbar .app-shell-notify-empty {
+  padding: 18px 16px;
+  border-radius: 16px;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  text-align: center;
+  color: rgba(212, 224, 241, 0.72);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+#app-shell-navbar .app-shell-notify-modal[hidden] {
+  display: none;
+}
+
+#app-shell-navbar .app-shell-notify-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+#app-shell-navbar .app-shell-notify-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 6, 16, 0.7);
+  backdrop-filter: blur(6px);
+}
+
+#app-shell-navbar .app-shell-notify-modal-card {
+  position: relative;
+  z-index: 1;
+  width: min(92vw, 640px);
+  max-height: min(82vh, 760px);
+  overflow: auto;
+  border-radius: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(180deg, rgba(7, 18, 34, 0.99), rgba(10, 28, 50, 0.985));
+  box-shadow: 0 38px 70px rgba(0, 0, 0, 0.42);
+  padding: 28px 26px 24px;
+  color: #f8fbff;
+}
+
+#app-shell-navbar .app-shell-notify-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+#app-shell-navbar .app-shell-notify-modal-kicker {
+  color: rgba(116, 212, 199, 0.92);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+#app-shell-navbar .app-shell-notify-modal-title {
+  margin: 10px 0 0;
+  font-size: clamp(1.3rem, 2vw, 1.8rem);
+  line-height: 1.2;
+}
+
+#app-shell-navbar .app-shell-notify-modal-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  color: rgba(211, 224, 242, 0.72);
+  font-size: 0.82rem;
+}
+
+#app-shell-navbar .app-shell-notify-modal-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+#app-shell-navbar .app-shell-notify-modal-pill[data-severity="success"] {
+  color: #86efac;
+}
+
+#app-shell-navbar .app-shell-notify-modal-pill[data-severity="warning"] {
+  color: #fbbf24;
+}
+
+#app-shell-navbar .app-shell-notify-modal-pill[data-severity="danger"] {
+  color: #fda4af;
+}
+
+#app-shell-navbar .app-shell-notify-modal-message {
+  margin-top: 18px;
+  color: rgba(234, 242, 252, 0.9);
+  font-size: 0.98rem;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+#app-shell-navbar .app-shell-notify-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+#app-shell-navbar .app-shell-menu-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
-  line-height: 1;
+  width: 46px;
+  height: 46px;
+  border: 1px solid var(--shell-border);
+  border-radius: 16px;
+  background: rgba(12, 24, 37, 0.94);
+  color: #fff;
   cursor: pointer;
-  z-index: 1110;
-  backdrop-filter: blur(10px);
-  transform: none;
+  flex-shrink: 0;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    transform 0.18s ease;
 }
 
-.app-shell-menu-toggle-floating:hover {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(76, 201, 240, 0.62);
+#app-shell-navbar .app-shell-menu-toggle svg {
+  width: 20px;
+  height: 20px;
 }
 
-.app-shell-menu-toggle-floating:focus-visible {
-  outline: 2px solid rgba(76, 201, 240, 0.9);
+#app-shell-navbar .app-shell-menu-toggle:hover {
+  background: rgba(37, 86, 143, 0.76);
+  border-color: rgba(77, 159, 255, 0.5);
+}
+
+#app-shell-navbar .app-shell-menu-toggle:focus-visible {
+  outline: 2px solid rgba(77, 159, 255, 0.8);
   outline-offset: 2px;
 }
 
 #app-shell-sidebar {
   position: fixed;
-  top: 84px;
-  left: 16px;
-  width: min(92vw, 360px);
+  top: 106px;
+  left: 18px;
+  width: min(320px, calc(100vw - 36px));
   padding: 18px;
-  background: rgba(16, 26, 46, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 18px;
-  z-index: 1090;
-  transform: translateX(-120%);
+  background:
+    linear-gradient(180deg, rgba(12, 24, 41, 0.98), rgba(10, 20, 35, 0.98)),
+    rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 22px;
+  z-index: 1040;
+  transform: translateX(calc(-100% - 28px));
   opacity: 0;
   pointer-events: none;
   transition: transform 0.22s ease, opacity 0.22s ease;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  box-shadow:
+    0 14px 30px rgba(3, 10, 23, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 #app-shell-sidebar.open {
@@ -397,19 +931,19 @@
 
 #app-shell-sidebar a:hover,
 #app-shell-sidebar a.active {
-  background: rgba(13, 110, 253, 0.2);
-  border: 1px solid rgba(13, 110, 253, 0.35);
+  background: rgba(37, 86, 143, 0.68);
+  border: 1px solid rgba(89, 156, 245, 0.42);
   color: #fff;
 }
 
 #app-shell-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.36);
+  background: rgba(5, 10, 18, 0.32);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease;
-  z-index: 1080;
+  z-index: 1025;
 }
 
 #app-shell-backdrop.show {
@@ -419,36 +953,129 @@
 
 [data-shell-page] .page-content,
 [data-shell-page] main {
-  padding-top: 72px;
+  padding-top: 92px;
 }
 
-@media (max-width: 991px) {
-  #app-shell-navbar .app-shell-brand {
-    gap: 5px;
-    min-height: 42px;
-  }
+html.is-ajax-navigating [data-shell-page] .page-content,
+html.is-ajax-navigating [data-shell-page] .page-content.show {
+  opacity: 1;
+  transform: none;
+}
 
-  #app-shell-navbar .app-shell-logo-slot {
-    width: 28px;
-    height: 28px;
-  }
-
-  #app-shell-navbar .app-shell-links,
+@media (max-width: 1180px) {
   #app-shell-navbar .app-shell-search {
     display: none;
   }
+}
 
-  #app-shell-navbar .app-shell-profile-menu {
-    right: -2px;
+@media (max-width: 991px) {
+  :root {
+    --shell-page-pad: 14px;
+    --shell-viewport-gutter: 12px;
   }
 
-  .app-shell-menu-toggle-floating {
-    top: 21px !important;
-    left: 10px;
+  #app-shell-navbar {
+    top: 12px;
+  }
+
+  #app-shell-navbar .app-shell-inner {
+    min-height: 64px;
+    padding: 0 14px;
+    gap: 12px;
+  }
+
+  #app-shell-navbar .app-shell-start {
+    gap: 18px;
+  }
+
+  #app-shell-navbar .app-shell-brand {
+    gap: 10px;
+    min-height: 46px;
+  }
+
+  #app-shell-navbar .app-shell-logo-slot {
+    width: 30px;
+    height: 30px;
+    transform: none;
+  }
+
+  #app-shell-navbar .app-shell-logo-slot svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  #app-shell-navbar .app-shell-brand-text {
+    font-size: 1.02rem;
+  }
+
+  #app-shell-navbar .app-shell-links {
+    display: none;
+  }
+
+  #app-shell-navbar .app-shell-actions {
+    gap: 8px;
+  }
+
+  #app-shell-navbar .app-shell-action-group {
+    gap: 8px;
+  }
+
+  #app-shell-navbar .app-shell-btn {
+    min-height: 40px;
+    padding: 0 14px;
+    font-size: 0.9rem;
+  }
+
+  #app-shell-navbar .app-shell-menu-toggle {
     width: 42px;
     height: 42px;
-    border-radius: 10px;
-    font-size: 20px;
+    border-radius: 14px;
   }
 
+  #app-shell-sidebar {
+    top: 88px;
+    left: 14px;
+    width: min(calc(100vw - 28px), 320px);
+  }
+
+  [data-shell-page] .page-content,
+  [data-shell-page] main {
+    padding-top: 84px;
+  }
+}
+
+@media (max-width: 640px) {
+  #app-shell-navbar .app-shell-inner {
+    grid-template-columns: auto 1fr;
+  }
+
+  #app-shell-navbar .app-shell-actions {
+    justify-self: end;
+  }
+
+  #app-shell-navbar .app-shell-btn.ghost {
+    display: none;
+  }
+
+  #app-shell-navbar .app-shell-btn {
+    min-height: 38px;
+    padding: 0 12px;
+    font-size: 0.88rem;
+  }
+
+  #app-shell-navbar .app-shell-profile-menu {
+    width: min(calc(100vw - (var(--shell-viewport-gutter) * 2)), 280px);
+  }
+
+  #app-shell-navbar .app-shell-notify-modal {
+    padding: 16px;
+  }
+
+  #app-shell-navbar .app-shell-notify-modal-card {
+    padding: 24px 18px 20px;
+  }
+
+  #app-shell-navbar .app-shell-notify-flyout::before {
+    display: none;
+  }
 }

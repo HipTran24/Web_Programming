@@ -10,6 +10,24 @@ namespace Web_Project.Services.Users
             int userId,
             UpdateProfileRequest request,
             CancellationToken cancellationToken);
+
+        Task<UserActionServiceResult> ChangePasswordAsync(
+            int userId,
+            ChangePasswordRequest request,
+            CancellationToken cancellationToken);
+
+        Task<UserNotificationSettingsServiceResult> GetNotificationSettingsAsync(
+            int userId,
+            CancellationToken cancellationToken);
+
+        Task<UserNotificationSettingsServiceResult> UpdateNotificationSettingsAsync(
+            int userId,
+            NotificationSettingsRequest request,
+            CancellationToken cancellationToken);
+
+        Task<UserActionServiceResult> DeleteAccountAsync(
+            int userId,
+            CancellationToken cancellationToken);
     }
 
     public sealed class UserProfileServiceResult
@@ -19,5 +37,21 @@ namespace Web_Project.Services.Users
         public string Message { get; init; } = string.Empty;
 
         public ProfileResponse? Response { get; init; }
+    }
+
+    public sealed class UserActionServiceResult
+    {
+        public bool Success { get; init; }
+
+        public string Message { get; init; } = string.Empty;
+    }
+
+    public sealed class UserNotificationSettingsServiceResult
+    {
+        public bool Success { get; init; }
+
+        public string Message { get; init; } = string.Empty;
+
+        public NotificationSettingsResponse Response { get; init; } = new();
     }
 }

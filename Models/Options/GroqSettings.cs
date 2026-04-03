@@ -12,9 +12,9 @@ namespace Web_Project.Models
 
         public string AudioModel { get; set; } = "whisper-large-v3-turbo";
 
-        public int MaxInputCharacters { get; set; } = 16000;
+        public int MaxInputCharacters { get; set; } = 0;
 
-        public int MaxQuizInputCharacters { get; set; } = 10000;
+        public int MaxQuizInputCharacters { get; set; } = 0;
 
         public int RequestTimeoutSeconds { get; set; } = 20;
 
@@ -28,7 +28,9 @@ namespace Web_Project.Models
 
         public bool EnableResponseCache { get; set; } = true;
 
-        public int ResponseCacheMinutes { get; set; } = 30;
+        public int ResponseCacheDays { get; set; } = 7;
+
+        public int ResponseCacheMinutes { get; set; }
 
         public List<string> FallbackModels { get; set; } =
         [

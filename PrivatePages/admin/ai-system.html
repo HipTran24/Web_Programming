@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <style id="instant-page-bg">html,body{background:#08131b!important;color:#eef6f7;}</style>
+    <title>SynapLearn - AI System</title>
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg?v=20260402-tab3" />
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=20260402-tab3" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/style.css" rel="stylesheet" />
+    <link href="/css/admin.css" rel="stylesheet" />
+  </head>
+  <body class="page-admin" data-admin-page="ai-system">
+    <div class="page-content portal-shell">
+      <aside class="portal-sidebar">
+        <div class="portal-brand">
+          <span class="portal-brand-lockup">
+            <span class="portal-brand-logo" aria-hidden="true">
+              <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+                <defs>
+                  <linearGradient id="adminBrandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#65d9cb" />
+                    <stop offset="100%" stop-color="#f0b45a" />
+                  </linearGradient>
+                </defs>
+                <path d="M6 5.5C6 4.12 7.12 3 8.5 3h7C16.88 3 18 4.12 18 5.5v2.34c0 .66-.26 1.3-.73 1.77l-3.5 3.5a2.5 2.5 0 0 1-3.54 0l-3.5-3.5A2.5 2.5 0 0 1 6 7.84V5.5Z" fill="url(#adminBrandGradient)"/>
+                <path d="M6 18.5C6 19.88 7.12 21 8.5 21h7c1.38 0 2.5-1.12 2.5-2.5v-2.34c0-.66-.26-1.3-.73-1.77l-3.5-3.5a2.5 2.5 0 0 0-3.54 0l-3.5 3.5A2.5 2.5 0 0 0 6 16.16v2.34Z" fill="rgba(101, 217, 203, 0.18)" stroke="rgba(101, 217, 203, 0.65)" stroke-width="1.1"/>
+                <circle cx="12" cy="12" r="1.7" fill="#edf7f7"/>
+              </svg>
+            </span>
+            <span class="section-kicker">SynapLearn</span>
+          </span>
+          <strong>Cổng quản trị</strong>
+        </div>
+
+        <nav class="portal-nav" aria-label="Điều hướng quản trị">
+          <a href="/admin">Tổng quan</a>
+          <a href="/admin/users">Người dùng</a>
+          <a href="/admin/content">Nội dung</a>
+          <a href="/admin/reports">Báo cáo</a>
+          <a class="is-active" href="/admin/ai-system">AI System</a>
+          <a href="/admin/notifications">Thông báo</a>
+          <a href="/admin/settings">Thiết lập</a>
+          <a href="/admin/profile">Hồ sơ</a>
+        </nav>
+      </aside>
+
+      <div class="portal-main">
+        <header class="portal-topbar">
+          <div>
+            <p class="section-kicker mb-1">Trang quản trị</p>
+            <h1 class="hero-title mb-0" style="font-size: clamp(1.5rem, 2.3vw, 2rem);">AI System</h1>
+          </div>
+          <div class="portal-session">
+            <div class="portal-session-avatar" id="adminSessionAvatar">AD</div>
+            <div>
+              <div class="fw-semibold" id="adminSessionName">Quản trị viên</div>
+              <div class="row-meta" id="adminSessionRole">Quản trị viên</div>
+            </div>
+            <div class="admin-alerts-wrap">
+              <button id="adminAlertsToggle" type="button" class="admin-alerts-toggle" aria-expanded="false" aria-controls="adminAlertsFlyout" aria-label="Thông báo quản trị">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M12 3.75a4.5 4.5 0 0 0-4.5 4.5v1.09c0 1.17-.32 2.32-.92 3.32l-1.05 1.74a1.5 1.5 0 0 0 1.28 2.28h10.38a1.5 1.5 0 0 0 1.28-2.28l-1.05-1.74a6.37 6.37 0 0 1-.92-3.32V8.25a4.5 4.5 0 0 0-4.5-4.5Zm0 16.5a2.63 2.63 0 0 1-2.41-1.58h4.82A2.63 2.63 0 0 1 12 20.25Z" fill="currentColor"/>
+                </svg>
+                <span id="adminAlertsDot" class="admin-alerts-dot" hidden></span>
+              </button>
+              <div id="adminAlertsFlyout" class="admin-alerts-flyout" hidden>
+                <div class="admin-alerts-head">
+                  <div>
+                    <strong>Thông báo quản trị</strong>
+                    <p id="adminAlertsMeta" class="admin-alerts-meta">Đang tải cảnh báo hệ thống...</p>
+                  </div>
+                  <a href="/admin/notifications" class="admin-alerts-link">Lịch sử</a>
+                </div>
+                <div id="adminAlertsList" class="admin-alerts-list"></div>
+              </div>
+            </div>
+            <button id="adminPortalLogout" type="button" class="btn btn-admin-secondary">Đăng xuất</button>
+          </div>
+        </header>
+
+        <main class="portal-content">
+          <div id="adminToastStack" class="admin-toast-stack" aria-live="polite" aria-atomic="true"></div>
+
+          <section class="admin-hero card-surface">
+            <div class="hero-copy">
+              <p class="hero-kicker mb-2">AI runtime control</p>
+              <h2 class="hero-title mb-3">Điều hành model, provider và token budget</h2>
+              <p class="hero-sub mb-0">
+                Khu vực này cho phép đổi provider chính, chỉnh model đang dùng, giới hạn token sinh quiz/tóm tắt và các tham số fallback
+                để thay đổi hành vi AI của hệ thống theo thời gian thực mà không cần restart ứng dụng.
+              </p>
+            </div>
+            <div class="hero-side">
+              <div class="live-badge-wrap">
+                <span class="health-badge">Runtime</span>
+                <p id="aiSystemMeta" class="hero-meta">Điều chỉnh provider, model, token budget và các tham số vận hành AI theo thời gian thực.</p>
+              </div>
+              <div class="hero-actions">
+                <a href="/admin/reports" class="btn btn-admin-secondary">Xem AI logs</a>
+                <button id="refreshAllBtn" type="button" class="btn btn-admin-primary">Làm mới trang</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="card-surface admin-workspace">
+            <div class="workspace-head workspace-head-inline">
+              <div>
+                <p class="section-kicker">AI settings</p>
+                <h2>Thiết lập AI dễ dùng hơn</h2>
+              </div>
+            </div>
+
+            <form id="aiSystemForm" class="admin-create-form ai-system-form" novalidate>
+              <div class="ai-system-grid">
+                <article class="card-surface ai-settings-card">
+                  <div class="section-head">
+                    <div>
+                      <p class="section-kicker">Quick control</p>
+                      <h3 class="admin-inline-title">Điều phối AI</h3>
+                    </div>
+                    <span class="section-tag accent">Cần thiết</span>
+                  </div>
+                  <p class="ai-settings-lead">Đây là những thiết lập ảnh hưởng rõ nhất tới chất lượng và chi phí xử lý AI.</p>
+
+                  <div class="form-grid">
+                    <label class="field">
+                      <span>Provider chính cho text</span>
+                      <select id="aiPrimaryTextProvider" class="form-select">
+                        <option value="gemini">Gemini</option>
+                        <option value="groq">Groq</option>
+                      </select>
+                    </label>
+                    <label class="field">
+                      <span>Provider chính cho vision</span>
+                      <select id="aiPrimaryVisionProvider" class="form-select">
+                        <option value="gemini">Gemini</option>
+                        <option value="groq">Groq</option>
+                      </select>
+                    </label>
+                    <label class="field">
+                      <span>Token budget cho tóm tắt text</span>
+                      <input id="aiTextOutputTokenBudget" class="form-control" type="number" min="200" step="50" />
+                    </label>
+                    <label class="field">
+                      <span>Token budget cho quiz</span>
+                      <input id="aiQuizOutputTokenBudget" class="form-control" type="number" min="200" step="50" />
+                    </label>
+                    <label class="field">
+                      <span>Token budget cho ảnh</span>
+                      <input id="aiImageOutputTokenBudget" class="form-control" type="number" min="200" step="50" />
+                    </label>
+                    <label class="field">
+                      <span>Timeout thực thi provider (ms)</span>
+                      <input id="aiProviderExecutionTimeoutMs" class="form-control" type="number" min="1500" step="500" />
+                    </label>
+                  </div>
+
+                  <div class="ai-settings-toggle-grid">
+                    <label class="toggle-inline">
+                      <input id="aiEnforceDailyTokenBudget" type="checkbox" />
+                      <span>Bật giới hạn token theo ngày</span>
+                    </label>
+                    <label class="toggle-inline">
+                      <input id="aiEnableProviderHealthSwitch" type="checkbox" />
+                      <span>Tự động chuyển provider khi lỗi/chậm</span>
+                    </label>
+                  </div>
+
+                  <details class="ai-settings-advanced">
+                    <summary>Thiết lập nâng cao điều phối</summary>
+                    <div class="form-grid">
+                      <label class="field">
+                        <span>Số ký tự ước tính trên mỗi token</span>
+                        <input id="aiApproxCharsPerToken" class="form-control" type="number" min="2" max="8" step="1" />
+                      </label>
+                      <label class="field">
+                        <span>Daily token budget Gemini</span>
+                        <input id="aiGeminiDailyTokenBudget" class="form-control" type="number" min="0" step="1000" />
+                      </label>
+                      <label class="field">
+                        <span>Daily token budget Groq</span>
+                        <input id="aiGroqDailyTokenBudget" class="form-control" type="number" min="0" step="1000" />
+                      </label>
+                      <label class="field">
+                        <span>Reserve token mỗi provider</span>
+                        <input id="aiMinReservedTokensPerProvider" class="form-control" type="number" min="0" step="100" />
+                      </label>
+                      <label class="field">
+                        <span>Ngưỡng phản hồi chậm (ms)</span>
+                        <input id="aiSlowRequestThresholdMs" class="form-control" type="number" min="1000" step="500" />
+                      </label>
+                      <label class="field">
+                        <span>Số lần chậm liên tiếp để cooldown</span>
+                        <input id="aiSlowRequestStreakThreshold" class="form-control" type="number" min="1" step="1" />
+                      </label>
+                      <label class="field">
+                        <span>Số lỗi liên tiếp để cooldown</span>
+                        <input id="aiConsecutiveFailureThreshold" class="form-control" type="number" min="1" step="1" />
+                      </label>
+                      <label class="field">
+                        <span>Thời gian cooldown provider (giây)</span>
+                        <input id="aiProviderCooldownSeconds" class="form-control" type="number" min="5" step="5" />
+                      </label>
+                    </div>
+                    <div class="ai-settings-toggle-grid ai-settings-toggle-grid--advanced">
+                      <label class="toggle-inline">
+                        <input id="aiPreferFastestHealthyProvider" type="checkbox" />
+                        <span>Ưu tiên provider khỏe và nhanh nhất</span>
+                      </label>
+                    </div>
+                  </details>
+                </article>
+
+                <article class="card-surface ai-settings-card">
+                  <div class="section-head">
+                    <div>
+                      <p class="section-kicker">Gemini</p>
+                      <h3 class="admin-inline-title">Gemini cho text và vision</h3>
+                    </div>
+                    <span id="aiGeminiKeyStatus" class="section-tag neutral">Chưa rõ API key</span>
+                  </div>
+                  <p class="ai-settings-lead">Chỉnh model chính và timeout. Những giới hạn sâu hơn có thể mở trong phần nâng cao.</p>
+
+                  <div class="form-grid">
+                    <label class="field field-wide">
+                      <span>Gemini API key mới</span>
+                      <input id="aiGeminiApiKey" class="form-control" type="password" placeholder="Để trống nếu giữ nguyên key hiện tại" autocomplete="new-password" />
+                    </label>
+                    <label class="field">
+                      <span>Gemini text model</span>
+                      <input id="aiGeminiTextModel" class="form-control" type="text" placeholder="gemini-2.0-flash" />
+                    </label>
+                    <label class="field">
+                      <span>Gemini vision model</span>
+                      <input id="aiGeminiVisionModel" class="form-control" type="text" placeholder="gemini-2.0-flash" />
+                    </label>
+                    <label class="field">
+                      <span>Timeout request (giây)</span>
+                      <input id="aiGeminiRequestTimeoutSeconds" class="form-control" type="number" min="5" step="1" />
+                    </label>
+                  </div>
+
+                  <details class="ai-settings-advanced">
+                    <summary>Thiết lập nâng cao Gemini</summary>
+                    <div class="form-grid">
+                      <label class="field field-wide">
+                        <span>Gemini base URL</span>
+                        <input id="aiGeminiBaseUrl" class="form-control" type="text" placeholder="https://generativelanguage.googleapis.com" />
+                      </label>
+                      <label class="field">
+                        <span>Max input characters</span>
+                        <input id="aiGeminiMaxInputCharacters" class="form-control" type="number" min="1000" step="1000" />
+                      </label>
+                      <label class="field">
+                        <span>Max input cho quiz</span>
+                        <input id="aiGeminiMaxQuizInputCharacters" class="form-control" type="number" min="1000" step="1000" />
+                      </label>
+                      <label class="field">
+                        <span>Số model candidate tối đa</span>
+                        <input id="aiGeminiMaxModelCandidates" class="form-control" type="number" min="1" step="1" />
+                      </label>
+                      <label class="field">
+                        <span>Số lần retry mỗi model</span>
+                        <input id="aiGeminiMaxRetriesPerModel" class="form-control" type="number" min="0" step="1" />
+                      </label>
+                      <label class="field field-wide">
+                        <span>Fallback models</span>
+                        <textarea id="aiGeminiFallbackModels" class="form-control" rows="3" placeholder="Mỗi dòng một model fallback"></textarea>
+                      </label>
+                    </div>
+                    <div class="ai-settings-toggle-grid ai-settings-toggle-grid--advanced">
+                      <label class="toggle-inline">
+                        <input id="aiGeminiClearApiKey" type="checkbox" />
+                        <span>Xóa API key Gemini hiện tại</span>
+                      </label>
+                    </div>
+                  </details>
+                </article>
+
+                <article class="card-surface ai-settings-card">
+                  <div class="section-head">
+                    <div>
+                      <p class="section-kicker">Groq</p>
+                      <h3 class="admin-inline-title">Groq cho text, vision và audio</h3>
+                    </div>
+                    <span id="aiGroqKeyStatus" class="section-tag neutral">Chưa rõ API key</span>
+                  </div>
+                  <p class="ai-settings-lead">Ưu tiên chỉnh model chính và timeout. Những tham số queue, cache và fallback nằm trong phần nâng cao.</p>
+
+                  <div class="form-grid">
+                    <label class="field field-wide">
+                      <span>Groq API key mới</span>
+                      <input id="aiGroqApiKey" class="form-control" type="password" placeholder="Để trống nếu giữ nguyên key hiện tại" autocomplete="new-password" />
+                    </label>
+                    <label class="field">
+                      <span>Groq text model</span>
+                      <input id="aiGroqTextModel" class="form-control" type="text" placeholder="llama-3.3-70b-versatile" />
+                    </label>
+                    <label class="field">
+                      <span>Groq vision model</span>
+                      <input id="aiGroqVisionModel" class="form-control" type="text" placeholder="llama-3.2-90b-vision-preview" />
+                    </label>
+                    <label class="field">
+                      <span>Groq audio model</span>
+                      <input id="aiGroqAudioModel" class="form-control" type="text" placeholder="whisper-large-v3-turbo" />
+                    </label>
+                    <label class="field">
+                      <span>Timeout request (giây)</span>
+                      <input id="aiGroqRequestTimeoutSeconds" class="form-control" type="number" min="5" step="1" />
+                    </label>
+                  </div>
+
+                  <details class="ai-settings-advanced">
+                    <summary>Thiết lập nâng cao Groq</summary>
+                    <div class="form-grid">
+                      <label class="field field-wide">
+                        <span>Groq base URL</span>
+                        <input id="aiGroqBaseUrl" class="form-control" type="text" placeholder="https://api.groq.com" />
+                      </label>
+                      <label class="field">
+                        <span>Max input characters</span>
+                        <input id="aiGroqMaxInputCharacters" class="form-control" type="number" min="1000" step="1000" />
+                      </label>
+                      <label class="field">
+                        <span>Max input cho quiz</span>
+                        <input id="aiGroqMaxQuizInputCharacters" class="form-control" type="number" min="1000" step="1000" />
+                      </label>
+                      <label class="field">
+                        <span>Số model candidate tối đa</span>
+                        <input id="aiGroqMaxModelCandidates" class="form-control" type="number" min="1" step="1" />
+                      </label>
+                      <label class="field">
+                        <span>Max concurrent requests</span>
+                        <input id="aiGroqMaxConcurrentRequests" class="form-control" type="number" min="1" step="1" />
+                      </label>
+                      <label class="field">
+                        <span>Queue wait timeout (giây)</span>
+                        <input id="aiGroqQueueWaitTimeoutSeconds" class="form-control" type="number" min="1" step="1" />
+                      </label>
+                      <label class="field">
+                        <span>Số lần retry mỗi model</span>
+                        <input id="aiGroqMaxRetriesPerModel" class="form-control" type="number" min="0" step="1" />
+                      </label>
+                      <label class="field">
+                        <span>Cache response (ngày)</span>
+                        <input id="aiGroqResponseCacheDays" class="form-control" type="number" min="1" max="30" step="1" />
+                      </label>
+                      <label class="field field-wide">
+                        <span>Fallback models</span>
+                        <textarea id="aiGroqFallbackModels" class="form-control" rows="3" placeholder="Mỗi dòng một model fallback"></textarea>
+                      </label>
+                    </div>
+                    <div class="ai-settings-toggle-grid ai-settings-toggle-grid--advanced">
+                      <label class="toggle-inline">
+                        <input id="aiGroqEnableResponseCache" type="checkbox" />
+                        <span>Bật cache response Groq</span>
+                      </label>
+                      <label class="toggle-inline">
+                        <input id="aiGroqClearApiKey" type="checkbox" />
+                        <span>Xóa API key Groq hiện tại</span>
+                      </label>
+                    </div>
+                  </details>
+                </article>
+              </div>
+
+              <p class="form-note ai-system-footnote">
+                API key hiện tại sẽ không hiển thị lại vì lý do bảo mật. Để trống trường key nếu bạn chỉ muốn đổi model, provider hoặc token budget.
+              </p>
+              <div class="form-actions">
+                <button id="aiSystemReset" type="button" class="btn btn-admin-secondary">Khôi phục form</button>
+                <button id="aiSystemSubmit" type="submit" class="btn btn-admin-primary">Lưu cấu hình AI</button>
+                <p id="aiSystemFeedback" class="inline-feedback" role="status" aria-live="polite"></p>
+              </div>
+            </form>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/assets/js/main.js"></script>
+    <script src="/js/admin.js"></script>
+  </body>
+</html>

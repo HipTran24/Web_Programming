@@ -1,98 +1,146 @@
-<!doctype html><html lang="vi"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Phân tích — SynapLearn</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="../css/style.css" rel="stylesheet" />
-  <link href="../css/app-shell.css" rel="stylesheet" />
-</head><body>
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <style id="instant-page-bg">html,body{background:#08131b!important;color:#eef6f7;}</style>
+<title>SynapLearn - Phân tích</title>
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg?v=20260402-tab3" />
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=20260402-tab3" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link href="../css/style.css" rel="stylesheet" />
+    <link href="../css/app-shell.css" rel="stylesheet" />
+    <link href="../css/analytics-premium.css" rel="stylesheet" />
+  </head>
+  <body class="page-analytics">
   <div id="page-loader" class="logo-loader">
-  <div class="logo-loader-box">
-    <div class="ai-orbit orbit-1"></div>
-    <div class="ai-orbit orbit-2"></div>
-    <div class="ai-logo-core">
-  </div>
-</div>
-
-<div class="page-content">
-<main class="container py-5">
-  <div class="row g-4">
-    <div class="col-lg-4">
-      <div class="glass p-4">
-        <h5 class="fw-semibold mb-3">Điểm số theo thời gian (demo)</h5>
-        <div class="text-muted-2 small mb-2">Tuần này</div>
-        <div class="progress mb-2"><div class="progress-bar" style="width:76%"></div></div>
-        <div class="d-flex justify-content-between text-muted-2 small"><span>Avg</span><span>76%</span></div>
-
-        <hr class="soft my-4">
-        <h6 class="fw-semibold mb-2">Tỷ lệ đúng theo chủ đề</h6>
-        <div class="mb-2">
-          <div class="d-flex justify-content-between small text-muted-2"><span>Chương 1</span><span>82%</span></div>
-          <div class="progress"><div class="progress-bar" style="width:82%"></div></div>
-        </div>
-        <div class="mb-2">
-          <div class="d-flex justify-content-between small text-muted-2"><span>Chương 2</span><span>70%</span></div>
-          <div class="progress"><div class="progress-bar" style="width:70%"></div></div>
-        </div>
-        <div>
-          <div class="d-flex justify-content-between small text-muted-2"><span>Chương 3</span><span>45%</span></div>
-          <div class="progress"><div class="progress-bar" style="width:45%"></div></div>
-        </div>
-      </div>
-
-      <div class="glass p-4 mt-4">
-        <h6 class="fw-semibold mb-2">Gợi ý ôn tập</h6>
-        <div class="text-muted-2 small">Bạn sai nhiều ở Chương 3 → Ôn lại keypoints + làm lại flashcard.</div>
-        <div class="d-grid gap-2 mt-3">
-          <a class="btn btn-soft" href="content-detail.html">Ôn lại nội dung</a>
-          <a class="btn btn-outline-light" href="quiz.html">Làm bài tổng hợp</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-lg-8">
-      <div class="glass p-4">
-        <div class="d-flex justify-content-between flex-wrap gap-2 align-items-center">
-          <h5 class="fw-semibold mb-0">Thống kê câu sai nhiều nhất</h5>
-          <a class="btn btn-outline-light btn-sm" href="history.html">Xem lịch sử</a>
-        </div>
-
-        <div class="table-responsive mt-3">
-          <table class="table table-hover align-middle mb-0">
-            <thead>
-              <tr>
-                <th>Câu hỏi</th><th>Chủ đề</th><th>Số lần sai</th><th class="text-end">Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>(Demo) Khái niệm X là gì?</td>
-                <td><span class="badge badge-soft">Chương 3</span></td>
-                <td><span class="badge text-bg-danger">6</span></td>
-                <td class="text-end"><button class="btn btn-soft btn-sm">Ôn lại</button></td>
-              </tr>
-              <tr>
-                <td>(Demo) Điều kiện Y áp dụng khi nào?</td>
-                <td><span class="badge badge-soft">Chương 2</span></td>
-                <td><span class="badge text-bg-warning">4</span></td>
-                <td class="text-end"><button class="btn btn-soft btn-sm">Ôn lại</button></td>
-              </tr>
-              <tr>
-                <td>(Demo) Công thức Z đúng là?</td>
-                <td><span class="badge badge-soft">Chương 1</span></td>
-                <td><span class="badge text-bg-warning">3</span></td>
-                <td class="text-end"><button class="btn btn-soft btn-sm">Ôn lại</button></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-      </div>
+    <div class="logo-loader-box">
+      <div class="ai-orbit orbit-1"></div>
+      <div class="ai-orbit orbit-2"></div>
+      <div class="ai-logo-core"><span>AI</span></div>
+      <h4>SynapLearn</h4>
+      <p>Đang tải trung tâm phân tích</p>
     </div>
   </div>
-</main>
 
-</div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../assets/js/main.js"></script>
-  <script src="../js/app-shell.js"></script>
-</body></html>
+    <div class="page-content">
+      <main class="container analytics-page py-5">
+        <div id="analyticsNotice" class="alert d-none mb-3" role="alert"></div>
+
+        <section class="analytics-hero mb-4">
+          <div>
+            <span class="analytics-eyebrow">Bảng điều khiển hiệu suất</span>
+            <h1 class="analytics-title">Trung tâm phân tích học tập</h1>
+            <p class="analytics-subtitle mb-0">
+              Theo dõi chất lượng học tập theo thời gian, nhận diện điểm yếu nhanh,
+              và ưu tiên đúng nội dung cần ôn lại.
+            </p>
+          </div>
+          <div class="analytics-hero-actions">
+            <a class="btn analytics-btn-primary" href="quiz.html">Làm bài tổng hợp</a>
+            <a class="btn analytics-btn-outline" href="history.html">Xem lịch sử nội dung</a>
+          </div>
+        </section>
+
+        <section class="analytics-kpis mb-4">
+          <article class="analytics-kpi-card">
+            <div class="analytics-kpi-label">Điểm trung bình</div>
+            <div id="analyticsKpiAverage" class="analytics-kpi-value">-</div>
+            <div id="analyticsKpiAverageMeta" class="analytics-kpi-meta">Đang tải...</div>
+          </article>
+          <article class="analytics-kpi-card">
+            <div class="analytics-kpi-label">Tổng quiz đã làm</div>
+            <div id="analyticsKpiAttempts" class="analytics-kpi-value">-</div>
+            <div id="analyticsKpiAttemptsMeta" class="analytics-kpi-meta">Đang tải...</div>
+          </article>
+          <article class="analytics-kpi-card">
+            <div class="analytics-kpi-label">Câu sai cần ôn</div>
+            <div id="analyticsKpiWrong" class="analytics-kpi-value">-</div>
+            <div id="analyticsKpiWrongMeta" class="analytics-kpi-meta">Đang tải...</div>
+          </article>
+          <article class="analytics-kpi-card">
+            <div class="analytics-kpi-label">Độ ổn định tiến độ</div>
+            <div id="analyticsKpiConsistency" class="analytics-kpi-value">-</div>
+            <div id="analyticsKpiConsistencyMeta" class="analytics-kpi-meta">Đang tải...</div>
+          </article>
+        </section>
+
+        <section class="row g-4 align-items-stretch">
+          <div class="col-lg-7">
+            <article class="glass analytics-panel p-4 h-100">
+              <div class="analytics-panel-head">
+                <h2 class="analytics-panel-title">Xu hướng điểm 7 ngày</h2>
+                <span id="analyticsUpdatedChip" class="analytics-chip">Đang tải dữ liệu...</span>
+              </div>
+
+              <div class="analytics-trend mt-3" aria-label="Biểu đồ điểm 7 ngày">
+                <div id="analyticsBars" class="analytics-bars"></div>
+              </div>
+
+              <div id="analyticsTopicList" class="analytics-topic mt-4"></div>
+            </article>
+          </div>
+
+          <div class="col-lg-5">
+            <article class="glass analytics-panel p-4 mb-4">
+              <div class="analytics-panel-head">
+                <h2 class="analytics-panel-title">Gợi ý ưu tiên hôm nay</h2>
+              </div>
+              <ul id="analyticsSuggestionList" class="analytics-suggestion-list mt-3 mb-0"></ul>
+            </article>
+
+            <article class="glass analytics-panel p-4">
+              <div class="analytics-panel-head">
+                <h2 class="analytics-panel-title">Hành động nhanh</h2>
+              </div>
+              <div class="d-grid gap-2 mt-3">
+                <a class="btn analytics-btn-soft" href="content-detail.html">Ôn lại nội dung</a>
+                <a class="btn analytics-btn-outline" href="quiz.html">Làm bài tổng hợp</a>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="glass analytics-panel p-4 mt-4">
+          <div class="analytics-panel-head">
+            <h2 class="analytics-panel-title">Nhóm câu hỏi sai nhiều nhất</h2>
+            <a class="btn analytics-btn-outline btn-sm" href="learning-plan.html">Mở lộ trình học</a>
+          </div>
+
+          <div class="analytics-table-wrap mt-3">
+            <table class="table analytics-table align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Nội dung câu hỏi</th>
+                  <th>Chủ đề</th>
+                  <th>Số lần sai</th>
+                  <th class="text-end">Hành động</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="4" class="text-center text-muted-2 py-4">Đang tải dữ liệu phân tích...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../js/analytics.js"></script>
+    <script src="../js/app-shell.js"></script>
+  </body>
+</html>

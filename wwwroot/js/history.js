@@ -1,33 +1,177 @@
 (function () {
-  const tableBody = document.getElementById("historyTableBody");
-  if (!tableBody) {
-    return;
-  }
-
-  const searchInput = document.getElementById("historySearchInput");
-  const sourceTypeSelect = document.getElementById("historySourceTypeSelect");
-  const sortSelect = document.getElementById("historySortSelect");
-  const refreshButton = document.getElementById("historyRefreshButton");
-  const metaText = document.getElementById("historyMetaText");
   const notice = document.getElementById("historyNotice");
+  const timeline = document.getElementById("historyTimeline");
+  const activityCount = document.getElementById("historyActivityCount");
+  const filterGroup = document.getElementById("historyFilterGroup");
+  const prevPageButton = document.getElementById("historyPrevPageButton");
+  const nextPageButton = document.getElementById("historyNextPageButton");
+  const pageMetaText = document.getElementById("historyPageMetaText");
+  const pageSizeSelect = document.getElementById("historyPageSizeSelect");
 
-  const kpiTotalUploads = document.getElementById("kpiTotalUploads");
-  const kpiFileUploads = document.getElementById("kpiFileUploads");
-  const kpiUrlUploads = document.getElementById("kpiUrlUploads");
-  const kpiAiCompleted = document.getElementById("kpiAiCompleted");
+  const totalContentsEl = document.getElementById("historyTotalContents");
+  const totalContentsMetaEl = document.getElementById("historyTotalContentsMeta");
+  const totalQuizzesEl = document.getElementById("historyTotalQuizzes");
+  const totalQuizzesMetaEl = document.getElementById("historyTotalQuizzesMeta");
+  const weeklyGoalEl = document.getElementById("historyWeeklyGoal");
+  const weeklyGoalMetaEl = document.getElementById("historyWeeklyGoalMeta");
 
-  const state = {
-    pageSize: 1000,
-    totalItems: 0,
-    loading: false,
-    searchTimer: null,
+  let allActivities = [];
+  let activeFilter = "all";
+  let page = 1;
+  let pageSize = 20;
+  let totalPages = 1;
+  let totalItems = 0;
+  let isLoadingActivities = false;
+  let shouldRestoreScroll = true;
+  let shouldScrollToTimeline = false;
+
+  const allowedPageSizes = new Set([10, 20, 50]);
+  const scrollStateKey = "history:scroll-state";
+  let scrollListener = null;
+  let pageHideListener = null;
+  let beforeUnloadListener = null;
+
+  const toSafeInt = (value, fallback) => {
+    const parsed = Number.parseInt(String(value || ""), 10);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return fallback;
+    }
+
+    return parsed;
   };
 
-  const sourceTypeLabels = {
-    FileUpload: "Tệp tải lên",
-    TextUrl: "URL văn bản",
-    DocumentUrl: "URL tài liệu",
-    VideoUrl: "URL video",
+  const initStateFromQuery = () => {
+    const params = new URLSearchParams(window.location.search);
+    const rawFilter = String(params.get("filter") || "all").trim().toLowerCase();
+    activeFilter = rawFilter === "quiz" || rawFilter === "content" ? rawFilter : "all";
+
+    page = toSafeInt(params.get("page"), 1);
+
+    const requestedPageSize = toSafeInt(params.get("pageSize"), 20);
+    pageSize = allowedPageSizes.has(requestedPageSize) ? requestedPageSize : 20;
+
+    if (pageSizeSelect) {
+      pageSizeSelect.value = String(pageSize);
+    }
+  };
+
+  const syncQueryState = () => {
+    const params = new URLSearchParams();
+
+    if (activeFilter !== "all") {
+      params.set("filter", activeFilter);
+    }
+
+    if (page > 1) {
+      params.set("page", String(page));
+    }
+
+    if (pageSize !== 20) {
+      params.set("pageSize", String(pageSize));
+    }
+
+    const target = params.toString();
+    const nextUrl = target
+      ? `${window.location.pathname}?${target}`
+      : window.location.pathname;
+
+    window.history.replaceState(null, "", nextUrl);
+  };
+
+  const scrollBehavior = () => {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ? "auto"
+      : "smooth";
+  };
+
+  const saveScrollState = () => {
+    try {
+      const payload = {
+        path: `${window.location.pathname}${window.location.search}`,
+        y: Math.max(0, Math.round(window.scrollY || 0)),
+      };
+      window.sessionStorage.setItem(scrollStateKey, JSON.stringify(payload));
+    } catch {
+      // Ignore storage issues silently.
+    }
+  };
+
+  const restoreScrollState = () => {
+    try {
+      const raw = window.sessionStorage.getItem(scrollStateKey);
+      if (!raw) {
+        return;
+      }
+
+      const payload = JSON.parse(raw);
+      const expectedPath = `${window.location.pathname}${window.location.search}`;
+      const y = Number(payload?.y || 0);
+
+      if (payload?.path !== expectedPath || y <= 0) {
+        return;
+      }
+
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: y, behavior: "auto" });
+      });
+    } catch {
+      // Ignore malformed or inaccessible storage.
+    }
+  };
+
+  const scrollToTimelineTop = () => {
+    const container = timeline?.closest("section");
+    if (!container) {
+      return;
+    }
+
+    container.scrollIntoView({ block: "start", behavior: scrollBehavior() });
+  };
+
+  const bindScrollPersistence = () => {
+    if (scrollListener) {
+      return;
+    }
+
+    let ticking = false;
+
+    scrollListener = () => {
+      if (ticking) {
+        return;
+      }
+
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        saveScrollState();
+        ticking = false;
+      });
+    };
+
+    pageHideListener = saveScrollState;
+    beforeUnloadListener = saveScrollState;
+
+    window.addEventListener("scroll", scrollListener, { passive: true });
+    window.addEventListener("pagehide", pageHideListener);
+    window.addEventListener("beforeunload", beforeUnloadListener);
+  };
+
+  const disposePage = () => {
+    saveScrollState();
+
+    if (scrollListener) {
+      window.removeEventListener("scroll", scrollListener);
+      scrollListener = null;
+    }
+
+    if (pageHideListener) {
+      window.removeEventListener("pagehide", pageHideListener);
+      pageHideListener = null;
+    }
+
+    if (beforeUnloadListener) {
+      window.removeEventListener("beforeunload", beforeUnloadListener);
+      beforeUnloadListener = null;
+    }
   };
 
   const escapeHtml = (text) =>
@@ -38,282 +182,380 @@
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#39;");
 
-  const toLocalDateTime = (value) => {
-    if (!value) {
-      return "-";
-    }
-
-    const raw = String(value).trim();
-    const hasTimezone = /(?:Z|[+-]\d{2}:\d{2})$/i.test(raw);
-    const normalized = hasTimezone ? raw : `${raw}Z`;
-    const date = new Date(normalized);
-    if (Number.isNaN(date.getTime())) {
-      return "-";
-    }
-
-    return new Intl.DateTimeFormat("vi-VN", {
-      dateStyle: "medium",
-      timeStyle: "short",
-      timeZone: "Asia/Ho_Chi_Minh",
-    }).format(date);
-  };
-
-  const normalizeDisplayName = (fileName) => {
-    const raw = String(fileName || "").trim();
-    if (!raw) {
-      return "(không có tên)";
-    }
-
-    let decoded = raw;
-    try {
-      decoded = decodeURIComponent(raw);
-    } catch {
-      decoded = raw;
-    }
-
-    decoded = decoded.replace(/\+/g, " ");
-    const withSpaces = decoded.replaceAll("_", " ").replaceAll("-", " ").replace(/\s+/g, " ").trim();
-    return withSpaces || decoded;
-  };
-
-  const stripFileExtension = (value) => {
-    const text = String(value || "").trim();
-    if (!text) {
-      return text;
-    }
-
-    return text.replace(/\.[a-z0-9]{1,8}$/i, "").trim();
-  };
-
-  const isGenericName = (value) => {
-    const normalized = String(value || "").toLowerCase().trim();
-    return ["inline text", "inline-text", "inline text txt", "inline-text.txt", "untitled", "khong co ten", "(không có tên)"]
-      .some((item) => normalized.includes(item));
-  };
-
-  const buildDisplayName = (rawName, summaryText) => {
-    const normalizedName = normalizeDisplayName(rawName);
-    const baseName = stripFileExtension(normalizedName);
-    if (baseName && !isGenericName(baseName)) {
-      return baseName;
-    }
-
-    const summary = String(summaryText || "").trim();
-    if (!summary) {
-      return baseName || normalizedName || "Nội dung tải lên";
-    }
-
-    const plain = summary.replace(/\s+/g, " ").trim();
-    const sentenceHead = plain.split(/[.!?]/)[0].trim();
-    const shortHead = sentenceHead.split(" ").slice(0, 10).join(" ").trim();
-    return shortHead || "Nội dung tải lên";
-  };
-
-  const sourceBadgeClass = (sourceType) => {
-    switch (sourceType) {
-      case "FileUpload":
-        return "history-source-badge history-source-badge--file";
-      case "VideoUrl":
-        return "history-source-badge history-source-badge--video";
-      default:
-        return "history-source-badge history-source-badge--url";
-    }
-  };
-
-  const aiBadgeClass = (item) => {
-    if (item.hasAiProcess) {
-      return "history-ai-badge history-ai-badge--success";
-    }
-    if (item.fetchStatus && String(item.fetchStatus).toLowerCase() === "failed") {
-      return "history-ai-badge history-ai-badge--failed";
-    }
-    return "history-ai-badge history-ai-badge--pending";
-  };
-
-  const aiBadgeText = (item) => {
-    if (item.hasAiProcess) {
-      return "Hoàn tất";
-    }
-    if (item.fetchStatus && String(item.fetchStatus).toLowerCase() === "failed") {
-      return "Thất bại";
-    }
-    return "Đang xử lý";
-  };
-
-  const setNotice = (message, type) => {
+  const setNotice = (message, kind) => {
     if (!notice) {
       return;
     }
 
     if (!message) {
-      notice.className = "alert d-none mb-3";
+      notice.className = "alert d-none mt-3 mb-0";
       notice.textContent = "";
       return;
     }
 
-    notice.className = `alert ${type === "error" ? "alert-danger" : "alert-success"} mb-3`;
+    notice.className = `alert alert-${kind || "danger"} mt-3 mb-0`;
     notice.textContent = message;
   };
 
-  const setLoading = (value) => {
-    state.loading = value;
-    if (refreshButton) {
-      refreshButton.disabled = value;
-      refreshButton.textContent = value ? "Đang tải..." : "Làm mới";
-    }
-  };
-
   const getAuthHeaders = () => {
-    const headers = { "Content-Type": "application/json" };
+    const headers = {
+      Accept: "application/json",
+    };
+
     const token = window.AuthClient?.getAccessToken?.() || "";
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
+
     return headers;
   };
 
-  const buildQueryString = () => {
-    const params = new URLSearchParams();
-    params.set("page", "1");
-    params.set("pageSize", String(state.pageSize));
-    params.set("sort", String(sortSelect?.value || "latest"));
-
-    const sourceType = String(sourceTypeSelect?.value || "all");
-    if (sourceType && sourceType !== "all") {
-      params.set("sourceType", sourceType);
+  const toDateText = (value) => {
+    const date = new Date(value || "");
+    if (Number.isNaN(date.getTime())) {
+      return "Không rõ thời gian";
     }
 
-    const search = String(searchInput?.value || "").trim();
-    if (search) {
-      params.set("query", search);
-    }
-
-    return params.toString();
+    return date.toLocaleString("vi-VN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
-  const renderKpis = (stats) => {
-    if (kpiTotalUploads) {
-      kpiTotalUploads.textContent = String(stats?.totalUploads || 0);
+  const toRelativeText = (value) => {
+    const date = new Date(value || "");
+    if (Number.isNaN(date.getTime())) {
+      return "Vừa cập nhật";
     }
 
-    if (kpiFileUploads) {
-      kpiFileUploads.textContent = String(stats?.fileUploads || 0);
+    const diffMs = Date.now() - date.getTime();
+    const diffMinutes = Math.max(1, Math.floor(diffMs / 60000));
+
+    if (diffMinutes < 60) {
+      return `${diffMinutes} phút trước`;
     }
 
-    if (kpiUrlUploads) {
-      kpiUrlUploads.textContent = String(stats?.urlUploads || 0);
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours < 24) {
+      return `${diffHours} giờ trước`;
     }
 
-    if (kpiAiCompleted) {
-      kpiAiCompleted.textContent = String(stats?.aiCompleted || 0);
-    }
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays} ngày trước`;
   };
 
-  const renderRows = (items) => {
-    if (!Array.isArray(items) || items.length === 0) {
-      tableBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted-2 py-5">Chưa có dữ liệu upload cho bộ lọc hiện tại.</td></tr>';
+  const normalizeType = (kind) => {
+    const raw = String(kind || "").toLowerCase();
+    if (raw === "quiz") {
+      return "Quiz";
+    }
+    if (raw === "videourl") {
+      return "URL video";
+    }
+    if (raw === "documenturl") {
+      return "URL tài liệu";
+    }
+    if (raw === "texturl") {
+      return "URL văn bản";
+    }
+    if (raw === "fileupload") {
+      return "Tệp tải lên";
+    }
+    return kind || "Hoạt động";
+  };
+
+  const classifyActivity = (item) => {
+    const raw = String(item?.kind || "").toLowerCase();
+    return raw === "quiz" ? "quiz" : "content";
+  };
+
+  const applyFilterButtons = () => {
+    if (!filterGroup) {
       return;
     }
 
-    tableBody.innerHTML = items
-      .map((item) => {
-        const summary = String(item.summaryPreview || "").trim();
-        const rawName = item.sourceType === "FileUpload"
-          ? String(item.filePath || item.fileName || "")
-          : String(item.fileName || "");
-        const name = escapeHtml(buildDisplayName(rawName, summary));
-        const sourceType = String(item.sourceType || "");
-        const sourceLabel = sourceTypeLabels[sourceType] || sourceType || "Khác";
-        const summaryMarkup = summary
-          ? `<div class="history-summary mt-1">${escapeHtml(summary)}</div>`
-          : '<div class="history-summary mt-1 text-muted-2">Chưa có tóm tắt AI.</div>';
+    const buttons = filterGroup.querySelectorAll("[data-filter]");
+    buttons.forEach((button) => {
+      const isActive = String(button.getAttribute("data-filter") || "all") === activeFilter;
+      button.classList.toggle("is-active", isActive);
+    });
+  };
 
-        return `
-          <tr>
-            <td>
-              <div class="history-file-name">${name}</div>
-              ${summaryMarkup}
-            </td>
-            <td>
-              <span class="${sourceBadgeClass(sourceType)}">${escapeHtml(sourceLabel)}</span>
-            </td>
-            <td>
-              <span class="${aiBadgeClass(item)}">${aiBadgeText(item)}</span>
-            </td>
-            <td class="text-muted-2">${toLocalDateTime(item.createdAt)}</td>
-          </tr>
-        `;
-      })
+  const getFilteredActivities = () => {
+    return Array.isArray(allActivities) ? allActivities : [];
+  };
+
+  const renderLoadingSkeleton = (count = 5) => {
+    if (!timeline) {
+      return;
+    }
+
+    timeline.innerHTML = Array.from({ length: count })
+      .map(() => `
+        <article class="history-item">
+          <div class="history-item-dot" aria-hidden="true"></div>
+          <div class="history-item-main">
+            <div class="list-skeleton-line list-skeleton-line--wide"></div>
+            <div class="list-skeleton-line list-skeleton-line--short mt-2"></div>
+          </div>
+        </article>
+      `)
       .join("");
   };
 
-  const renderMeta = () => {
-    if (!metaText) {
+  const updatePaginationMeta = () => {
+    if (activityCount) {
+      activityCount.textContent = `${totalItems} hoạt động`;
+    }
+
+    if (pageMetaText) {
+      pageMetaText.textContent = `Trang ${page} / ${totalPages}`;
+    }
+
+    if (prevPageButton) {
+      prevPageButton.disabled = isLoadingActivities || page <= 1;
+    }
+
+    if (nextPageButton) {
+      nextPageButton.disabled = isLoadingActivities || page >= totalPages;
+    }
+  };
+
+  const renderKpis = (kpis) => {
+    const totalContents = Number(kpis?.totalContents || 0);
+    const totalContentsLast7Days = Number(kpis?.totalContentsLast7Days || 0);
+    const completedQuizzes = Number(kpis?.completedQuizzes || 0);
+    const weeklyGoalPercent = Math.max(0, Math.min(100, Number(kpis?.weeklyGoalPercent || 0)));
+
+    if (totalContentsEl) {
+      totalContentsEl.textContent = String(totalContents);
+    }
+
+    if (totalContentsMetaEl) {
+      totalContentsMetaEl.textContent = `7 ngày gần nhất: +${totalContentsLast7Days}`;
+    }
+
+    if (totalQuizzesEl) {
+      totalQuizzesEl.textContent = String(completedQuizzes);
+    }
+
+    if (totalQuizzesMetaEl) {
+      totalQuizzesMetaEl.textContent = completedQuizzes > 0
+        ? "Bạn đang duy trì nhịp học tốt"
+        : "Bắt đầu quiz đầu tiên để có dữ liệu";
+    }
+
+    if (weeklyGoalEl) {
+      weeklyGoalEl.textContent = `${weeklyGoalPercent}%`;
+    }
+
+    if (weeklyGoalMetaEl) {
+      const remainingSessions = Math.max(0, Math.ceil(((100 - weeklyGoalPercent) / 100) * 7));
+      weeklyGoalMetaEl.textContent = remainingSessions === 0
+        ? "Bạn đã hoàn thành mục tiêu tuần này"
+        : `Cần thêm ${remainingSessions} phiên học để đạt 100%`;
+    }
+  };
+
+  const renderTimeline = () => {
+    const list = getFilteredActivities();
+
+    updatePaginationMeta();
+
+    if (!timeline) {
       return;
     }
 
-    metaText.textContent = `${state.totalItems} bản ghi`; 
+    if (list.length === 0) {
+      timeline.innerHTML = `
+        <article class="history-item is-empty">
+          <div class="history-item-main">
+            <div class="history-item-title">Chưa có lịch sử hoạt động</div>
+            <div class="history-item-meta">Hãy upload tài liệu hoặc làm quiz để bắt đầu.</div>
+          </div>
+        </article>
+      `;
+      return;
+    }
+
+    const rows = list.map((item) => {
+        const title = escapeHtml(item?.title || "Hoạt động học tập");
+        const kind = escapeHtml(normalizeType(item?.kind));
+        const result = escapeHtml(item?.result || "Đã cập nhật");
+        const at = toDateText(item?.at);
+        const relative = toRelativeText(item?.at);
+        const actionText = escapeHtml(item?.actionText || "Xem chi tiết");
+        const actionUrl = String(item?.actionUrl || "/home/history.html");
+
+        return `
+          <article class="history-item">
+            <div class="history-item-dot" aria-hidden="true"></div>
+            <div class="history-item-main">
+              <div class="history-item-head">
+                <h6 class="history-item-title">${title}</h6>
+                <span class="history-item-time" title="${escapeHtml(at)}">${escapeHtml(relative)}</span>
+              </div>
+              <div class="history-item-meta">Loại: ${kind} • Kết quả: ${result}</div>
+              <div class="history-item-footer">
+                <span class="history-item-date">${escapeHtml(at)}</span>
+                <a class="btn btn-soft btn-sm" href="${escapeHtml(actionUrl)}">${actionText}</a>
+              </div>
+            </div>
+          </article>
+        `;
+      });
+
+    timeline.innerHTML = '<div class="small text-muted-2">Đang dựng lịch sử hoạt động...</div>';
+
+    const chunkSize = 10;
+    let cursor = 0;
+    timeline.innerHTML = "";
+
+    const renderNextChunk = () => {
+      const chunk = rows.slice(cursor, cursor + chunkSize).join("");
+      timeline.insertAdjacentHTML("beforeend", chunk);
+      cursor += chunkSize;
+
+      if (cursor < rows.length) {
+        window.requestAnimationFrame(renderNextChunk);
+      }
+    };
+
+    window.requestAnimationFrame(renderNextChunk);
   };
 
-  const loadHistory = async () => {
-    setLoading(true);
-    setNotice("", "success");
+  const loadOverview = async () => {
+    setNotice("");
 
     try {
-      const queryString = buildQueryString();
-      const response = await fetch(`/api/summary/upload-history?${queryString}`, {
+      const response = await fetch("/api/dashboard/overview", {
         method: "GET",
+        cache: "no-store",
         headers: getAuthHeaders(),
       });
 
-      if (response.status === 401) {
-        setNotice("Bạn cần đăng nhập để xem lịch sử upload.", "error");
-        tableBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted-2 py-5">Vui lòng đăng nhập để tiếp tục.</td></tr>';
-        return;
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const message = String(payload?.message || "Không thể tải lịch sử học tập.");
+        throw new Error(message);
       }
 
-      const data = await response.json().catch(() => null);
-      if (!response.ok || !data) {
-        throw new Error(data?.message || "Không tải được lịch sử upload.");
-      }
-
-      state.totalItems = Number(data.totalItems || 0);
-
-      renderKpis(data.stats || {});
-      renderRows(data.items || []);
-      renderMeta();
+      renderKpis(payload?.kpis || {});
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Có lỗi khi tải lịch sử.";
-      setNotice(message, "error");
-      tableBody.innerHTML = '<tr><td colspan="4" class="text-center text-danger py-5">Không tải được dữ liệu. Thử lại sau.</td></tr>';
-      state.totalItems = 0;
-      renderMeta();
-    } finally {
-      setLoading(false);
+      setNotice(error?.message || "Không thể tải lịch sử học tập.");
     }
   };
 
-  refreshButton?.addEventListener("click", () => {
-    loadHistory();
-  });
+  const loadActivities = async () => {
+    setNotice("");
+    isLoadingActivities = true;
+    renderLoadingSkeleton();
+    updatePaginationMeta();
 
-  sourceTypeSelect?.addEventListener("change", () => {
-    loadHistory();
-  });
+    try {
+      const query = new URLSearchParams({
+        filter: activeFilter,
+        page: String(page),
+        pageSize: String(pageSize),
+      });
 
-  sortSelect?.addEventListener("change", () => {
-    loadHistory();
-  });
+      const response = await fetch(`/api/dashboard/history-activities?${query.toString()}`, {
+        method: "GET",
+        cache: "no-store",
+        headers: getAuthHeaders(),
+      });
 
-  searchInput?.addEventListener("input", () => {
-    if (state.searchTimer) {
-      window.clearTimeout(state.searchTimer);
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const message = String(payload?.message || "Không thể tải lịch sử học tập.");
+        throw new Error(message);
+      }
+
+      allActivities = Array.isArray(payload?.items) ? payload.items : [];
+      totalItems = Number(payload?.totalItems || allActivities.length);
+      totalPages = Math.max(1, Number(payload?.totalPages || 1));
+      page = Math.min(page, totalPages);
+      renderTimeline();
+      syncQueryState();
+
+      if (shouldRestoreScroll) {
+        restoreScrollState();
+        shouldRestoreScroll = false;
+      } else if (shouldScrollToTimeline) {
+        scrollToTimelineTop();
+      }
+
+      shouldScrollToTimeline = false;
+    } catch (error) {
+      allActivities = [];
+      totalItems = 0;
+      totalPages = 1;
+      renderTimeline();
+      setNotice(error?.message || "Không thể tải lịch sử học tập.");
+      shouldScrollToTimeline = false;
+    } finally {
+      isLoadingActivities = false;
+      updatePaginationMeta();
+    }
+  };
+
+  const bindFilters = () => {
+    if (!filterGroup) {
+      return;
     }
 
-    state.searchTimer = window.setTimeout(() => {
-      loadHistory();
-    }, 350);
-  });
+    filterGroup.addEventListener("click", (event) => {
+      const target = event.target instanceof Element
+        ? event.target.closest("[data-filter]")
+        : null;
+
+      if (!target) {
+        return;
+      }
+
+      const nextFilter = String(target.getAttribute("data-filter") || "all");
+      activeFilter = nextFilter;
+      page = 1;
+      shouldScrollToTimeline = true;
+      applyFilterButtons();
+      loadActivities();
+    });
+  };
+
+  const bindPagination = () => {
+    prevPageButton?.addEventListener("click", () => {
+      if (page <= 1 || isLoadingActivities) {
+        return;
+      }
+
+      page -= 1;
+      shouldScrollToTimeline = true;
+      loadActivities();
+    });
+
+    nextPageButton?.addEventListener("click", () => {
+      if (page >= totalPages || isLoadingActivities) {
+        return;
+      }
+
+      page += 1;
+      shouldScrollToTimeline = true;
+      loadActivities();
+    });
+
+    pageSizeSelect?.addEventListener("change", () => {
+      const nextSize = toSafeInt(pageSizeSelect.value, 20);
+      pageSize = allowedPageSizes.has(nextSize) ? nextSize : 20;
+      page = 1;
+      shouldScrollToTimeline = true;
+      loadActivities();
+    });
+  };
 
   const boot = async () => {
     const me = await window.AuthClient?.requireAuth?.();
@@ -321,9 +563,16 @@
       return;
     }
 
+    initStateFromQuery();
     window.AuthClient?.bindUserUi?.(me);
-    loadHistory();
+    bindFilters();
+    bindPagination();
+    bindScrollPersistence();
+    applyFilterButtons();
+    loadOverview();
+    loadActivities();
   };
 
+  document.addEventListener("ajax:before-swap", disposePage, { once: true });
   boot();
 })();

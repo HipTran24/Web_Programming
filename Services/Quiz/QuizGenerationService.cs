@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 using System.Globalization;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using Web_Project.Models;
@@ -9,6 +11,10 @@ namespace Web_Project.Services.Quiz
 {
     public class QuizGenerationService : IQuizGenerationService
     {
+        private static readonly Regex TimecodeRegex = new(@"\b\d{1,2}:\d{2}(?::\d{2})?\b", RegexOptions.Compiled);
+        private static readonly Regex TimeQuestionRegex = new(
+            @"(mốc thời gian|thời điểm nào|phút(\s*thứ)?\s*\d+|giây(\s*thứ)?\s*\d+|timeline|timestamp|timecode|lúc\s*\d{1,2}:\d{2}(?::\d{2})?)",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private readonly AppDbContext _dbContext;
         private readonly IGroqSummaryService _groqSummaryService;
@@ -69,12 +75,23 @@ namespace Web_Project.Services.Quiz
                     throw new UnauthorizedAccessException("Guest không thể sinh quiz từ nội dung của tài khoản người dùng.");
                 }
             }
-            else if (content.UserId.HasValue && content.UserId != userId)
+                else if (content.UserId.HasValue && content.UserId != userId)
             {
                 throw new UnauthorizedAccessException("Bạn không có quyền sinh quiz từ nội dung này.");
             }
 
-                var totalQuestions = ResolveTotalQuestions(request.TotalQuestions);
+            var moderation = await _dbContext.ContentModerations
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.ContentId == content.ContentId, cancellationToken);
+
+            if (moderation is not null &&
+                (string.Equals(moderation.Status, "Pending", StringComparison.OrdinalIgnoreCase) ||
+                 string.Equals(moderation.Status, "Rejected", StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new InvalidOperationException(BuildModerationBlockedMessage(moderation.Status));
+            }
+
+            var totalQuestions = ResolveTotalQuestions(request.TotalQuestions);
             var difficulty = NormalizeDifficulty(request.Difficulty);
             var quizType = NormalizeQuizType(request.QuizType);
 
@@ -95,90 +112,113 @@ namespace Web_Project.Services.Quiz
                 .Where(x => !string.IsNullOrWhiteSpace(x))
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-            var generated = await _groqSummaryService.GenerateQuizAsync(
-                BuildQuizGenerationSource(sourceText, request.VariationNonce, previousQuestionTexts, forceFreshCoverage: false),
-                totalQuestions,
-                difficulty,
-                quizType,
-                cancellationToken);
-
-            var uniqueQuestions = BuildUniqueQuestions(
-                generated.Questions,
-                previousQuestionSignatures,
-                totalQuestions);
-
-            var minTarget = Math.Max(3, totalQuestions * 7 / 10);
-            if (uniqueQuestions.Count < minTarget)
+            var startedAt = Stopwatch.StartNew();
+            try
             {
-                var retryNonce = $"{request.VariationNonce}-{Guid.NewGuid():N}";
-                if (retryNonce.Length > 64)
-                {
-                    retryNonce = retryNonce[..64];
-                }
-
-                var retryGenerated = await _groqSummaryService.GenerateQuizAsync(
+                var generated = await _groqSummaryService.GenerateQuizAsync(
                     BuildQuizGenerationSource(
                         sourceText,
-                        retryNonce,
+                        request.VariationNonce,
                         previousQuestionTexts,
-                        forceFreshCoverage: true),
+                        forceFreshCoverage: false),
                     totalQuestions,
                     difficulty,
                     quizType,
                     cancellationToken);
 
-                var retryUnique = BuildUniqueQuestions(
-                    retryGenerated.Questions,
+                var uniqueQuestions = BuildUniqueQuestions(
+                    generated.Questions,
                     previousQuestionSignatures,
-                    totalQuestions,
-                    existingQuestions: uniqueQuestions);
+                    totalQuestions);
 
-                uniqueQuestions = retryUnique;
+                // Ensure quiz size is deterministic for UI/UX: either đủ số câu yêu cầu hoặc báo lỗi rõ ràng.
+                const int maxRegenerationAttempts = 3;
+                for (var attempt = 0; attempt < maxRegenerationAttempts && uniqueQuestions.Count < totalQuestions; attempt++)
+                {
+                    var retryNonce = $"{request.VariationNonce}-{Guid.NewGuid():N}";
+                    if (retryNonce.Length > 64)
+                    {
+                        retryNonce = retryNonce[..64];
+                    }
+
+                    var regenerationQuestionCount = Math.Min(30, totalQuestions + 5);
+
+                    var retryGenerated = await _groqSummaryService.GenerateQuizAsync(
+                        BuildQuizGenerationSource(
+                            sourceText,
+                            retryNonce,
+                            previousQuestionTexts,
+                            forceFreshCoverage: true),
+                        regenerationQuestionCount,
+                        difficulty,
+                        quizType,
+                        cancellationToken);
+
+                    uniqueQuestions = BuildUniqueQuestions(
+                        retryGenerated.Questions,
+                        previousQuestionSignatures,
+                        totalQuestions,
+                        existingQuestions: uniqueQuestions);
+                }
+
+                if (uniqueQuestions.Count == 0)
+                {
+                    throw new InvalidOperationException("AI không sinh được câu hỏi phù hợp từ nội dung này.");
+                }
+
+                if (uniqueQuestions.Count < totalQuestions)
+                {
+                    throw new InvalidOperationException(
+                        $"AI chỉ sinh được {uniqueQuestions.Count}/{totalQuestions} câu hợp lệ. Vui lòng bấm 'Reload đề mới' để hệ thống tạo lại đủ số câu.");
+                }
+
+                var now = DateTime.UtcNow;
+                var quiz = new Models.Quiz
+                {
+                    ContentId = content.ContentId,
+                    UserId = userId,
+                    IsGuest = isGuest,
+                    TotalQuestions = totalQuestions,
+                    Difficulty = difficulty,
+                    QuizType = quizType,
+                    CreatedAt = now,
+                    Questions = uniqueQuestions.Select(MapQuestion).ToList()
+                };
+
+                _dbContext.Quizzes.Add(quiz);
+
+                if (isGuest && guestSession is not null)
+                {
+                    guestSession.TrialUsedAt = now;
+                    guestSession.LastSeenAt = now;
+                    _dbContext.GuestSessions.Update(guestSession);
+                    await IncrementDailyQuizGenerationCounterAsync(
+                        userId: null,
+                        guestSessionId: guestSession.GuestSessionId,
+                        now,
+                        cancellationToken);
+                }
+                else if (userId.HasValue)
+                {
+                    await IncrementDailyQuizGenerationCounterAsync(
+                        userId,
+                        guestSessionId: null,
+                        now,
+                        cancellationToken);
+                }
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                startedAt.Stop();
+                await PersistAiLogAsync("Quiz.Generate", userId, isGuest, startedAt.Elapsed.TotalSeconds, isError: false, cancellationToken);
+
+                return MapQuiz(quiz, includeAnswers: false, guestToken);
             }
-
-            if (uniqueQuestions.Count == 0)
+            catch
             {
-                throw new InvalidOperationException("AI không sinh được câu hỏi phù hợp từ nội dung này.");
+                startedAt.Stop();
+                await PersistAiLogAsync("Quiz.Generate", userId, isGuest, startedAt.Elapsed.TotalSeconds, isError: true, cancellationToken);
+                throw;
             }
-
-            var now = DateTime.UtcNow;
-            var quiz = new Models.Quiz
-            {
-                ContentId = content.ContentId,
-                UserId = userId,
-                IsGuest = isGuest,
-                TotalQuestions = uniqueQuestions.Count,
-                Difficulty = difficulty,
-                QuizType = quizType,
-                CreatedAt = now,
-                Questions = uniqueQuestions.Select(MapQuestion).ToList()
-            };
-
-            _dbContext.Quizzes.Add(quiz);
-
-            if (isGuest && guestSession is not null)
-            {
-                guestSession.TrialUsedAt = now;
-                guestSession.LastSeenAt = now;
-                _dbContext.GuestSessions.Update(guestSession);
-                await IncrementDailyQuizGenerationCounterAsync(
-                    userId: null,
-                    guestSessionId: guestSession.GuestSessionId,
-                    now,
-                    cancellationToken);
-            }
-            else if (userId.HasValue)
-            {
-                await IncrementDailyQuizGenerationCounterAsync(
-                    userId,
-                    guestSessionId: null,
-                    now,
-                    cancellationToken);
-            }
-
-            await _dbContext.SaveChangesAsync(cancellationToken);
-
-            return MapQuiz(quiz, includeAnswers: false, guestToken);
         }
 
         public async Task<GenerateQuizResponse?> GetQuizAsync(
@@ -241,6 +281,14 @@ namespace Web_Project.Services.Quiz
                 if (session is null || session.IsBlocked || !session.TrialUsedAt.HasValue)
                 {
                     throw new UnauthorizedAccessException("Guest token không hợp lệ hoặc đã hết hiệu lực.");
+                }
+
+                var alreadySubmitted = await _dbContext.QuizAttempts
+                    .AsNoTracking()
+                    .AnyAsync(x => x.QuizId == quiz.QuizId && x.UserId == null, cancellationToken);
+                if (alreadySubmitted)
+                {
+                    throw new InvalidOperationException("Guest chỉ được chấm điểm 1 lần. Vui lòng đăng nhập để tiếp tục.");
                 }
             }
             else
@@ -369,6 +417,34 @@ namespace Web_Project.Services.Quiz
             return sb.ToString();
         }
 
+        private async Task PersistAiLogAsync(
+            string actionType,
+            int? userId,
+            bool isGuest,
+            double processingTimeSeconds,
+            bool isError,
+            CancellationToken cancellationToken)
+        {
+            _dbContext.AISystemLogs.Add(new AISystemLog
+            {
+                ActionType = actionType,
+                UserId = userId,
+                IsGuest = isGuest,
+                ProcessingTime = Math.Max(0, processingTimeSeconds),
+                IsError = isError,
+                CreatedAt = DateTime.UtcNow
+            });
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        private static string BuildModerationBlockedMessage(string status)
+        {
+            return string.Equals(status, "Rejected", StringComparison.OrdinalIgnoreCase)
+                ? "Nội dung này đã bị từ chối sau bước kiểm duyệt nên không thể dùng để sinh quiz."
+                : "Nội dung này đang chờ admin duyệt vì có dấu hiệu nhạy cảm. Bạn chưa thể sinh quiz cho tới khi được phê duyệt.";
+        }
+
         private async Task<List<string>> GetPreviousQuestionTextsAsync(
             int contentId,
             int? userId,
@@ -413,6 +489,11 @@ namespace Web_Project.Services.Quiz
 
                 var signature = NormalizeQuestionSignature(question.QuestionText);
                 if (string.IsNullOrWhiteSpace(signature))
+                {
+                    continue;
+                }
+
+                if (IsTimelineFocusedQuestion(question))
                 {
                     continue;
                 }
@@ -489,8 +570,21 @@ namespace Web_Project.Services.Quiz
             CancellationToken cancellationToken)
         {
             var now = DateTime.UtcNow;
+            var normalizedIp = TrimTo(requestIp, 64);
+            var normalizedUserAgent = TrimTo(userAgent, 512);
+            var normalizedToken = TrimTo(guestToken, 128);
+            var fingerprintHash = BuildFingerprintHash(normalizedIp, normalizedUserAgent);
+
             var session = await _dbContext.GuestSessions
-                .FirstOrDefaultAsync(x => x.GuestToken == guestToken, cancellationToken);
+                .FirstOrDefaultAsync(x => x.GuestToken == normalizedToken, cancellationToken);
+
+            if (session is null && !string.IsNullOrWhiteSpace(fingerprintHash))
+            {
+                session = await _dbContext.GuestSessions
+                    .Where(x => x.FingerprintHash == fingerprintHash)
+                    .OrderByDescending(x => x.LastSeenAt)
+                    .FirstOrDefaultAsync(cancellationToken);
+            }
 
             if (session is not null)
             {
@@ -499,15 +593,25 @@ namespace Web_Project.Services.Quiz
                     throw new InvalidOperationException("Guest session đã bị chặn. Vui lòng đăng nhập để tiếp tục.");
                 }
 
-                session.LastSeenAt = now;
-                if (!string.IsNullOrWhiteSpace(requestIp))
+                if (!string.IsNullOrWhiteSpace(normalizedToken))
                 {
-                    session.IpAddress = TrimTo(requestIp, 64);
+                    session.GuestToken = normalizedToken;
                 }
 
-                if (!string.IsNullOrWhiteSpace(userAgent))
+                if (!string.IsNullOrWhiteSpace(fingerprintHash))
                 {
-                    session.UserAgent = TrimTo(userAgent, 512);
+                    session.FingerprintHash = fingerprintHash;
+                }
+
+                session.LastSeenAt = now;
+                if (!string.IsNullOrWhiteSpace(normalizedIp))
+                {
+                    session.IpAddress = normalizedIp;
+                }
+
+                if (!string.IsNullOrWhiteSpace(normalizedUserAgent))
+                {
+                    session.UserAgent = normalizedUserAgent;
                 }
 
                 return session;
@@ -515,10 +619,10 @@ namespace Web_Project.Services.Quiz
 
             session = new GuestSession
             {
-                GuestToken = TrimTo(guestToken, 128),
-                FingerprintHash = string.Empty,
-                IpAddress = TrimTo(requestIp, 64),
-                UserAgent = TrimTo(userAgent, 512),
+                GuestToken = normalizedToken,
+                FingerprintHash = fingerprintHash,
+                IpAddress = normalizedIp,
+                UserAgent = normalizedUserAgent,
                 FirstSeenAt = now,
                 LastSeenAt = now,
                 TrialUsedAt = null,
@@ -586,11 +690,23 @@ namespace Web_Project.Services.Quiz
             return trimmed.Length <= maxLength ? trimmed : trimmed[..maxLength];
         }
 
+        private static string BuildFingerprintHash(string ip, string userAgent)
+        {
+            var raw = $"{ip}|{userAgent}".Trim();
+            if (string.IsNullOrWhiteSpace(raw) || raw == "|")
+            {
+                return string.Empty;
+            }
+
+            var hash = SHA256.HashData(Encoding.UTF8.GetBytes(raw));
+            return Convert.ToHexString(hash).ToLowerInvariant();
+        }
+
         private static string BuildQuizSourceText(Models.Content content)
         {
-            var summary = content.AIProcess?.Summary?.Trim() ?? string.Empty;
-            var keyPoints = content.AIProcess?.KeyPoints?.Trim() ?? string.Empty;
-            var extracted = content.ExtractedText?.Trim() ?? string.Empty;
+            var summary = RemoveTimecodes(content.AIProcess?.Summary?.Trim() ?? string.Empty);
+            var keyPoints = FilterTimelineKeyPoints(content.AIProcess?.KeyPoints?.Trim() ?? string.Empty);
+            var extracted = RemoveTimecodes(content.ExtractedText?.Trim() ?? string.Empty);
 
             var source = string.Empty;
             if (!string.IsNullOrWhiteSpace(summary))
@@ -610,6 +726,49 @@ namespace Web_Project.Services.Quiz
             }
 
             return source.Trim();
+        }
+
+        private static bool IsTimelineFocusedQuestion(AiQuizQuestion question)
+        {
+            var questionText = question.QuestionText ?? string.Empty;
+            var explanation = question.Explanation ?? string.Empty;
+            return TimeQuestionRegex.IsMatch(questionText) || TimeQuestionRegex.IsMatch(explanation);
+        }
+
+        private static string FilterTimelineKeyPoints(string rawKeyPoints)
+        {
+            if (string.IsNullOrWhiteSpace(rawKeyPoints))
+            {
+                return string.Empty;
+            }
+
+            var lines = rawKeyPoints
+                .Split(new[] { "\r\n", "\n" }, StringSplitOptions.None)
+                .Select(line => line.Trim())
+                .Where(line => !string.IsNullOrWhiteSpace(line))
+                .Where(line =>
+                {
+                    var noDiacritics = RemoveDiacritics(line).ToLowerInvariant();
+                    if (noDiacritics.Contains("moc thoi gian") || noDiacritics.Contains("timeline"))
+                    {
+                        return false;
+                    }
+
+                    return !TimecodeRegex.IsMatch(line);
+                })
+                .ToList();
+
+            return lines.Count == 0 ? string.Empty : string.Join("\n", lines);
+        }
+
+        private static string RemoveTimecodes(string raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw))
+            {
+                return string.Empty;
+            }
+
+            return TimecodeRegex.Replace(raw, string.Empty).Trim();
         }
 
         private static int ResolveTotalQuestions(int? requested)

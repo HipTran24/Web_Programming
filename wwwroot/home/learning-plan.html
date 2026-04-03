@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <style id="instant-page-bg">html,body{background:#08131b!important;color:#eef6f7;}</style>
+<title>SynapLearn - Lộ trình học</title>
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg?v=20260402-tab3" />
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=20260402-tab3" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link href="../css/style.css?v=20260403-prod" rel="stylesheet" />
+    <link href="../css/app-shell.css?v=20260403-prod" rel="stylesheet" />
+  </head>
+  <body class="page-learning-plan">
+    <div id="page-loader" class="logo-loader">
+      <div class="logo-loader-box">
+        <div class="ai-orbit orbit-1"></div>
+        <div class="ai-orbit orbit-2"></div>
+        <div class="ai-logo-core">
+          <span>AI</span>
+        </div>
+        <h4>SynapLearn</h4>
+        <p>Đang tải lộ trình học tập</p>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <main class="container py-5">
+        <section class="glass learning-plan-hero">
+          <div>
+            <h4 class="fw-bold mb-1">Lộ trình học cá nhân</h4>
+            <p class="text-muted-2 mb-0">Tập trung theo mục tiêu tuần, ưu tiên chủ đề yếu và theo dõi tiến độ hoàn thành từng nhiệm vụ.</p>
+          </div>
+          <div class="learning-plan-hero-actions">
+            <a class="btn btn-primary" href="upload.html">Tạo nội dung mới</a>
+            <a class="btn btn-soft" href="history.html">Mở lịch sử học tập</a>
+          </div>
+        </section>
+
+        <div id="learningPlanNotice" class="alert d-none mt-3 mb-0" role="alert"></div>
+
+        <section class="learning-plan-kpis mt-4" id="learningPlanKpis">
+          <article class="glass learning-plan-kpi">
+            <div class="learning-plan-kpi-label">Tiến độ tuần</div>
+            <div class="learning-plan-kpi-value" id="learningPlanWeekProgress">0%</div>
+            <div class="learning-plan-kpi-meta" id="learningPlanActiveDays">0/7 ngày hoạt động</div>
+          </article>
+          <article class="glass learning-plan-kpi">
+            <div class="learning-plan-kpi-label">Điểm gần đây</div>
+            <div class="learning-plan-kpi-value" id="learningPlanAverageScore">0.0</div>
+            <div class="learning-plan-kpi-meta">Trung bình 20 lượt gần nhất</div>
+          </article>
+          <article class="glass learning-plan-kpi">
+            <div class="learning-plan-kpi-label">Chủ đề ưu tiên</div>
+            <div class="learning-plan-kpi-value" id="learningPlanFocusTopic">-</div>
+            <div class="learning-plan-kpi-meta" id="learningPlanFocusTopicMeta">Độ chính xác: -</div>
+          </article>
+        </section>
+
+        <section class="glass mt-4">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h5 class="fw-semibold mb-0">Nhiệm vụ tuần này</h5>
+            <span id="learningPlanTaskCount" class="badge badge-soft">0 nhiệm vụ</span>
+          </div>
+          <div id="learningPlanTasks" class="learning-plan-tasks mt-3"></div>
+        </section>
+
+        <section class="glass mt-4">
+          <h5 class="fw-semibold mb-0">Gợi ý hành động</h5>
+          <div id="learningPlanRecommendations" class="learning-plan-recommendations mt-3"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../js/learning-plan.js?v=20260403-prod"></script>
+    <script src="../js/app-shell.js"></script>
+  </body>
+</html>

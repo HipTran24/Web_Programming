@@ -100,6 +100,60 @@ public sealed class GroqSummaryServiceTests
         Assert.True(handler.RequestUris.Count >= 2);
     }
 
+    [Fact]
+    public async Task SummarizeTextAsync_StripsModelArtifactWrapper_WhenPayloadContainsAssistantToken()
+    {
+        var handler = new SequenceHttpMessageHandler(
+            _ => JsonResponse(HttpStatusCode.OK, """
+                {
+                  "choices": [
+                    {
+                      "message": {
+                        "content": "{\"assistant<|end_header_id|>\":\"{\\\"summary\\\":\\\"Nội dung sạch\\\",\\\"keyPoints\\\":[\\\"Ý 1\\\",\\\"Ý 2\\\"]}\"}"
+                      }
+                    }
+                  ]
+                }
+                """)
+        );
+
+        var service = CreateService(handler);
+
+        var result = await service.SummarizeTextAsync("Noi dung", "text", CancellationToken.None);
+
+        Assert.Equal("Nội dung sạch", result.Summary);
+        Assert.Equal(2, result.KeyPoints.Count);
+        Assert.Contains("Ý 1", result.KeyPoints);
+        Assert.DoesNotContain("end_header_id", result.Summary, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task SummarizeTextAsync_UnwrapsAssistantObjectEnvelope_WhenPayloadContainsAssistantObject()
+    {
+        var handler = new SequenceHttpMessageHandler(
+            _ => JsonResponse(HttpStatusCode.OK, """
+                {
+                  "choices": [
+                    {
+                      "message": {
+                        "content": "{\"assistant\":{\"summary\":\"Tóm tắt hợp lệ\",\"keyPoints\":[\"Ý chính 1\",\"Ý chính 2\"]}}"
+                      }
+                    }
+                  ]
+                }
+                """)
+        );
+
+        var service = CreateService(handler);
+
+        var result = await service.SummarizeTextAsync("Noi dung", "text", CancellationToken.None);
+
+        Assert.Equal("Tóm tắt hợp lệ", result.Summary);
+        Assert.Equal(2, result.KeyPoints.Count);
+        Assert.Contains("Ý chính 1", result.KeyPoints);
+        Assert.DoesNotContain("\"assistant\"", result.Summary, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static GroqSummaryService CreateService(HttpMessageHandler handler)
     {
         var settings = new GroqSettings

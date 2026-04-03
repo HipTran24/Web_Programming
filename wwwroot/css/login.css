@@ -1,0 +1,747 @@
+/* Fix triệt để autofill input không bị nền trắng trên mọi trình duyệt */
+.page-login input.floating-input:-webkit-autofill,
+.page-login input.floating-input:-webkit-autofill:focus,
+.page-login input.floating-input:-webkit-autofill:hover,
+.page-login input.floating-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #2a3147 inset !important;
+  box-shadow: 0 0 0 1000px #2a3147 inset !important;
+  background: linear-gradient(155deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03)) !important;
+  -webkit-text-fill-color: #f4f7ff !important;
+  color: #f4f7ff !important;
+  border: 1px solid rgba(159, 177, 255, 0.2) !important;
+  transition: background 0.22s, box-shadow 0.22s, color 0.22s;
+}
+
+/* Keep autofilled inputs visually consistent with dark theme */
+.page-login input.floating-input:-webkit-autofill {
+  -webkit-text-fill-color: #f4f7ff !important;
+  caret-color: #f4f7ff !important;
+  border-color: rgba(159, 177, 255, 0.2) !important;
+  -webkit-box-shadow: 0 0 0 1000px rgba(24, 32, 64, 0.22) inset !important;
+  box-shadow:
+    0 0 0 1000px rgba(24, 32, 64, 0.22) inset,
+    inset 0 1px 1px rgba(255, 255, 255, 0.07),
+    inset 0 -8px 12px rgba(2, 7, 22, 0.34) !important;
+  transition: background-color 500000s ease-in-out 0s;
+}
+
+input.floating-input:-internal-autofill-selected {
+  background: linear-gradient(155deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03)) !important;
+  color: #f4f7ff !important;
+  box-shadow: 0 0 0 1000px #2a3147 inset !important;
+}
+
+input.floating-input:autofill,
+input.floating-input:autofill:focus,
+input.floating-input:autofill:hover,
+input.floating-input:autofill:active {
+  background: linear-gradient(155deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03)) !important;
+  color: #f4f7ff !important;
+  box-shadow: 0 0 0 1000px #2a3147 inset !important;
+}
+/* Căn giữa divider và Google login button */
+.auth-divider {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 12px 0 6px 0;
+  text-align: center;
+}
+
+#googleLoginButton {
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto 6px auto;
+  width: 100%;
+  max-width: 360px;
+}
+/* Fix triệt để autofill input không bị nền trắng */
+.page-login input.floating-input:-webkit-autofill,
+.page-login input.floating-input:-webkit-autofill:focus,
+.page-login input.floating-input:-webkit-autofill:hover,
+.page-login input.floating-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px rgba(24, 32, 64, 0.18) inset !important;
+  box-shadow: 0 0 0 1000px rgba(24, 32, 64, 0.18) inset !important;
+  background: linear-gradient(155deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03)) !important;
+  -webkit-text-fill-color: #f4f7ff !important;
+  color: #f4f7ff !important;
+  border: 1px solid rgba(159, 177, 255, 0.2) !important;
+  transition: background 0.22s, box-shadow 0.22s, color 0.22s;
+}
+.page-login .floating-input,
+.page-login .floating-input:-webkit-autofill,
+.page-login .floating-input:-webkit-autofill:focus,
+.page-login .floating-input:-webkit-autofill:hover,
+.page-login .floating-input:-webkit-autofill:active {
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03)) !important;
+  -webkit-box-shadow: 0 0 0 1000px rgba(24, 32, 64, 0.18) inset !important;
+  box-shadow:
+    0 0 0 1000px rgba(24, 32, 64, 0.18) inset,
+    inset 0 1px 1px rgba(255, 255, 255, 0.07),
+    inset 0 -8px 12px rgba(2, 7, 22, 0.34);
+  color: #f4f7ff !important;
+  -webkit-text-fill-color: #f4f7ff !important;
+  border: 1px solid rgba(159, 177, 255, 0.2);
+  transition: background 0.22s, box-shadow 0.22s, color 0.22s;
+}
+
+.page-login .floating-input:focus,
+.page-login .floating-input:hover,
+.page-login .floating-input:active {
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05)) !important;
+  color: #f4f7ff !important;
+  -webkit-text-fill-color: #f4f7ff !important;
+}
+.page-login .floating-input,
+.page-login .floating-input:-webkit-autofill,
+.page-login .floating-input:-webkit-autofill:focus,
+.page-login .floating-input:-webkit-autofill:hover,
+.page-login .floating-input:-webkit-autofill:active {
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03)) !important;
+  -webkit-box-shadow: 0 0 0 1000px rgba(24, 32, 64, 0.18) inset !important;
+  box-shadow:
+    0 0 0 1000px rgba(24, 32, 64, 0.18) inset,
+    inset 0 1px 1px rgba(255, 255, 255, 0.07),
+    inset 0 -8px 12px rgba(2, 7, 22, 0.34);
+  color: #f4f7ff !important;
+  -webkit-text-fill-color: #f4f7ff !important;
+  border: 1px solid rgba(159, 177, 255, 0.2);
+}
+.page-login .field-control {
+  position: relative;
+  width: 100%;
+}
+
+.page-login .field-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  transform: translateY(-50%);
+  color: rgba(165, 188, 255, 0.74);
+  pointer-events: none;
+  transition: color 0.22s ease;
+  z-index: 2;
+}
+
+.page-login .field-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.page-login .floating-input {
+  display: block;
+  width: 100% !important;
+  max-width: 100% !important;
+  appearance: none;
+  -webkit-appearance: none;
+  min-height: 50px;
+  border-radius: 16px;
+  border: 1px solid rgba(159, 177, 255, 0.2);
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+  color: #f4f7ff;
+  padding: 13px 46px 13px 18px;
+  font-size: 0.93rem;
+  letter-spacing: 0.01em;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.07),
+    inset 0 -8px 12px rgba(2, 7, 22, 0.34);
+  transition:
+    border-color 0.22s ease,
+    box-shadow 0.22s ease,
+    transform 0.22s ease,
+    background-color 0.22s ease;
+}
+
+.page-login .floating-input:focus,
+.page-login .floating-input:hover {
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  color: #f4f7ff;
+}
+
+.page-login .floating-input:focus {
+  border-color: rgba(120, 146, 255, 0.5);
+  box-shadow:
+    0 0 0 4px rgba(120, 146, 255, 0.16),
+    0 0 22px rgba(90, 127, 255, 0.32),
+    inset 0 1px 1px rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
+}
+
+.page-login .floating-label {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.88rem;
+  color: rgba(190, 205, 255, 0.62);
+  pointer-events: none;
+  transition: transform 0.2s ease, color 0.2s ease, font-size 0.2s ease, top 0.2s ease, opacity 0.2s;
+  opacity: 1;
+}
+
+.page-login .floating-input:focus + .floating-label,
+.page-login .floating-input:not(:placeholder-shown) + .floating-label,
+.page-login .floating-input:-webkit-autofill + .floating-label {
+  top: 13px;
+  left: 18px;
+  transform: translateY(0);
+  font-size: 0.68rem;
+  color: rgba(182, 202, 255, 0.95);
+  letter-spacing: 0.04em;
+  opacity: 0;
+}
+
+.page-login .field-control:focus-within .field-icon {
+  color: rgba(182, 202, 255, 0.95);
+}
+
+.page-login .field-control.has-toggle .floating-input {
+  padding-right: 50px;
+  padding-left: 18px;
+}
+
+.page-login .field-icon {
+  display: none;
+}
+/* Định vị lại nút con mắt cho đúng khi không còn icon bên trái */
+.page-login .password-toggle-btn {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  z-index: 2;
+  padding: 0 6px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+}
+
+.page-login .field-control.has-toggle {
+  position: relative;
+}
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+.page-login {
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  --bg-1: #060d1f;
+  --bg-2: #0b1736;
+  --bg-3: #2a0f4a;
+  border-color: var(--border-strong);
+  box-shadow:
+    0 0 0 4px rgba(124, 156, 255, 0.16),
+    0 0 22px rgba(93, 133, 255, 0.26),
+    inset 0 1px 1px rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
+  --text: #eff4ff;
+  --text-soft: rgba(217, 228, 255, 0.78);
+  --text-muted: rgba(178, 198, 245, 0.62);
+  --border: rgba(152, 181, 255, 0.24);
+  --border-strong: rgba(124, 156, 255, 0.56);
+  --surface: rgba(11, 18, 39, 0.58);
+  --surface-strong: rgba(14, 23, 49, 0.8);
+  --accent-1: #4d80ff;
+  --accent-2: #735dff;
+  --danger: #ff93b1;
+  --success: #7aeec5;
+  font-family: "Inter", "SF Pro Text", "Poppins", sans-serif;
+  color: var(--text);
+}
+
+.page-login .auth-page--login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: clamp(20px, 5vh, 68px) 0;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(60rem 38rem at 8% 12%, rgba(68, 119, 255, 0.24), transparent 58%),
+    radial-gradient(45rem 32rem at 92% 18%, rgba(146, 96, 255, 0.24), transparent 62%),
+    linear-gradient(136deg, var(--bg-1) 0%, var(--bg-2) 52%, var(--bg-3) 100%);
+}
+
+.page-login .auth-page--login::before,
+.page-login .auth-page--login::after {
+  content: "";
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+  filter: blur(12px);
+}
+
+.page-login .auth-page--login::before {
+  width: 360px;
+  height: 360px;
+  left: -120px;
+  top: 20%;
+  background: radial-gradient(circle, rgba(103, 152, 255, 0.36), transparent 70%);
+}
+
+.page-login .auth-page--login::after {
+  width: 420px;
+  height: 340px;
+  right: -130px;
+  bottom: 8%;
+  background: radial-gradient(circle, rgba(149, 96, 255, 0.34), transparent 70%);
+}
+
+.page-login .login-shell {
+  max-width: 520px;
+  position: relative;
+  z-index: 1;
+}
+
+.page-login .login-card {
+  border-radius: 22px;
+  padding: clamp(18px, 2vw, 28px);
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(165deg, rgba(14, 22, 46, 0.78), rgba(8, 13, 30, 0.7)),
+    radial-gradient(circle at 85% 10%, rgba(69, 142, 255, 0.16), transparent 42%);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow:
+    0 28px 72px rgba(2, 7, 20, 0.62),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.page-login .login-card-head {
+  margin-bottom: 16px;
+}
+
+.page-login .login-kicker {
+  display: inline-flex;
+  margin-bottom: 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: rgba(166, 192, 255, 0.9);
+}
+
+.page-login .login-title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  width: fit-content;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(124, 156, 255, 0.56);
+  background: rgba(78, 130, 255, 0.14);
+  color: var(--text);
+  font-size: clamp(1.2rem, 2.2vw, 1.7rem);
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  line-height: 1.08;
+}
+
+.page-login .login-head-sub {
+  margin-top: 10px;
+  color: var(--text-soft);
+  font-size: 0.91rem;
+  line-height: 1.62;
+}
+
+.page-login #alertBox {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 0.84rem;
+  border: 1px solid rgba(255, 147, 177, 0.34);
+}
+
+.page-login .login-form-grid {
+  width: 100%;
+  display: grid;
+  gap: 10px;
+}
+
+.page-login .field-control {
+  position: relative;
+  width: 100%;
+}
+
+.page-login .password-toggle-btn {
+  position: absolute;
+  right: 9px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border: 0 !important;
+  margin: 0 !important;
+  padding: 0;
+  border-radius: 10px;
+  line-height: 1 !important;
+  text-decoration: none !important;
+  color: rgba(190, 208, 255, 0.78);
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  transition: color 0.24s ease, background-color 0.24s ease, transform 0.24s ease;
+}
+.page-login .password-toggle-btn svg {
+  width: 22px;
+  height: 22px;
+  pointer-events: none;
+}
+.page-login .password-toggle-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.11);
+}
+.page-login .password-toggle-btn.is-visible {
+  color: rgba(139, 188, 255, 0.96);
+  background: rgba(111, 151, 255, 0.2);
+}
+.page-login .password-toggle-btn:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.page-login .field-icon {
+  position: absolute;
+  left: 15px;
+  top: calc(50% - 8px);
+  transform: translateY(-50%);
+  width: 17px;
+  height: 17px;
+  color: rgba(164, 188, 247, 0.74);
+  pointer-events: none;
+  transition: color 0.25s ease;
+  z-index: 2;
+}
+
+.page-login .field-icon svg {
+  width: 100%;
+  height: 100%;
+  transform: translateY(-2px);
+}
+
+.page-login .floating-input {
+  display: block;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-height: 50px;
+  height: 50px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+  color: var(--text) !important;
+  padding: 0 16px;
+  line-height: 50px;
+  font-size: 0.93rem;
+  letter-spacing: 0.01em;
+  appearance: none;
+  -webkit-appearance: none;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.07),
+    inset 0 -8px 12px rgba(2, 7, 22, 0.34);
+  transition:
+    border-color 0.22s ease,
+    box-shadow 0.22s ease,
+    transform 0.22s ease,
+    background-color 0.22s ease;
+}
+
+.page-login .floating-input:hover {
+  background:
+    linear-gradient(154deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.035)),
+    rgba(22, 34, 65, 0.82);
+}
+
+.page-login .floating-input:focus {
+  border-color: var(--border-strong);
+  background:
+    linear-gradient(154deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.04)),
+    rgba(22, 34, 65, 0.9);
+  box-shadow:
+    0 0 0 4px rgba(118, 150, 255, 0.16),
+    0 0 22px rgba(93, 133, 255, 0.26),
+    inset 0 1px 1px rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
+}
+
+.page-login .floating-input:-webkit-autofill,
+.page-login .floating-input:-webkit-autofill:hover,
+.page-login .floating-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text) !important;
+  caret-color: var(--text);
+  -webkit-box-shadow:
+    0 0 0 1000px rgba(22, 31, 61, 0.94) inset,
+    0 0 0 2px rgba(124, 156, 255, 0.2),
+    0 0 14px rgba(93, 133, 255, 0.18) !important;
+  box-shadow:
+    0 0 0 1000px rgba(22, 31, 61, 0.94) inset,
+    0 0 0 2px rgba(124, 156, 255, 0.2),
+    0 0 14px rgba(93, 133, 255, 0.18) !important;
+  border-color: var(--border-strong);
+  transition: background-color 600000s 0s, color 600000s 0s;
+}
+
+.page-login .floating-label {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  pointer-events: none;
+  transition: transform 0.2s ease, color 0.2s ease, font-size 0.2s ease, top 0.2s ease;
+}
+
+.page-login .floating-input:focus + .floating-label,
+.page-login .floating-input:not(:placeholder-shown) + .floating-label,
+.page-login .floating-input:-webkit-autofill + .floating-label {
+  top: 13px;
+  transform: translateY(0);
+  font-size: 0.68rem;
+  color: rgba(182, 202, 255, 0.95);
+  letter-spacing: 0.04em;
+}
+
+.page-login .password-toggle-btn {
+  position: absolute;
+  right: 9px;
+  top: calc(50% - 8px);
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  border: 0 !important;
+  margin: 0 !important;
+  padding: 0;
+  border-radius: 10px;
+  line-height: 1 !important;
+  text-decoration: none !important;
+  color: rgba(190, 208, 255, 0.78);
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  transition: color 0.24s ease, background-color 0.24s ease, transform 0.24s ease;
+}
+
+.page-login .password-toggle-btn svg {
+  transform: translateY(-2px);
+}
+
+.page-login .password-toggle-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.11);
+}
+
+.page-login .password-toggle-btn.is-visible {
+  color: rgba(139, 188, 255, 0.96);
+  background: rgba(111, 151, 255, 0.2);
+}
+
+.page-login .password-toggle-btn:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.page-login .invalid-feedback {
+  min-height: 16px;
+  margin-top: 5px;
+  padding-left: 2px;
+  font-size: 0.75rem;
+  color: var(--danger);
+}
+
+.page-login .floating-input.is-invalid {
+  border-color: rgba(255, 147, 177, 0.84);
+  box-shadow: 0 0 0 3px rgba(255, 147, 177, 0.16), 0 0 14px rgba(255, 147, 177, 0.2);
+}
+
+.page-login .floating-input.is-valid {
+  border-color: rgba(122, 238, 197, 0.76);
+  box-shadow: 0 0 0 3px rgba(122, 238, 197, 0.14), 0 0 14px rgba(122, 238, 197, 0.18);
+}
+
+.page-login .login-row-meta {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0;
+}
+
+.page-login .forgot-password-link {
+  font-size: 0.83rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.24s ease;
+}
+
+.page-login .forgot-password-link:hover {
+  color: #fff;
+}
+
+.page-login .login-submit-btn {
+  min-height: 50px;
+  margin-top: 0;
+  border: 0;
+  border-radius: 16px;
+  font-size: 0.94rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #f8fbff;
+  background: linear-gradient(120deg, #4d80ff 0%, #6a6fff 52%, #845ef7 100%);
+  background-size: 180% 180%;
+  box-shadow: 0 16px 30px rgba(91, 108, 255, 0.34);
+  transition: transform 0.26s ease, box-shadow 0.26s ease, background-position 0.3s ease;
+}
+
+.page-login .login-submit-btn:hover {
+  transform: translateY(-1px) scale(1.012);
+  background-position: 86% 50%;
+  box-shadow: 0 20px 36px rgba(99, 104, 255, 0.42);
+}
+
+.page-login .login-submit-btn:active {
+  transform: scale(0.992);
+}
+
+.page-login .login-submit-btn.is-loading {
+  opacity: 0.9;
+  cursor: wait;
+}
+
+.page-login .auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0 2px;
+  color: rgba(187, 204, 247, 0.72);
+  font-size: 0.84rem;
+}
+
+.page-login .auth-divider::before,
+.page-login .auth-divider::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: rgba(164, 184, 240, 0.24);
+}
+
+.page-login .google-login-host {
+  width: 100%;
+  border-radius: 0;
+  overflow: visible;
+  min-height: 46px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.page-login .login-footer-note {
+  text-align: center;
+  color: var(--text-soft) !important;
+  margin-top: 1px;
+  font-size: 0.84rem;
+}
+
+.page-login .login-footer-note a {
+  color: #cfddff !important;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.page-login .login-footer-note a:hover {
+  color: #fff !important;
+  text-decoration: underline;
+}
+
+@media (max-width: 767.98px) {
+  .page-login .auth-page--login {
+    align-items: flex-start;
+    padding-top: 16px;
+    padding-bottom: 28px;
+  }
+
+  .page-login .login-card {
+    border-radius: 18px;
+    padding: 16px 13px;
+  }
+
+  .page-login .login-title {
+    font-size: clamp(1.55rem, 9vw, 1.95rem);
+  }
+
+  .page-login .floating-input {
+    height: 48px;
+    min-height: 48px;
+    border-radius: 14px;
+    padding: 0 14px;
+    line-height: 48px;
+  }
+
+  .page-login .login-submit-btn {
+    min-height: 46px;
+    border-radius: 14px;
+  }
+}
+
+/* Force browser autofill to keep dark style (credential suggestion pick). */
+html body.page-login input.floating-input:-webkit-autofill,
+html body.page-login input.floating-input:-webkit-autofill:hover,
+html body.page-login input.floating-input:-webkit-autofill:focus,
+html body.page-login input.floating-input:-webkit-autofill:active,
+html body.page-login input.floating-input:-internal-autofill-selected {
+  -webkit-text-fill-color: #f4f7ff !important;
+  color: #f4f7ff !important;
+  caret-color: #f4f7ff !important;
+  border: 1px solid rgba(159, 177, 255, 0.2) !important;
+  background-color: transparent !important;
+  background-image: linear-gradient(155deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03)) !important;
+  -webkit-box-shadow:
+    0 0 0 1000px rgba(24, 32, 64, 0.22) inset,
+    inset 0 1px 1px rgba(255, 255, 255, 0.07),
+    inset 0 -8px 12px rgba(2, 7, 22, 0.34) !important;
+  box-shadow:
+    0 0 0 1000px rgba(24, 32, 64, 0.22) inset,
+    inset 0 1px 1px rgba(255, 255, 255, 0.07),
+    inset 0 -8px 12px rgba(2, 7, 22, 0.34) !important;
+  transition:
+    background-color 99999s ease-in-out 0s,
+    color 99999s ease-in-out 0s !important;
+}
+
+/* Ultimate override: keep login inputs dark in all browsers/states */
+html body.page-login .login-card .floating-input,
+html body.page-login .login-card .floating-input:hover,
+html body.page-login .login-card .floating-input:focus,
+html body.page-login .login-card .floating-input:active,
+html body.page-login .login-card .floating-input:-webkit-autofill,
+html body.page-login .login-card .floating-input:-webkit-autofill:hover,
+html body.page-login .login-card .floating-input:-webkit-autofill:focus,
+html body.page-login .login-card .floating-input:-webkit-autofill:active,
+html body.page-login .login-card .floating-input:-internal-autofill-selected,
+html body.page-login .login-card .floating-input:-moz-autofill {
+  background-color: #16203d !important;
+  background-image: none !important;
+  color: #f4f7ff !important;
+  -webkit-text-fill-color: #f4f7ff !important;
+  caret-color: #f4f7ff !important;
+  border-color: rgba(159, 177, 255, 0.28) !important;
+  -webkit-box-shadow:
+    0 0 0 1000px #16203d inset,
+    0 0 0 1px rgba(159, 177, 255, 0.12) !important;
+  box-shadow:
+    0 0 0 1000px #16203d inset,
+    0 0 0 1px rgba(159, 177, 255, 0.12) !important;
+  transition:
+    background-color 99999s ease-in-out 0s,
+    color 99999s ease-in-out 0s !important;
+}
+
+/* FINAL EYE ALIGNMENT: icon must be perfectly centered with password text */
+html body.page-login #passwordToggleBtn {
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}
+
+html body.page-login #passwordToggleBtn svg {
+  transform: none !important;
+}

@@ -1,7 +1,96 @@
-﻿(function () {
+(function () {
   const tokenStorageKey = "auth.accessToken";
   const userStorageKey = "auth.currentUser";
-  const loginPage = "login.html";
+  const avatarStorageKey = "auth.avatar";
+  const loginPage = "/home/login.html";
+  const defaultLandingPage = "/dashboard";
+  const adminLandingPage = "/admin";
+  const authPages = new Set([
+    "/home/login.html",
+    "/home/register.html",
+    "/home/otp.html",
+  ]);
+  const publicPages = new Set([
+    "/home/index.html",
+    "/home/about.html",
+    "/home/guide.html",
+    "/home/upload.html",
+    "/home/unauthorized.html",
+  ]);
+  const protectedPageRoles = new Map([
+    ["/admin", ["admin"]],
+    ["/dashboard", ["user"]],
+    ["/home/admin.html", ["admin"]],
+    ["/home/dashboard.html", ["user"]],
+  ]);
+  const sessionKeys = [
+    tokenStorageKey,
+    userStorageKey,
+    avatarStorageKey,
+    "token",
+    "role",
+    "name",
+    "avatar",
+    "notifCount",
+    "progress",
+    "auth.google.returnUrl",
+  ];
+
+  let validatedUser = null;
+  let validationPromise = null;
+  let bootPromise = Promise.resolve(null);
+  let bootCompleted = false;
+
+  const normalizePath = (value) => {
+    const raw = String(value || "").trim().toLowerCase();
+    if (!raw) {
+      return "/";
+    }
+
+    const normalized = raw.replace(/\/+/g, "/");
+    if (normalized.length > 1 && normalized.endsWith("/")) {
+      return normalized.slice(0, -1);
+    }
+
+    return normalized;
+  };
+
+  const currentPath = () => normalizePath(window.location.pathname);
+
+  const getDefaultLandingByRole = (role) => {
+    const normalizedRole = String(role || "").trim().toLowerCase();
+    if (normalizedRole === "admin") {
+      return adminLandingPage;
+    }
+
+    return defaultLandingPage;
+  };
+
+  const getPageAccess = (pathname) => {
+    const path = normalizePath(pathname || currentPath());
+
+    if (authPages.has(path)) {
+      return { path, kind: "auth", roles: [] };
+    }
+
+    if (publicPages.has(path) || path === "/" || path === "/home" || path === "/unauthorized") {
+      return { path, kind: "public", roles: [] };
+    }
+
+    if (protectedPageRoles.has(path)) {
+      return { path, kind: "protected", roles: protectedPageRoles.get(path) || [] };
+    }
+
+    if (path.startsWith("/admin/")) {
+      return { path, kind: "protected", roles: ["admin"] };
+    }
+
+    if (path.startsWith("/home/") && path.endsWith(".html")) {
+      return { path, kind: "protected", roles: ["user"] };
+    }
+
+    return { path, kind: "public", roles: [] };
+  };
 
   const readFromStorages = (key) => {
     const localValue = window.localStorage.getItem(key);
@@ -19,7 +108,7 @@
 
   const getAccessToken = () => readFromStorages(tokenStorageKey).value;
 
-  const getCurrentUser = () => {
+  const parseCurrentUser = () => {
     const raw = readFromStorages(userStorageKey).value;
     if (!raw) {
       return null;
@@ -32,14 +121,164 @@
     }
   };
 
-  const clearSession = () => {
-    window.localStorage.removeItem(tokenStorageKey);
-    window.localStorage.removeItem(userStorageKey);
-    window.sessionStorage.removeItem(tokenStorageKey);
-    window.sessionStorage.removeItem(userStorageKey);
+  const normalizeUser = (user) => ({
+    userId: user?.userId ?? null,
+    username: user?.username ?? "",
+    fullName: user?.fullName ?? "",
+    email: user?.email ?? "",
+    role: user?.role ?? "",
+    avatarUrl: user?.avatarUrl ?? readFromStorages(avatarStorageKey).value ?? "",
+    expiresAt: user?.expiresAt ?? null,
+  });
+
+  const getCurrentUser = () => {
+    if (validatedUser) {
+      return validatedUser;
+    }
+
+    if (!bootCompleted) {
+      return null;
+    }
+
+    const parsed = parseCurrentUser();
+    return parsed ? normalizeUser(parsed) : null;
   };
 
-  const isAuthenticated = () => Boolean(getAccessToken());
+  const getActiveSessionStorage = () => {
+    const tokenInfo = readFromStorages(tokenStorageKey);
+    if (tokenInfo.storage) {
+      return tokenInfo.storage;
+    }
+
+    const userInfo = readFromStorages(userStorageKey);
+    if (userInfo.storage) {
+      return userInfo.storage;
+    }
+
+    return null;
+  };
+
+  const dispatchAuthChanged = () => {
+    window.dispatchEvent(
+      new CustomEvent("auth:changed", {
+        detail: {
+          authenticated: Boolean(validatedUser),
+          user: validatedUser,
+          page: getPageAccess(),
+        },
+      }),
+    );
+  };
+
+  const clearSession = () => {
+    validatedUser = null;
+
+    sessionKeys.forEach((key) => {
+      window.localStorage.removeItem(key);
+      window.sessionStorage.removeItem(key);
+    });
+
+    applyAuthVisibility();
+    dispatchAuthChanged();
+  };
+
+  const logout = async () => {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        keepalive: true,
+        headers: {
+          Accept: "application/json",
+        },
+      });
+    } catch {
+      // Ignore logout transport issues and still clear local session.
+    }
+
+    clearSession();
+  };
+
+  const syncStoredUser = (user) => {
+    const token = getAccessToken();
+    const normalized = normalizeUser(user);
+    const storage = getActiveSessionStorage() || window.sessionStorage;
+    const otherStorage = storage === window.localStorage
+      ? window.sessionStorage
+      : window.localStorage;
+    const displayName = resolveDisplayName(normalized.fullName, normalized.email);
+
+    if (token) {
+      storage.setItem(tokenStorageKey, token);
+      storage.setItem("token", token);
+    } else {
+      storage.removeItem(tokenStorageKey);
+      storage.removeItem("token");
+    }
+    storage.setItem(userStorageKey, JSON.stringify(normalized));
+    storage.setItem("role", normalized.role || "");
+    storage.setItem("name", displayName);
+
+    if (normalized.avatarUrl) {
+      storage.setItem(avatarStorageKey, normalized.avatarUrl);
+      storage.setItem("avatar", normalized.avatarUrl);
+    } else {
+      storage.removeItem(avatarStorageKey);
+      storage.removeItem("avatar");
+    }
+
+    [tokenStorageKey, "token", userStorageKey, "role", "name", avatarStorageKey, "avatar"].forEach((key) => {
+      otherStorage.removeItem(key);
+    });
+
+    validatedUser = normalized;
+    applyAuthVisibility();
+    dispatchAuthChanged();
+    return normalized;
+  };
+
+  const storeSession = (data, rememberMe) => {
+    const token = String(data?.accessToken || "").trim();
+    if (!token) {
+      return null;
+    }
+
+    const storage = rememberMe ? window.localStorage : window.sessionStorage;
+    const otherStorage = rememberMe ? window.sessionStorage : window.localStorage;
+    const user = normalizeUser(data);
+    const displayName = resolveDisplayName(user.fullName, user.email);
+
+    sessionKeys.forEach((key) => {
+      window.localStorage.removeItem(key);
+      window.sessionStorage.removeItem(key);
+    });
+
+    storage.setItem(tokenStorageKey, token);
+    storage.setItem("token", token);
+    storage.setItem(userStorageKey, JSON.stringify(user));
+    storage.setItem("role", user.role || "");
+    storage.setItem("name", displayName);
+
+    if (user.avatarUrl) {
+      storage.setItem(avatarStorageKey, user.avatarUrl);
+      storage.setItem("avatar", user.avatarUrl);
+    }
+
+    [tokenStorageKey, "token", userStorageKey, "role", "name", avatarStorageKey, "avatar"].forEach((key) => {
+      if (otherStorage.getItem(key)) {
+        otherStorage.removeItem(key);
+      }
+    });
+
+    validatedUser = user;
+    applyAuthVisibility();
+    dispatchAuthChanged();
+    return user;
+  };
+
+  const hasSessionToken = () => Boolean(getAccessToken());
+  const hasSessionArtifacts = () => Boolean(getAccessToken() || parseCurrentUser());
+
+  const isAuthenticated = () => Boolean(validatedUser);
 
   const setElementVisible = (element, visible) => {
     if (!element) {
@@ -54,7 +293,7 @@
     element.style.setProperty("display", "none", "important");
   };
 
-  const applyAuthVisibility = () => {
+  function applyAuthVisibility() {
     const authed = isAuthenticated();
 
     document.querySelectorAll("[data-auth-guest]").forEach((el) => {
@@ -64,25 +303,46 @@
     document.querySelectorAll("[data-auth-user]").forEach((el) => {
       setElementVisible(el, authed);
     });
+  }
+
+  const buildLoginUrl = (message) => {
+    const current = `${window.location.pathname}${window.location.search}`;
+    const query = new URLSearchParams();
+    query.set("returnUrl", current);
+
+    if (message) {
+      query.set("message", message);
+    }
+
+    return `${loginPage}?${query.toString()}`;
   };
 
   const redirectToLogin = (message) => {
-    const current = `${window.location.pathname}${window.location.search}`;
-    const returnUrl = encodeURIComponent(current);
-    const hint = message ? `&message=${encodeURIComponent(message)}` : "";
-    window.location.href = `${loginPage}?returnUrl=${returnUrl}${hint}`;
+    const target = buildLoginUrl(message);
+    if (currentPath() === normalizePath(loginPage)) {
+      return;
+    }
+
+    window.location.replace(target);
   };
 
   const apiGetMe = async () => {
     const token = getAccessToken();
-    if (!token) {
-      return { ok: false, status: 401, data: null };
-    }
 
     try {
+      const headers = {
+        Accept: "application/json",
+        "Cache-Control": "no-store",
+        Pragma: "no-cache",
+      };
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
       const response = await fetch("/api/auth/me", {
         method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
+        headers,
       });
 
       const contentType = response.headers.get("content-type") || "";
@@ -96,36 +356,74 @@
     }
   };
 
-  const requireAuth = async (options) => {
-    const opts = options || {};
-    const requiredRoles = Array.isArray(opts.roles) ? opts.roles : [];
-    const onForbidden =
-      typeof opts.onForbidden === "function" ? opts.onForbidden : null;
-
-    if (!isAuthenticated()) {
-      redirectToLogin("Vui lòng đăng nhập để tiếp tục.");
-      return null;
+  const validateSession = async () => {
+    if (validatedUser) {
+      return validatedUser;
     }
 
-    const me = await apiGetMe();
-    if (!me.ok || !me.data) {
-      clearSession();
-      redirectToLogin("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
-      return null;
+    if (validationPromise) {
+      return validationPromise;
     }
 
-    const role = String(me.data.role || "");
-    if (requiredRoles.length > 0 && !requiredRoles.includes(role)) {
-      if (onForbidden) {
-        onForbidden(me.data);
+    validationPromise = (async () => {
+      const me = await apiGetMe();
+      if (!me.ok || !me.data) {
+        clearSession();
         return null;
       }
 
-      window.location.href = "/home/dashboard.html";
+      return syncStoredUser(me.data);
+    })().finally(() => {
+      validationPromise = null;
+    });
+
+    return validationPromise;
+  };
+
+  
+  const roleMatches = (actualRole, requiredRoles) => {
+    const normalizedActualRole = String(actualRole || "").trim().toLowerCase();
+    const normalizedRequiredRoles = requiredRoles
+      .map((role) => String(role || "").trim().toLowerCase())
+      .filter(Boolean);
+
+    if (normalizedRequiredRoles.length === 0) {
+      return true;
+    }
+
+    return normalizedRequiredRoles.includes(normalizedActualRole);
+  };
+
+  const requireAuth = async (options) => {
+    const opts = options || {};
+    const requiredRoles = Array.isArray(opts.roles) ? opts.roles : [];
+    const onForbidden = typeof opts.onForbidden === "function" ? opts.onForbidden : null;
+    const shouldRedirect = opts.redirect !== false;
+
+    const me = await validateSession();
+    if (!me) {
+      if (shouldRedirect) {
+        if (requiredRoles.includes("admin")) {
+          const returnUrl = encodeURIComponent(`${window.location.pathname}${window.location.search}`);
+          window.location.replace(`/home/login.html?returnUrl=${returnUrl}`);
+        } else {
+          redirectToLogin("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+        }
+      }
       return null;
     }
 
-    return me.data;
+    if (!roleMatches(me.role, requiredRoles)) {
+      if (onForbidden) {
+        onForbidden(me);
+        return null;
+      }
+
+      window.location.replace(requiredRoles.includes("admin") ? "/unauthorized" : getDefaultLandingByRole(me.role));
+      return null;
+    }
+
+    return me;
   };
 
   const getInitials = (name, email) => {
@@ -142,6 +440,20 @@
     return source.slice(0, 2).toUpperCase();
   };
 
+  const resolveDisplayName = (fullName, email) => {
+    const fullNameText = String(fullName || "").trim();
+    if (fullNameText) {
+      return fullNameText;
+    }
+
+    const emailText = String(email || "").trim();
+    if (!emailText) {
+      return "Người dùng";
+    }
+
+    return emailText.split("@")[0] || emailText;
+  };
+
   const bindUserUi = (me, options) => {
     const opts = options || {};
     const nameSelector = opts.nameSelector || "[data-auth-name]";
@@ -150,11 +462,11 @@
     const logoutSelector = opts.logoutSelector || "[data-auth-logout]";
 
     document.querySelectorAll(nameSelector).forEach((el) => {
-      el.textContent = me.fullName || me.username || me.email || "User";
+      el.textContent = resolveDisplayName(me.fullName, me.email);
     });
 
     document.querySelectorAll(avatarSelector).forEach((el) => {
-      el.textContent = getInitials(me.fullName || me.username, me.email);
+      el.textContent = getInitials(me.fullName, me.email);
     });
 
     document.querySelectorAll(roleSelector).forEach((el) => {
@@ -164,25 +476,90 @@
     document.querySelectorAll(logoutSelector).forEach((el) => {
       el.addEventListener("click", (event) => {
         event.preventDefault();
-        clearSession();
-        window.location.href = loginPage;
+        void logout();
+        window.location.replace(loginPage);
       });
     });
+  };
+
+  const guardCurrentPage = async () => {
+    const page = getPageAccess();
+
+    if (page.kind === "auth") {
+      const me = await validateSession();
+      if (!me) {
+        clearSession();
+        return null;
+      }
+
+      window.location.replace(getDefaultLandingByRole(me.role));
+      return me;
+    }
+
+    if (page.kind === "protected") {
+      return requireAuth({ roles: page.roles });
+    }
+
+    if (!hasSessionArtifacts()) {
+      clearSession();
+      return null;
+    }
+
+    return validateSession();
+  };
+
+  const boot = () => {
+    bootPromise = guardCurrentPage()
+      .catch(() => {
+        clearSession();
+        return null;
+      })
+      .finally(() => {
+        bootCompleted = true;
+        applyAuthVisibility();
+        dispatchAuthChanged();
+      });
+
+    return bootPromise;
+  };
+
+  const refreshFromPageShow = () => {
+    const page = getPageAccess();
+    void guardCurrentPage();
+  };
+
+  const handleStorageChange = (event) => {
+    if (!event || !sessionKeys.includes(String(event.key || ""))) {
+      return;
+    }
+
+    const page = getPageAccess();
+    if (page.kind === "protected" && !hasSessionArtifacts()) {
+      clearSession();
+      redirectToLogin("Phiên đăng nhập đã thay đổi. Vui lòng đăng nhập lại.");
+      return;
+    }
+
+    void guardCurrentPage();
   };
 
   window.AuthClient = {
     getAccessToken,
     getCurrentUser,
     clearSession,
+    logout,
+    storeSession,
     isAuthenticated,
     requireAuth,
+    validateSession,
     applyAuthVisibility,
     bindUserUi,
+    getPageAccess,
+    whenReady: () => bootPromise,
   };
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", applyAuthVisibility, { once: true });
-  } else {
-    applyAuthVisibility();
-  }
+  window.addEventListener("pageshow", refreshFromPageShow);
+  window.addEventListener("storage", handleStorageChange);
+
+  boot();
 })();

@@ -3,15 +3,19 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Phân tích — SynapLearn</title>
+        <style id="instant-page-bg">html,body{background:#08131b!important;color:#eef6f7;}</style>
+<title>SynapLearn - Admin Control Room</title>
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg?v=20260402-tab3" />
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=20260402-tab3" />
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
     <link href="../css/style.css" rel="stylesheet" />
     <link href="../css/app-shell.css" rel="stylesheet" />
-</head>
-  <body>
+    <link href="../css/admin.css" rel="stylesheet" />
+  </head>
+  <body class="page-admin">
     <div id="page-loader" class="logo-loader">
       <div class="logo-loader-box">
         <div class="ai-orbit orbit-1"></div>
@@ -20,125 +24,629 @@
           <span>AI</span>
         </div>
         <h4>SynapLearn</h4>
-        <p>Hệ thống học tập thông minh đang khởi động</p>
+        <p>Đang tải trung tâm vận hành quản trị</p>
       </div>
     </div>
 
     <div class="page-content">
-<main class="container py-5">
-        <div class="row g-4">
-          <div class="col-lg-4">
-            <div class="glass p-4">
-              <h5 class="fw-semibold mb-3">Điểm số theo thời gian (demo)</h5>
-              <div class="text-muted-2 small mb-2">Tuần này</div>
-              <div class="progress mb-2">
-                <div class="progress-bar" style="width: 76%"></div>
-              </div>
-              <div class="d-flex justify-content-between text-muted-2 small">
-                <span>Avg</span><span>76%</span>
-              </div>
+      <div id="adminToastStack" class="admin-toast-stack" aria-live="polite" aria-atomic="true"></div>
 
-              <hr class="soft my-4" />
-              <h6 class="fw-semibold mb-2">Tỷ lệ đúng theo chủ đề</h6>
-              <div class="mb-2">
-                <div class="d-flex justify-content-between small text-muted-2">
-                  <span>Chương 1</span><span>82%</span>
-                </div>
-                <div class="progress">
-                  <div class="progress-bar" style="width: 82%"></div>
-                </div>
-              </div>
-              <div class="mb-2">
-                <div class="d-flex justify-content-between small text-muted-2">
-                  <span>Chương 2</span><span>70%</span>
-                </div>
-                <div class="progress">
-                  <div class="progress-bar" style="width: 70%"></div>
-                </div>
-              </div>
-              <div>
-                <div class="d-flex justify-content-between small text-muted-2">
-                  <span>Chương 3</span><span>45%</span>
-                </div>
-                <div class="progress">
-                  <div class="progress-bar" style="width: 45%"></div>
-                </div>
-              </div>
+      <aside id="detailsDrawer" class="details-drawer" aria-hidden="true">
+        <div class="details-drawer-backdrop" data-drawer-close></div>
+        <div class="details-drawer-panel">
+          <button id="closeDetailsDrawer" type="button" class="details-drawer-close" aria-label="Đóng panel">
+            <span aria-hidden="true">&times;</span>
+          </button>
+          <p id="detailsDrawerEyebrow" class="details-drawer-eyebrow">Nhật ký hệ thống</p>
+          <h2 id="detailsDrawerTitle" class="details-drawer-title">Chi tiết bản ghi</h2>
+          <p id="detailsDrawerMeta" class="details-drawer-meta"></p>
+          <pre id="detailsDrawerBody" class="details-drawer-body"></pre>
+        </div>
+      </aside>
+
+      <main class="admin-main container-fluid px-3 px-xl-4 py-4 py-xl-5">
+        <section class="admin-hero card-surface">
+          <div class="hero-copy">
+            <p class="hero-kicker mb-2">SynapLearn Operations</p>
+            <h1 class="hero-title mb-3">Admin Control Room</h1>
+            <p class="hero-sub mb-0">
+              Khu điều hành dành riêng cho quản trị: giám sát tăng trưởng, theo dõi AI, đọc audit log
+              và quản lý tài khoản admin từ một giao diện tách biệt hoàn toàn với khu vực người dùng.
+            </p>
+          </div>
+          <div class="hero-side">
+            <div class="live-badge-wrap">
+              <span id="healthBadge" class="health-badge">Đang đồng bộ</span>
+              <p class="hero-meta">Cập nhật gần nhất: <strong id="lastUpdatedValue">--</strong></p>
             </div>
-
-            <div class="glass p-4 mt-4">
-              <h6 class="fw-semibold mb-2">Gợi ý ôn tập</h6>
-              <div class="text-muted-2 small">
-                Bạn sai nhiều ở Chương 3 → Ôn lại keypoints + làm lại flashcard.
-              </div>
-              <div class="d-grid gap-2 mt-3">
-                <a class="btn btn-soft" href="content-detail.html"
-                  >Ôn lại nội dung</a
-                >
-                <a class="btn btn-outline-light" href="quiz.html"
-                  >Làm bài tổng hợp</a
-                >
-              </div>
+            <div class="hero-actions">
+              <a href="#workspace" class="btn btn-admin-secondary">Đi tới bàn điều hành</a>
+              <button id="refreshAllBtn" type="button" class="btn btn-admin-primary">Làm mới toàn bộ</button>
             </div>
           </div>
+        </section>
 
-          <div class="col-lg-8">
-            <div class="glass p-4">
-              <div
-                class="d-flex justify-content-between flex-wrap gap-2 align-items-center"
-              >
-                <h5 class="fw-semibold mb-0">Thống kê câu sai nhiều nhất</h5>
-                <a class="btn btn-outline-light btn-sm" href="history.html"
-                  >Xem lịch sử</a
-                >
+        <section class="command-strip card-surface">
+          <a href="#adminAccess" class="command-link">Quyền truy cập admin</a>
+          <a href="#systemIntel" class="command-link">Tín hiệu hệ thống</a>
+          <a href="#workspace" class="command-link">Quản trị dữ liệu</a>
+          <a href="#aiSystem" class="command-link">AI System</a>
+          <a href="#workspace" class="command-link">Đọc AI log</a>
+          <a href="#workspace" class="command-link">Đọc audit trail</a>
+        </section>
+
+        <section class="operations-grid">
+          <article class="card-surface operations-card pulse-card">
+            <div class="section-head">
+              <div>
+                <p class="section-kicker">System pulse</p>
+                <h2>Tín hiệu vận hành</h2>
               </div>
+              <span class="section-tag">Live</span>
+            </div>
+            <div id="healthSignals" class="health-signals"></div>
+          </article>
 
-              <div class="table-responsive mt-3">
-                <table class="table table-hover align-middle mb-0">
+          <article class="card-surface operations-card" id="adminAccess">
+            <div class="section-head">
+              <div>
+                <p class="section-kicker">Access control</p>
+                <h2>Tạo tài khoản admin mới</h2>
+              </div>
+              <span class="section-tag accent">Secure</span>
+            </div>
+            <form id="adminCreateForm" class="admin-create-form" novalidate>
+              <div class="form-grid">
+                <label class="field">
+                  <span>Username</span>
+                  <input id="adminUsername" class="form-control" type="text" maxlength="64" placeholder="admin.operations" required />
+                </label>
+                <label class="field">
+                  <span>Họ tên</span>
+                  <input id="adminFullName" class="form-control" type="text" maxlength="128" placeholder="Người quản trị hệ thống" required />
+                </label>
+                <label class="field field-wide">
+                  <span>Email</span>
+                  <input id="adminEmail" class="form-control" type="email" maxlength="256" placeholder="admin@example.com" required />
+                </label>
+                <label class="field">
+                  <span>Mật khẩu</span>
+                  <input id="adminPassword" class="form-control" type="password" placeholder="Tối thiểu 8 ký tự" required />
+                </label>
+                <label class="field">
+                  <span>Xác nhận mật khẩu</span>
+                  <input id="adminConfirmPassword" class="form-control" type="password" placeholder="Nhập lại mật khẩu" required />
+                </label>
+              </div>
+              <div class="form-note">
+                Tài khoản admin mới sẽ được xác thực email sẵn, mở khóa mặc định và ghi lại trong audit log.
+              </div>
+              <div class="form-actions">
+                <button id="adminCreateSubmit" type="submit" class="btn btn-admin-primary">Tạo admin mới</button>
+                <p id="adminCreateFeedback" class="inline-feedback" role="status" aria-live="polite"></p>
+              </div>
+            </form>
+          </article>
+
+          <article class="card-surface operations-card operations-card-wide">
+            <div class="section-head">
+              <div>
+                <p class="section-kicker">Privileged roster</p>
+                <h2>Danh sách admin hiện có</h2>
+              </div>
+              <span id="adminRosterMeta" class="section-tag neutral">0 tài khoản</span>
+            </div>
+            <div id="adminAccounts" class="admin-account-grid"></div>
+          </article>
+        </section>
+
+        <section class="kpi-grid" id="kpiGrid">
+          <article class="kpi-card card-surface">
+            <p>Tổng người dùng</p>
+            <h3 id="kpiTotalUsers">--</h3>
+          </article>
+          <article class="kpi-card card-surface">
+            <p>Tổng admin</p>
+            <h3 id="kpiTotalAdmins">--</h3>
+          </article>
+          <article class="kpi-card card-surface">
+            <p>Hoạt động 7 ngày</p>
+            <h3 id="kpiActiveUsers">--</h3>
+          </article>
+          <article class="kpi-card card-surface">
+            <p>Người dùng bị khóa</p>
+            <h3 id="kpiLockedUsers">--</h3>
+          </article>
+          <article class="kpi-card card-surface">
+            <p>Nội dung chờ duyệt</p>
+            <h3 id="kpiPendingModeration">--</h3>
+          </article>
+          <article class="kpi-card card-surface">
+            <p>Tổng nội dung</p>
+            <h3 id="kpiTotalContents">--</h3>
+          </article>
+          <article class="kpi-card card-surface">
+            <p>Tổng quiz</p>
+            <h3 id="kpiTotalQuizzes">--</h3>
+          </article>
+          <article class="kpi-card card-surface">
+            <p>AI gọi 24h</p>
+            <h3 id="kpiAiCalls24h">--</h3>
+          </article>
+          <article class="kpi-card card-surface">
+            <p>Lỗi AI 24h</p>
+            <h3 id="kpiAiErrors24h">--</h3>
+          </article>
+          <article class="kpi-card card-surface">
+            <p>Tỷ lệ lỗi AI</p>
+            <h3 id="kpiAiErrorRate">--</h3>
+          </article>
+          <article class="kpi-card card-surface">
+            <p>AI trung bình</p>
+            <h3 id="kpiAiAvgMs">--</h3>
+          </article>
+          <article class="kpi-card card-surface">
+            <p>Tài khoản xác thực</p>
+            <h3 id="kpiVerifiedUsers">--</h3>
+          </article>
+        </section>
+
+        <section id="systemIntel" class="intel-grid">
+          <article class="card-surface intel-panel">
+            <div class="section-head">
+              <div>
+                <p class="section-kicker">Traffic intelligence</p>
+                <h2>Xu hướng sử dụng 7 ngày</h2>
+              </div>
+            </div>
+            <div id="usageTrend" class="trend-bars"></div>
+          </article>
+
+          <article class="card-surface intel-panel">
+            <div class="section-head">
+              <div>
+                <p class="section-kicker">Growth leaders</p>
+                <h2>Người dùng đóng góp nhiều nhất</h2>
+              </div>
+            </div>
+            <div id="topContributors" class="contributors-list"></div>
+          </article>
+
+          <article class="card-surface intel-panel intel-panel-wide">
+            <div class="section-head">
+              <div>
+                <p class="section-kicker">Recent stream</p>
+                <h2>Hoạt động hệ thống gần đây</h2>
+              </div>
+            </div>
+            <div id="recentActivities" class="activity-list"></div>
+          </article>
+        </section>
+
+        <section id="workspace" class="card-surface admin-workspace">
+          <div class="workspace-head">
+            <div>
+              <p class="section-kicker">Operations desk</p>
+              <h2>Bàn điều hành quản trị</h2>
+            </div>
+            <p class="workspace-meta">Chuyển nhanh giữa quản trị người dùng, kiểm duyệt dữ liệu và đọc log hệ thống.</p>
+          </div>
+
+          <div class="workspace-tabs" role="tablist" aria-label="Admin sections">
+            <button class="workspace-tab active" data-tab="users" role="tab" aria-selected="true">Users</button>
+            <button class="workspace-tab" data-tab="moderation" role="tab" aria-selected="false">Moderation</button>
+            <button class="workspace-tab" data-tab="aiSystem" role="tab" aria-selected="false">AI System</button>
+            <button class="workspace-tab" data-tab="aiLogs" role="tab" aria-selected="false">AI Logs</button>
+            <button class="workspace-tab" data-tab="audit" role="tab" aria-selected="false">Audit Trail</button>
+          </div>
+
+          <div class="workspace-panel active" data-panel="users" role="tabpanel">
+            <div class="toolbar">
+              <input id="userQuery" class="form-control" type="search" placeholder="Tìm username, họ tên hoặc email" />
+              <select id="userStatus" class="form-select">
+                <option value="all">Tất cả trạng thái</option>
+                <option value="active">Đang hoạt động</option>
+                <option value="locked">Đã khóa</option>
+              </select>
+              <select id="userRole" class="form-select">
+                <option value="all">Tất cả vai trò</option>
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+              </select>
+              <button id="applyUserFilter" class="btn btn-admin-secondary" type="button">Áp dụng</button>
+            </div>
+            <div class="table-shell">
+              <div class="table-responsive">
+                <table class="table admin-table align-middle" id="usersTable">
                   <thead>
                     <tr>
-                      <th>Câu hỏi</th>
-                      <th>Chủ đề</th>
-                      <th>Số lần sai</th>
+                      <th>Người dùng</th>
+                      <th>Vai trò</th>
+                      <th>Trạng thái</th>
+                      <th>Nội dung</th>
+                      <th>Quiz</th>
+                      <th>Tạo lúc</th>
                       <th class="text-end">Hành động</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    <tr>
-                      <td>(Demo) Khái niệm X là gì?</td>
-                      <td><span class="badge badge-soft">Chương 3</span></td>
-                      <td><span class="badge text-bg-danger">6</span></td>
-                      <td class="text-end">
-                        <button class="btn btn-soft btn-sm">Ôn lại</button>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>(Demo) Điều kiện Y áp dụng khi nào?</td>
-                      <td><span class="badge badge-soft">Chương 2</span></td>
-                      <td><span class="badge text-bg-warning">4</span></td>
-                      <td class="text-end">
-                        <button class="btn btn-soft btn-sm">Ôn lại</button>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>(Demo) Công thức Z đúng là?</td>
-                      <td><span class="badge badge-soft">Chương 1</span></td>
-                      <td><span class="badge text-bg-warning">3</span></td>
-                      <td class="text-end">
-                        <button class="btn btn-soft btn-sm">Ôn lại</button>
-                      </td>
-                    </tr>
-                  </tbody>
+                  <tbody></tbody>
                 </table>
               </div>
             </div>
+            <div class="pager" id="usersPager"></div>
           </div>
-        </div>
-      </main>
 
+          <div class="workspace-panel" data-panel="moderation" role="tabpanel" hidden>
+            <div class="toolbar">
+              <input id="contentQuery" class="form-control" type="search" placeholder="Tìm theo tên nội dung hoặc user" />
+              <select id="contentStatus" class="form-select">
+                <option value="all">Tất cả trạng thái duyệt</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+                <option value="none">Chưa có moderation</option>
+              </select>
+              <button id="applyContentFilter" class="btn btn-admin-secondary" type="button">Áp dụng</button>
+            </div>
+            <div class="table-shell">
+              <div class="table-responsive">
+                <table class="table admin-table align-middle" id="contentsTable">
+                  <thead>
+                    <tr>
+                      <th>Nội dung</th>
+                      <th>Người tạo</th>
+                      <th>Nguồn</th>
+                      <th>Moderation</th>
+                      <th>Tạo lúc</th>
+                      <th class="text-end">Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="pager" id="contentsPager"></div>
+          </div>
+
+          <div class="workspace-panel" data-panel="aiLogs" role="tabpanel" hidden>
+            <div class="toolbar toolbar-compact">
+              <label class="toggle-inline">
+                <input id="errorsOnly" type="checkbox" />
+                <span>Chỉ hiển thị lỗi</span>
+              </label>
+              <button id="refreshAiLogs" class="btn btn-admin-secondary" type="button">Làm mới AI logs</button>
+            </div>
+            <div class="table-shell">
+              <div class="table-responsive">
+                <table class="table admin-table align-middle" id="aiLogsTable">
+                  <thead>
+                    <tr>
+                      <th>Action</th>
+                      <th>Actor</th>
+                      <th>Trạng thái</th>
+                      <th>Processing</th>
+                      <th>Thời gian</th>
+                      <th class="text-end">Chi tiết</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="pager" id="aiLogsPager"></div>
+          </div>
+
+          <div class="workspace-panel" data-panel="aiSystem" role="tabpanel" hidden>
+            <div class="workspace-head-inline">
+              <div>
+                <p class="section-kicker mb-1">AI runtime control</p>
+                <h3 class="admin-inline-title">AI System</h3>
+              </div>
+              <p id="aiSystemMeta" class="workspace-meta">Điều chỉnh provider, model, token budget và các tham số vận hành AI theo thời gian thực.</p>
+            </div>
+
+            <form id="aiSystemForm" class="admin-create-form ai-system-form" novalidate>
+              <div class="ai-system-grid">
+                <article class="card-surface ai-settings-card">
+                  <div class="section-head">
+                    <div>
+                      <p class="section-kicker">Routing</p>
+                      <h2>Điều phối provider</h2>
+                    </div>
+                    <span class="section-tag neutral">Live</span>
+                  </div>
+                  <div class="form-grid">
+                    <label class="field">
+                      <span>Provider text chính</span>
+                      <select id="aiPrimaryTextProvider" class="form-select">
+                        <option value="gemini">Gemini</option>
+                        <option value="groq">Groq</option>
+                      </select>
+                    </label>
+                    <label class="field">
+                      <span>Provider vision chính</span>
+                      <select id="aiPrimaryVisionProvider" class="form-select">
+                        <option value="gemini">Gemini</option>
+                        <option value="groq">Groq</option>
+                      </select>
+                    </label>
+                    <label class="field">
+                      <span>Text output tokens</span>
+                      <input id="aiTextOutputTokenBudget" class="form-control" type="number" min="100" max="10000" />
+                    </label>
+                    <label class="field">
+                      <span>Quiz output tokens</span>
+                      <input id="aiQuizOutputTokenBudget" class="form-control" type="number" min="100" max="10000" />
+                    </label>
+                    <label class="field">
+                      <span>Image output tokens</span>
+                      <input id="aiImageOutputTokenBudget" class="form-control" type="number" min="100" max="10000" />
+                    </label>
+                    <label class="field">
+                      <span>Approx chars/token</span>
+                      <input id="aiApproxCharsPerToken" class="form-control" type="number" min="2" max="8" />
+                    </label>
+                    <label class="field">
+                      <span>Gemini daily token budget</span>
+                      <input id="aiGeminiDailyTokenBudget" class="form-control" type="number" min="0" />
+                    </label>
+                    <label class="field">
+                      <span>Groq daily token budget</span>
+                      <input id="aiGroqDailyTokenBudget" class="form-control" type="number" min="0" />
+                    </label>
+                    <label class="field">
+                      <span>Reserved tokens/provider</span>
+                      <input id="aiMinReservedTokensPerProvider" class="form-control" type="number" min="0" />
+                    </label>
+                    <label class="field">
+                      <span>Provider timeout (ms)</span>
+                      <input id="aiProviderExecutionTimeoutMs" class="form-control" type="number" min="1500" max="30000" />
+                    </label>
+                    <label class="field">
+                      <span>Slow threshold (ms)</span>
+                      <input id="aiSlowRequestThresholdMs" class="form-control" type="number" min="1000" max="60000" />
+                    </label>
+                    <label class="field">
+                      <span>Slow streak threshold</span>
+                      <input id="aiSlowRequestStreakThreshold" class="form-control" type="number" min="1" max="5" />
+                    </label>
+                    <label class="field">
+                      <span>Failure threshold</span>
+                      <input id="aiConsecutiveFailureThreshold" class="form-control" type="number" min="1" max="10" />
+                    </label>
+                    <label class="field">
+                      <span>Cooldown (giây)</span>
+                      <input id="aiProviderCooldownSeconds" class="form-control" type="number" min="5" max="300" />
+                    </label>
+                  </div>
+                  <div class="ai-settings-toggle-grid">
+                    <label class="toggle-inline">
+                      <input id="aiEnforceDailyTokenBudget" type="checkbox" />
+                      <span>Bật giới hạn token ngày</span>
+                    </label>
+                    <label class="toggle-inline">
+                      <input id="aiEnableProviderHealthSwitch" type="checkbox" />
+                      <span>Bật auto health switch</span>
+                    </label>
+                    <label class="toggle-inline">
+                      <input id="aiPreferFastestHealthyProvider" type="checkbox" />
+                      <span>Ưu tiên provider nhanh nhất</span>
+                    </label>
+                  </div>
+                </article>
+
+                <article class="card-surface ai-settings-card" id="aiSystem">
+                  <div class="section-head">
+                    <div>
+                      <p class="section-kicker">Gemini</p>
+                      <h2>Cấu hình Gemini</h2>
+                    </div>
+                    <span id="aiGeminiKeyStatus" class="section-tag neutral">Chưa có API key</span>
+                  </div>
+                  <div class="form-grid">
+                    <label class="field field-wide">
+                      <span>Gemini API key mới</span>
+                      <input id="aiGeminiApiKey" class="form-control" type="password" placeholder="Để trống nếu giữ nguyên" autocomplete="new-password" />
+                    </label>
+                    <label class="field">
+                      <span>Base URL</span>
+                      <input id="aiGeminiBaseUrl" class="form-control" type="text" />
+                    </label>
+                    <label class="field">
+                      <span>Text model</span>
+                      <input id="aiGeminiTextModel" class="form-control" type="text" />
+                    </label>
+                    <label class="field">
+                      <span>Vision model</span>
+                      <input id="aiGeminiVisionModel" class="form-control" type="text" />
+                    </label>
+                    <label class="field">
+                      <span>Max input chars</span>
+                      <input id="aiGeminiMaxInputCharacters" class="form-control" type="number" min="0" />
+                    </label>
+                    <label class="field">
+                      <span>Max quiz input chars</span>
+                      <input id="aiGeminiMaxQuizInputCharacters" class="form-control" type="number" min="0" />
+                    </label>
+                    <label class="field">
+                      <span>Timeout (giây)</span>
+                      <input id="aiGeminiRequestTimeoutSeconds" class="form-control" type="number" min="5" max="120" />
+                    </label>
+                    <label class="field">
+                      <span>Max model candidates</span>
+                      <input id="aiGeminiMaxModelCandidates" class="form-control" type="number" min="1" max="5" />
+                    </label>
+                    <label class="field">
+                      <span>Max retries/model</span>
+                      <input id="aiGeminiMaxRetriesPerModel" class="form-control" type="number" min="0" max="3" />
+                    </label>
+                    <label class="field field-wide">
+                      <span>Fallback models</span>
+                      <textarea id="aiGeminiFallbackModels" class="form-control" rows="4" placeholder="Mỗi dòng một model hoặc phân tách bằng dấu phẩy"></textarea>
+                    </label>
+                  </div>
+                  <div class="ai-settings-toggle-grid">
+                    <label class="toggle-inline">
+                      <input id="aiGeminiClearApiKey" type="checkbox" />
+                      <span>Xóa API key Gemini đang lưu</span>
+                    </label>
+                  </div>
+                </article>
+
+                <article class="card-surface ai-settings-card">
+                  <div class="section-head">
+                    <div>
+                      <p class="section-kicker">Groq</p>
+                      <h2>Cấu hình Groq</h2>
+                    </div>
+                    <span id="aiGroqKeyStatus" class="section-tag neutral">Chưa có API key</span>
+                  </div>
+                  <div class="form-grid">
+                    <label class="field field-wide">
+                      <span>Groq API key mới</span>
+                      <input id="aiGroqApiKey" class="form-control" type="password" placeholder="Để trống nếu giữ nguyên" autocomplete="new-password" />
+                    </label>
+                    <label class="field">
+                      <span>Base URL</span>
+                      <input id="aiGroqBaseUrl" class="form-control" type="text" />
+                    </label>
+                    <label class="field">
+                      <span>Text model</span>
+                      <input id="aiGroqTextModel" class="form-control" type="text" />
+                    </label>
+                    <label class="field">
+                      <span>Vision model</span>
+                      <input id="aiGroqVisionModel" class="form-control" type="text" />
+                    </label>
+                    <label class="field">
+                      <span>Audio model</span>
+                      <input id="aiGroqAudioModel" class="form-control" type="text" />
+                    </label>
+                    <label class="field">
+                      <span>Max input chars</span>
+                      <input id="aiGroqMaxInputCharacters" class="form-control" type="number" min="0" />
+                    </label>
+                    <label class="field">
+                      <span>Max quiz input chars</span>
+                      <input id="aiGroqMaxQuizInputCharacters" class="form-control" type="number" min="0" />
+                    </label>
+                    <label class="field">
+                      <span>Timeout (giây)</span>
+                      <input id="aiGroqRequestTimeoutSeconds" class="form-control" type="number" min="5" max="120" />
+                    </label>
+                    <label class="field">
+                      <span>Max model candidates</span>
+                      <input id="aiGroqMaxModelCandidates" class="form-control" type="number" min="1" max="5" />
+                    </label>
+                    <label class="field">
+                      <span>Max concurrent requests</span>
+                      <input id="aiGroqMaxConcurrentRequests" class="form-control" type="number" min="1" max="16" />
+                    </label>
+                    <label class="field">
+                      <span>Queue wait timeout (giây)</span>
+                      <input id="aiGroqQueueWaitTimeoutSeconds" class="form-control" type="number" min="1" max="60" />
+                    </label>
+                    <label class="field">
+                      <span>Max retries/model</span>
+                      <input id="aiGroqMaxRetriesPerModel" class="form-control" type="number" min="0" max="3" />
+                    </label>
+                    <label class="field">
+                      <span>Response cache (ngày)</span>
+                      <input id="aiGroqResponseCacheDays" class="form-control" type="number" min="1" max="30" />
+                    </label>
+                    <label class="field field-wide">
+                      <span>Fallback models</span>
+                      <textarea id="aiGroqFallbackModels" class="form-control" rows="4" placeholder="Mỗi dòng một model hoặc phân tách bằng dấu phẩy"></textarea>
+                    </label>
+                  </div>
+                  <div class="ai-settings-toggle-grid">
+                    <label class="toggle-inline">
+                      <input id="aiGroqEnableResponseCache" type="checkbox" />
+                      <span>Bật response cache cho Groq</span>
+                    </label>
+                    <label class="toggle-inline">
+                      <input id="aiGroqClearApiKey" type="checkbox" />
+                      <span>Xóa API key Groq đang lưu</span>
+                    </label>
+                  </div>
+                </article>
+              </div>
+
+              <div class="form-note ai-system-footnote">
+                Thay đổi ở mục này áp dụng cho các lượt gọi AI tiếp theo. API key hiện tại không được hiển thị lại trên giao diện vì lý do bảo mật.
+              </div>
+              <div class="form-actions">
+                <button id="aiSystemReset" type="button" class="btn btn-admin-secondary">Khôi phục form</button>
+                <button id="aiSystemSubmit" type="submit" class="btn btn-admin-primary">Lưu cấu hình AI</button>
+                <p id="aiSystemFeedback" class="inline-feedback" role="status" aria-live="polite"></p>
+              </div>
+            </form>
+          </div>
+
+          <div class="workspace-panel" data-panel="audit" role="tabpanel" hidden>
+            <div class="toolbar toolbar-compact">
+              <button id="refreshAuditLogs" class="btn btn-admin-secondary" type="button">Làm mới audit trail</button>
+            </div>
+            <div class="table-shell">
+              <div class="table-responsive">
+                <table class="table admin-table align-middle" id="auditTable">
+                  <thead>
+                    <tr>
+                      <th>Admin</th>
+                      <th>Action</th>
+                      <th>Target</th>
+                      <th>Tóm tắt</th>
+                      <th>Thời gian</th>
+                      <th class="text-end">Chi tiết</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="pager" id="auditPager"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="modal fade" id="adminActionModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <form id="adminActionForm" class="modal-content admin-modal-content">
+          <div class="modal-header border-0 pb-1">
+            <div>
+              <p id="adminActionEyebrow" class="modal-eyebrow mb-1">Admin action</p>
+              <h5 id="adminActionTitle" class="modal-title fw-bold">Xác nhận thao tác</h5>
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body pt-2">
+            <p id="adminActionDescription" class="modal-description"></p>
+            <input id="adminActionKind" type="hidden" />
+            <input id="adminActionTargetId" type="hidden" />
+            <label class="field">
+              <span id="adminActionReasonLabel">Ghi chú</span>
+              <textarea
+                id="adminActionReason"
+                class="form-control"
+                rows="4"
+                placeholder="Nhập ghi chú để lưu vào audit log"
+              ></textarea>
+            </label>
+            <p id="adminActionFeedback" class="inline-feedback mt-3" role="status" aria-live="polite"></p>
+          </div>
+          <div class="modal-footer border-0 pt-1">
+            <button type="button" class="btn btn-admin-secondary" data-bs-dismiss="modal">Huỷ</button>
+            <button id="adminActionSubmit" type="submit" class="btn btn-admin-primary">Xác nhận</button>
+          </div>
+        </form>
       </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/auth.js"></script>
     <script src="../assets/js/main.js"></script>
+    <script src="../js/admin.js"></script>
     <script src="../js/app-shell.js"></script>
-</body>
+  </body>
 </html>
