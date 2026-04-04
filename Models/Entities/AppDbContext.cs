@@ -29,6 +29,19 @@ namespace Web_Project.Models
             base.OnModelCreating(modelBuilder);
 
             ApplyUtcDateTimeConverters(modelBuilder);
+            var isPostgres = Database.IsNpgsql();
+
+            var userIdNotNullFilter = isPostgres ? "\"UserId\" IS NOT NULL" : "[UserId] IS NOT NULL";
+            var guestSessionIdNotNullFilter = isPostgres ? "\"GuestSessionId\" IS NOT NULL" : "[GuestSessionId] IS NOT NULL";
+            var dailyUsageActorConstraint = isPostgres
+                ? "((\"UserId\" IS NOT NULL AND \"GuestSessionId\" IS NULL) OR (\"UserId\" IS NULL AND \"GuestSessionId\" IS NOT NULL))"
+                : "(([UserId] IS NOT NULL AND [GuestSessionId] IS NULL) OR ([UserId] IS NULL AND [GuestSessionId] IS NOT NULL))";
+            var contentSourceTypeConstraint = isPostgres
+                ? "\"SourceType\" IN ('FileUpload', 'TextUrl', 'VideoUrl', 'DocumentUrl')"
+                : "[SourceType] IN (N'FileUpload', N'TextUrl', N'VideoUrl', N'DocumentUrl')";
+            var contentUrlFieldsConstraint = isPostgres
+                ? "((\"SourceType\" = 'FileUpload' AND \"SourceUrl\" IS NULL AND \"FetchStatus\" IS NULL AND \"FetchError\" IS NULL) OR (\"SourceType\" <> 'FileUpload' AND \"SourceUrl\" IS NOT NULL AND \"FetchStatus\" IS NOT NULL))"
+                : "(([SourceType] = N'FileUpload' AND [SourceUrl] IS NULL AND [FetchStatus] IS NULL AND [FetchError] IS NULL) OR ([SourceType] <> N'FileUpload' AND [SourceUrl] IS NOT NULL AND [FetchStatus] IS NOT NULL))";
 
             foreach (var relationship in modelBuilder.Model.GetEntityTypes()
                          .SelectMany(e => e.GetForeignKeys()))
@@ -74,17 +87,17 @@ namespace Web_Project.Models
             modelBuilder.Entity<DailyUsageCounter>()
                 .HasIndex(x => new { x.UsageDate, x.UserId })
                 .IsUnique()
-                .HasFilter("[UserId] IS NOT NULL");
+                .HasFilter(userIdNotNullFilter);
 
             modelBuilder.Entity<DailyUsageCounter>()
                 .HasIndex(x => new { x.UsageDate, x.GuestSessionId })
                 .IsUnique()
-                .HasFilter("[GuestSessionId] IS NOT NULL");
+                .HasFilter(guestSessionIdNotNullFilter);
 
             modelBuilder.Entity<DailyUsageCounter>()
                 .ToTable(t => t.HasCheckConstraint(
                     "CK_DailyUsageCounters_Actor",
-                    "(([UserId] IS NOT NULL AND [GuestSessionId] IS NULL) OR ([UserId] IS NULL AND [GuestSessionId] IS NOT NULL))"));
+                    dailyUsageActorConstraint));
 
             modelBuilder.Entity<DailyUsageCounter>()
                 .HasOne(x => x.User)
@@ -123,12 +136,12 @@ namespace Web_Project.Models
             modelBuilder.Entity<Content>()
                 .ToTable(t => t.HasCheckConstraint(
                     "CK_Contents_SourceType",
-                    "[SourceType] IN (N'FileUpload', N'TextUrl', N'VideoUrl', N'DocumentUrl')"));
+                    contentSourceTypeConstraint));
 
             modelBuilder.Entity<Content>()
                 .ToTable(t => t.HasCheckConstraint(
                     "CK_Contents_UrlFieldsBySource",
-                    "(([SourceType] = N'FileUpload' AND [SourceUrl] IS NULL AND [FetchStatus] IS NULL AND [FetchError] IS NULL) OR ([SourceType] <> N'FileUpload' AND [SourceUrl] IS NOT NULL AND [FetchStatus] IS NOT NULL))"));
+                    contentUrlFieldsConstraint));
 
             modelBuilder.Entity<AdminAuditLog>()
                 .HasOne(x => x.AdminUser)
@@ -168,6 +181,9 @@ namespace Web_Project.Models
                 .WithMany()
                 .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<StudyStatistic>()
+                .HasQueryFilter(x => x.User.Status);
 
             modelBuilder.Entity<StudyStatistic>()
                 .HasOne(x => x.User)

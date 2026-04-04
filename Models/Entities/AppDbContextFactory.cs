@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
+using Web_Project.Infrastructure;
 
 namespace Web_Project.Models
 {
@@ -15,11 +16,19 @@ namespace Web_Project.Models
                 .AddEnvironmentVariables()
                 .Build();
 
-            var connectionString = configuration.GetConnectionString("DefaultConnection")
-                ?? throw new InvalidOperationException("Connection string 'DefaultConnection' was not found.");
-
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-            optionsBuilder.UseSqlServer(connectionString);
+            var databaseProvider = DatabaseConnectionResolver.ResolveDatabaseProvider(configuration);
+
+            if (databaseProvider.Equals("PostgreSQL", StringComparison.OrdinalIgnoreCase) ||
+                databaseProvider.Equals("Postgres", StringComparison.OrdinalIgnoreCase) ||
+                databaseProvider.Equals("Npgsql", StringComparison.OrdinalIgnoreCase))
+            {
+                optionsBuilder.UseNpgsql(DatabaseConnectionResolver.ResolvePostgresConnectionString(configuration));
+            }
+            else
+            {
+                optionsBuilder.UseSqlServer(DatabaseConnectionResolver.ResolveSqlServerConnectionString(configuration));
+            }
 
             return new AppDbContext(optionsBuilder.Options);
         }

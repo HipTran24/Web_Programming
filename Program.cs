@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IO.Compression;
 using System.Security.Claims;
+using Web_Project.Infrastructure;
 using Web_Project.Models;
 using Web_Project.Middleware;
 using Web_Project.Security;
@@ -17,109 +18,6 @@ using Web_Project.Services.Quiz;
 using Web_Project.Services.Users;
 
 var builder = WebApplication.CreateBuilder(args);
-
-static string ResolveDatabaseProvider(IConfiguration configuration)
-{
-    var configuredProvider = configuration["DatabaseProvider"]?.Trim();
-    if (!string.IsNullOrWhiteSpace(configuredProvider))
-    {
-        return configuredProvider;
-    }
-
-    if (!string.IsNullOrWhiteSpace(configuration["DATABASE_URL"]))
-    {
-        return "PostgreSQL";
-    }
-
-    var defaultConnection = configuration.GetConnectionString("DefaultConnection");
-    if (!string.IsNullOrWhiteSpace(defaultConnection) &&
-        (defaultConnection.Contains("Host=", StringComparison.OrdinalIgnoreCase) ||
-         defaultConnection.Contains("Username=", StringComparison.OrdinalIgnoreCase)))
-    {
-        return "PostgreSQL";
-    }
-
-    return "SqlServer";
-}
-
-static string ResolveSqlServerConnectionString(IConfiguration configuration)
-{
-    var dbHost = configuration["DB_HOST"]?.Trim();
-    if (string.IsNullOrWhiteSpace(dbHost))
-    {
-        return configuration.GetConnectionString("DefaultConnection")
-            ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is not configured.");
-    }
-
-    var dbPort = configuration["DB_PORT"]?.Trim();
-    var dbName = configuration["DB_NAME"]?.Trim();
-    var dbUser = configuration["DB_USER"]?.Trim();
-    var dbPassword = configuration["DB_PASSWORD"]?.Trim();
-    var dbEncrypt = configuration["DB_ENCRYPT"]?.Trim();
-    var dbTrustServerCertificate = configuration["DB_TRUST_SERVER_CERTIFICATE"]?.Trim();
-
-    if (string.IsNullOrWhiteSpace(dbPassword))
-    {
-        dbPassword = configuration["DB_SA_PASSWORD"]?.Trim();
-    }
-
-    return $"Server={dbHost},{(string.IsNullOrWhiteSpace(dbPort) ? "1433" : dbPort)};" +
-           $"Database={(string.IsNullOrWhiteSpace(dbName) ? "myDB" : dbName)};" +
-           $"User Id={(string.IsNullOrWhiteSpace(dbUser) ? "sa" : dbUser)};" +
-           $"Password={dbPassword};" +
-           $"TrustServerCertificate={(string.IsNullOrWhiteSpace(dbTrustServerCertificate) ? "True" : dbTrustServerCertificate)};" +
-           $"Encrypt={(string.IsNullOrWhiteSpace(dbEncrypt) ? "False" : dbEncrypt)};";
-}
-
-static string ResolvePostgresConnectionString(IConfiguration configuration)
-{
-    var databaseUrl = configuration["DATABASE_URL"]?.Trim();
-    if (!string.IsNullOrWhiteSpace(databaseUrl))
-    {
-        return databaseUrl;
-    }
-
-    var defaultConnection = configuration.GetConnectionString("DefaultConnection");
-    if (!string.IsNullOrWhiteSpace(defaultConnection) &&
-        (defaultConnection.Contains("Host=", StringComparison.OrdinalIgnoreCase) ||
-         defaultConnection.Contains("Username=", StringComparison.OrdinalIgnoreCase)))
-    {
-        return defaultConnection;
-    }
-
-    var dbHost = configuration["PGHOST"]?.Trim()
-        ?? configuration["POSTGRES_HOST"]?.Trim()
-        ?? configuration["DB_HOST"]?.Trim();
-    var dbPort = configuration["PGPORT"]?.Trim()
-        ?? configuration["POSTGRES_PORT"]?.Trim()
-        ?? configuration["DB_PORT"]?.Trim();
-    var dbName = configuration["PGDATABASE"]?.Trim()
-        ?? configuration["POSTGRES_DB"]?.Trim()
-        ?? configuration["DB_NAME"]?.Trim();
-    var dbUser = configuration["PGUSER"]?.Trim()
-        ?? configuration["POSTGRES_USER"]?.Trim()
-        ?? configuration["DB_USER"]?.Trim();
-    var dbPassword = configuration["PGPASSWORD"]?.Trim()
-        ?? configuration["POSTGRES_PASSWORD"]?.Trim()
-        ?? configuration["DB_PASSWORD"]?.Trim();
-    var sslMode = configuration["POSTGRES_SSL_MODE"]?.Trim()
-        ?? configuration["PGSSLMODE"]?.Trim()
-        ?? "Prefer";
-    var trustServerCertificate = configuration["POSTGRES_TRUST_SERVER_CERTIFICATE"]?.Trim() ?? "true";
-
-    if (string.IsNullOrWhiteSpace(dbHost))
-    {
-        throw new InvalidOperationException("PostgreSQL is selected but no PostgreSQL connection information is configured.");
-    }
-
-    return $"Host={dbHost};" +
-           $"Port={(string.IsNullOrWhiteSpace(dbPort) ? "5432" : dbPort)};" +
-           $"Database={(string.IsNullOrWhiteSpace(dbName) ? "postgres" : dbName)};" +
-           $"Username={(string.IsNullOrWhiteSpace(dbUser) ? "postgres" : dbUser)};" +
-           $"Password={dbPassword};" +
-           $"SSL Mode={sslMode};" +
-           $"Trust Server Certificate={trustServerCertificate};";
-}
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -141,17 +39,17 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
 });
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    var databaseProvider = ResolveDatabaseProvider(builder.Configuration);
+    var databaseProvider = DatabaseConnectionResolver.ResolveDatabaseProvider(builder.Configuration);
 
     if (databaseProvider.Equals("PostgreSQL", StringComparison.OrdinalIgnoreCase) ||
         databaseProvider.Equals("Postgres", StringComparison.OrdinalIgnoreCase) ||
         databaseProvider.Equals("Npgsql", StringComparison.OrdinalIgnoreCase))
     {
-        options.UseNpgsql(ResolvePostgresConnectionString(builder.Configuration));
+        options.UseNpgsql(DatabaseConnectionResolver.ResolvePostgresConnectionString(builder.Configuration));
         return;
     }
 
-    options.UseSqlServer(ResolveSqlServerConnectionString(builder.Configuration));
+    options.UseSqlServer(DatabaseConnectionResolver.ResolveSqlServerConnectionString(builder.Configuration));
 });
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"));
 builder.Services.Configure<EmailOtpSettings>(builder.Configuration.GetSection("EmailOtp"));
