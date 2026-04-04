@@ -18,6 +18,35 @@ using Web_Project.Services.Users;
 
 var builder = WebApplication.CreateBuilder(args);
 
+static string ResolveSqlServerConnectionString(IConfiguration configuration)
+{
+    var dbHost = configuration["DB_HOST"]?.Trim();
+    if (string.IsNullOrWhiteSpace(dbHost))
+    {
+        return configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is not configured.");
+    }
+
+    var dbPort = configuration["DB_PORT"]?.Trim();
+    var dbName = configuration["DB_NAME"]?.Trim();
+    var dbUser = configuration["DB_USER"]?.Trim();
+    var dbPassword = configuration["DB_PASSWORD"]?.Trim();
+    var dbEncrypt = configuration["DB_ENCRYPT"]?.Trim();
+    var dbTrustServerCertificate = configuration["DB_TRUST_SERVER_CERTIFICATE"]?.Trim();
+
+    if (string.IsNullOrWhiteSpace(dbPassword))
+    {
+        dbPassword = configuration["DB_SA_PASSWORD"]?.Trim();
+    }
+
+    return $"Server={dbHost},{(string.IsNullOrWhiteSpace(dbPort) ? "1433" : dbPort)};" +
+           $"Database={(string.IsNullOrWhiteSpace(dbName) ? "myDB" : dbName)};" +
+           $"User Id={(string.IsNullOrWhiteSpace(dbUser) ? "sa" : dbUser)};" +
+           $"Password={dbPassword};" +
+           $"TrustServerCertificate={(string.IsNullOrWhiteSpace(dbTrustServerCertificate) ? "True" : dbTrustServerCertificate)};" +
+           $"Encrypt={(string.IsNullOrWhiteSpace(dbEncrypt) ? "False" : dbEncrypt)};";
+}
+
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddHttpClient();
@@ -37,7 +66,7 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
     options.Level = CompressionLevel.Fastest;
 });
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(ResolveSqlServerConnectionString(builder.Configuration)));
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"));
 builder.Services.Configure<EmailOtpSettings>(builder.Configuration.GetSection("EmailOtp"));
 builder.Services.Configure<GroqSettings>(builder.Configuration.GetSection("Groq"));
@@ -318,6 +347,7 @@ app.UseAuthorization();
 app.UseMiddleware<PortalRoutingMiddleware>();
 
 app.MapControllers();
+app.MapGet("/healthz", () => Results.Ok(new { status = "ok" }));
 
 app.MapStaticAssets();
 
