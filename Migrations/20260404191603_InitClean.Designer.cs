@@ -12,7 +12,7 @@ using Web_Project.Models;
 namespace Wed_Project.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260404191150_InitClean")]
+    [Migration("20260404191603_InitClean")]
     partial class InitClean
     {
         /// <inheritdoc />
