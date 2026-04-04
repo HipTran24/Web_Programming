@@ -1,5 +1,13 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 
+.page-register #app-shell-navbar,
+.page-register #app-shell-sidebar,
+.page-register #app-shell-backdrop,
+.page-register nav.navbar,
+.page-register #navbar {
+  display: none !important;
+}
+
 .page-register {
   --register-bg-start: #060d1f;
   --register-bg-mid: #0a1734;

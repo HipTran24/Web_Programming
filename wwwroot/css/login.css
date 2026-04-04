@@ -1,4 +1,12 @@
 /* Fix triệt để autofill input không bị nền trắng trên mọi trình duyệt */
+.page-login #app-shell-navbar,
+.page-login #app-shell-sidebar,
+.page-login #app-shell-backdrop,
+.page-login nav.navbar,
+.page-login #navbar {
+  display: none !important;
+}
+
 .page-login input.floating-input:-webkit-autofill,
 .page-login input.floating-input:-webkit-autofill:focus,
 .page-login input.floating-input:-webkit-autofill:hover,

@@ -989,7 +989,7 @@
   async function mountShell() {
     hideLegacyNavAndSidebar();
 
-    if (document.body.classList.contains("page-login")) {
+    if (document.body.classList.contains("page-login") || document.body.classList.contains("page-register")) {
       document.body.removeAttribute("data-shell-page");
       removeShellArtifacts();
       applyNotificationBadge(0);
