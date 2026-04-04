@@ -617,8 +617,21 @@ setTimeout(revealPageContent, 300);
   async function syncHeadAssets(nextDocument, nextUrl) {
     const desiredNodes = Array.from(nextDocument.head.querySelectorAll(HEAD_SELECTOR));
     const currentNodes = Array.from(document.head.querySelectorAll(`[${MANAGED_HEAD_ATTR}="true"]`));
+    const desiredSignatures = new Set(
+      desiredNodes.map((node) => buildHeadSignature(node, nextUrl))
+    );
+
+    currentNodes.forEach((node) => {
+      const signature = buildHeadSignature(node);
+      if (!desiredSignatures.has(signature)) {
+        node.remove();
+      }
+    });
+
     const currentSignatures = new Set(
-      currentNodes.map((node) => buildHeadSignature(node))
+      Array.from(document.head.querySelectorAll(`[${MANAGED_HEAD_ATTR}="true"]`)).map((node) =>
+        buildHeadSignature(node)
+      )
     );
     const insertionAnchor = document.head.querySelector("script");
 
