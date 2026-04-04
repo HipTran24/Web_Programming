@@ -4,6 +4,44 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
         <style id="instant-page-bg">html,body{background:#08131b!important;color:#eef6f7;}</style>
+    <script>
+      (function () {
+        document.documentElement.classList.add("auth-shellless");
+
+        const removeShellArtifacts = () => {
+          document.body?.removeAttribute("data-shell-page");
+          document.getElementById("app-shell-navbar")?.remove();
+          document.getElementById("app-shell-sidebar")?.remove();
+          document.getElementById("app-shell-backdrop")?.remove();
+          document.querySelectorAll("nav.navbar, #navbar, #appSidebar, .app-sidebar").forEach((node) => {
+            node.remove();
+          });
+        };
+
+        removeShellArtifacts();
+        document.addEventListener("DOMContentLoaded", removeShellArtifacts, { once: true });
+      })();
+    </script>
+    <style>
+      html.auth-shellless #app-shell-navbar,
+      html.auth-shellless #app-shell-sidebar,
+      html.auth-shellless #app-shell-backdrop,
+      html.auth-shellless nav.navbar,
+      html.auth-shellless #navbar,
+      html.auth-shellless #appSidebar,
+      html.auth-shellless .app-sidebar {
+        display: none !important;
+      }
+
+      html.auth-shellless body {
+        padding-top: 0 !important;
+      }
+
+      html.auth-shellless [data-shell-page] .page-content,
+      html.auth-shellless [data-shell-page] main {
+        padding-top: 0 !important;
+      }
+    </style>
 <title>SynapLearn - Đăng ký</title>
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg?v=20260402-tab3" />
     <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=20260402-tab3" />
