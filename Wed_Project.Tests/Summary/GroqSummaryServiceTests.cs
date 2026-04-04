@@ -2,9 +2,9 @@ using System.Net;
 using System.Text;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 using Web_Project.Models;
 using Web_Project.Services.AI;
+using Web_Project.Tests.TestDoubles;
 
 namespace Web_Project.Tests.Summary;
 
@@ -156,21 +156,27 @@ public sealed class GroqSummaryServiceTests
 
     private static GroqSummaryService CreateService(HttpMessageHandler handler)
     {
-        var settings = new GroqSettings
+        var runtimeSettings = new FakeAiRuntimeSettingsService
         {
-            GroqApiKey = "test-key",
-          BaseUrl = "https://api.groq.com/openai",
-          TextModel = "llama-a",
-          VisionModel = "llama-v",
-          AudioModel = "whisper-a",
-            MaxInputCharacters = 24000,
-          FallbackModels = ["llama-b"]
+            Snapshot = new AiRuntimeSettingsSnapshot
+            {
+                Groq = new GroqSettings
+                {
+                    GroqApiKey = "test-key",
+                    BaseUrl = "https://api.groq.com/openai",
+                    TextModel = "llama-a",
+                    VisionModel = "llama-v",
+                    AudioModel = "whisper-a",
+                    MaxInputCharacters = 24000,
+                    FallbackModels = ["llama-b"]
+                }
+            }
         };
 
         return new GroqSummaryService(
             new HttpClient(handler),
-            Options.Create(settings),
-          new MemoryCache(new MemoryCacheOptions()),
+            runtimeSettings,
+            new MemoryCache(new MemoryCacheOptions()),
             NullLogger<GroqSummaryService>.Instance);
     }
 

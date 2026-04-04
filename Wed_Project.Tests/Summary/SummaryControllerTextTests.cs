@@ -157,5 +157,12 @@ public sealed class SummaryControllerTextTests
         {
             return Task.FromResult(new SummarizeUrlResponse());
         }
+
+        public Task<bool> GenerateApprovedContentSummaryAsync(
+            int contentId,
+            CancellationToken cancellationToken)
+        {
+            return Task.FromResult(true);
+        }
     }
 }

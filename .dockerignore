@@ -5,4 +5,7 @@ obj/
 .vscode/
 .dotnet-cli-home/
 Wed_Project.Tests/
+.env
+.env.*
+appsettings.Development.json
 *.user

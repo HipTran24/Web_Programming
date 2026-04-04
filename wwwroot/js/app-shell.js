@@ -863,7 +863,6 @@
               <div class="app-shell-notify-modal-message" id="appShellNotificationModalMessage"></div>
               <div class="app-shell-notify-modal-actions">
                 <button type="button" class="app-shell-notify-secondary" id="appShellNotificationModalDismiss">Đóng</button>
-                <button type="button" class="app-shell-notify-primary" id="appShellNotificationModalAction" hidden>Mở liên kết</button>
               </div>
             </div>
           </div>
@@ -989,6 +988,13 @@
 
   async function mountShell() {
     hideLegacyNavAndSidebar();
+
+    if (document.body.classList.contains("page-login")) {
+      document.body.removeAttribute("data-shell-page");
+      removeShellArtifacts();
+      applyNotificationBadge(0);
+      return;
+    }
 
     if (document.body.classList.contains("page-admin")) {
       document.body.removeAttribute("data-shell-page");
@@ -1145,7 +1151,6 @@
     const notificationModalTitle = document.getElementById("appShellNotificationModalTitle");
     const notificationModalMeta = document.getElementById("appShellNotificationModalMeta");
     const notificationModalMessage = document.getElementById("appShellNotificationModalMessage");
-    const notificationModalAction = document.getElementById("appShellNotificationModalAction");
     const searchRoot = nav.querySelector(".app-shell-search");
     const searchInput = document.getElementById("appShellSearchInput");
     const searchClearButton = document.getElementById("appShellSearchClear");
@@ -1279,25 +1284,6 @@
         <span>${escapeHtml(formatNotificationDateTime(item?.createdAt))}</span>
       `;
       notificationModalMessage.textContent = item?.message || "";
-
-      if (notificationModalAction) {
-        if (item?.actionUrl) {
-          notificationModalAction.hidden = false;
-          notificationModalAction.onclick = async () => {
-            notificationModal.hidden = true;
-            closeProfileMenu();
-            if (window.AjaxNavigation?.navigate) {
-              await window.AjaxNavigation.navigate(item.actionUrl);
-              return;
-            }
-
-            window.location.assign(item.actionUrl);
-          };
-        } else {
-          notificationModalAction.hidden = true;
-          notificationModalAction.onclick = null;
-        }
-      }
     };
 
     const closeNotificationModal = function () {

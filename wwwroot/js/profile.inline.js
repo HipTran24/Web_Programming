@@ -502,7 +502,6 @@
         </div>
         <div class="system-notify-message">${escapeHtml(item.message || "")}</div>
         <div class="system-notify-actions">
-          ${item.actionUrl ? `<button type="button" class="btn btn-primary" data-open-notify-url="${escapeHtml(item.actionUrl)}" data-notification-id="${escapeHtml(item.notificationId)}">Mở liên kết</button>` : ""}
           ${item.isRead ? "" : `<button type="button" class="btn btn-outline-light" data-mark-notify-read="${escapeHtml(item.notificationId)}">Đánh dấu đã đọc</button>`}
         </div>
       </article>
@@ -511,27 +510,6 @@
     Array.from(el.systemNotifyList.querySelectorAll("[data-mark-notify-read]")).forEach((button) => {
       button.addEventListener("click", async () => {
         await markSystemNotificationsAsRead(button.getAttribute("data-mark-notify-read") || "", false);
-      });
-    });
-
-    Array.from(el.systemNotifyList.querySelectorAll("[data-open-notify-url]")).forEach((button) => {
-      button.addEventListener("click", async () => {
-        const notificationId = button.getAttribute("data-notification-id") || "";
-        const targetUrl = button.getAttribute("data-open-notify-url") || "";
-        if (notificationId) {
-          await markSystemNotificationsAsRead(notificationId, false);
-        }
-
-        if (!targetUrl) {
-          return;
-        }
-
-        if (window.AjaxNavigation?.navigate) {
-          await window.AjaxNavigation.navigate(targetUrl);
-          return;
-        }
-
-        window.location.assign(targetUrl);
       });
     });
 

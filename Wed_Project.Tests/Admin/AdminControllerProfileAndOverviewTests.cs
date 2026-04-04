@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Web_Project.Controllers;
 using Web_Project.Models;
+using Web_Project.Tests.TestDoubles;
 using Web_Project.Models.Dtos.User;
 using Web_Project.Security;
 
@@ -397,7 +398,10 @@ public sealed class AdminControllerProfileAndOverviewTests
 
     private static AdminController CreateController(AppDbContext dbContext, int? userId, string role)
     {
-        var controller = new AdminController(dbContext);
+        var controller = new AdminController(
+            dbContext,
+            new FakeAiRuntimeSettingsService(),
+            new NoOpSummaryProcessingService());
         var httpContext = new DefaultHttpContext();
 
         if (userId.HasValue)
