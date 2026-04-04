@@ -137,6 +137,24 @@ function normalizeSiteTitle(rawTitle) {
 
 window.normalizeSiteTitle = normalizeSiteTitle;
 
+function isShelllessBody(body) {
+  return Boolean(
+    body?.classList?.contains("page-login") ||
+    body?.classList?.contains("page-register") ||
+    body?.classList?.contains("page-admin")
+  );
+}
+
+function removeShellArtifactsForShelllessPages() {
+  document.body.removeAttribute("data-shell-page");
+  document.getElementById("app-shell-navbar")?.remove();
+  document.getElementById("app-shell-sidebar")?.remove();
+  document.getElementById("app-shell-backdrop")?.remove();
+  document.querySelectorAll("nav.navbar, #navbar, #appSidebar, .app-sidebar").forEach((node) => {
+    node.remove();
+  });
+}
+
 function shouldDisablePrefetch() {
   const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
   if (!connection) {
@@ -626,6 +644,11 @@ setTimeout(revealPageContent, 300);
       document.body.setAttribute(attribute.name, attribute.value);
     });
 
+    if (isShelllessBody(nextBody)) {
+      removeShellArtifactsForShelllessPages();
+      return;
+    }
+
     if (document.getElementById("app-shell-navbar") && !document.body.classList.contains("page-admin")) {
       document.body.setAttribute("data-shell-page", "true");
     }
@@ -813,6 +836,9 @@ setTimeout(revealPageContent, 300);
     }
 
     syncBodyAttributes(nextDocument.body);
+    if (isShelllessBody(nextDocument.body)) {
+      removeShellArtifactsForShelllessPages();
+    }
     document.title = normalizeSiteTitle(nextDocument.title || document.title);
 
     if (options.replaceHistory) {
