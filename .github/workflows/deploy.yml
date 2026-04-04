@@ -62,18 +62,8 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       - name: Build Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Dockerfile
-          push: false
-          tags: wed-project:ci
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+        run: docker build -f Dockerfile -t wed-project:ci .
 
   deploy:
     name: Deploy To Server
