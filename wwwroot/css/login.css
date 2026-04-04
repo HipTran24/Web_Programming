@@ -753,3 +753,55 @@ html body.page-login #passwordToggleBtn {
 html body.page-login #passwordToggleBtn svg {
   transform: none !important;
 }
+
+@media (max-width: 575.98px) {
+  .page-login .login-shell {
+    width: min(100%, calc(100vw - 20px));
+  }
+
+  .page-login .auth-page--login::before {
+    width: 260px;
+    height: 260px;
+    left: -100px;
+    top: 10%;
+  }
+
+  .page-login .auth-page--login::after {
+    width: 280px;
+    height: 260px;
+    right: -110px;
+    bottom: 0;
+  }
+
+  .page-login .login-card {
+    padding: 16px 12px;
+  }
+
+  .page-login .login-title {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .page-login #googleLoginButton {
+    max-width: none;
+  }
+
+  .page-login #googleLoginButton > div,
+  .page-login #googleLoginButton iframe {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .page-login .auth-page--login {
+    padding-top: 12px;
+  }
+
+  .page-login .login-title {
+    padding-inline: 14px;
+    font-size: 1.28rem;
+  }
+}

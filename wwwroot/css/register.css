@@ -412,3 +412,47 @@
     border-radius: 14px;
   }
 }
+
+@media (max-width: 575.98px) {
+  .page-register .register-shell {
+    width: min(100%, calc(100vw - 20px));
+  }
+
+  .page-register .auth-page--register::before {
+    width: 260px;
+    height: 260px;
+    left: -100px;
+    top: 12%;
+  }
+
+  .page-register .auth-page--register::after {
+    width: 280px;
+    height: 280px;
+    right: -110px;
+    bottom: -2%;
+  }
+
+  .page-register .register-card {
+    padding: 16px 12px;
+  }
+
+  .page-register .register-title {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .page-register .register-submit-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  .page-register .register-title {
+    padding-inline: 14px;
+  }
+
+  .page-register .floating-input {
+    padding-right: 18px;
+  }
+}

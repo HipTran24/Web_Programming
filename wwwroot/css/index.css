@@ -867,3 +867,51 @@ html.page-hydrated .page-content.show {
     justify-content: flex-start;
   }
 }
+
+@media (max-width: 980px) {
+  .hero-actions,
+  .cta-actions {
+    width: 100%;
+  }
+
+  .hero-actions > *,
+  .cta-actions > * {
+    flex: 1 1 calc(50% - 14px);
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-actions,
+  .cta-actions {
+    flex-direction: column;
+  }
+
+  .hero-actions > *,
+  .cta-actions > * {
+    width: 100%;
+    flex-basis: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    width: min(var(--home-max-width), calc(100% - 22px));
+  }
+
+  .hero-copy {
+    padding: 8px 0 0;
+  }
+
+  .hero-console,
+  .trust-card,
+  .feature-card,
+  .operation-panel,
+  .timeline-item,
+  .cta-panel {
+    padding: 18px;
+  }
+
+  .hero-trust-row {
+    gap: 10px;
+  }
+}

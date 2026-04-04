@@ -627,3 +627,43 @@
           min-width: 620px;
         }
       }
+
+      @media (max-width: 640px) {
+        .welcome,
+        .streak {
+          width: 100%;
+        }
+
+        .type-row,
+        .pill-grp,
+        .tab-row {
+          display: grid;
+          grid-template-columns: 1fr;
+          width: 100%;
+        }
+
+        .type-opt,
+        .pill,
+        .btn-view {
+          width: 100%;
+        }
+      }
+
+      @media (max-width: 480px) {
+        main {
+          padding: 16px 12px 28px;
+        }
+
+        .welcome,
+        .card {
+          padding: 16px;
+        }
+
+        .welcome h4 {
+          font-size: 1.12rem;
+        }
+
+        .hist-card table {
+          min-width: 560px;
+        }
+      }

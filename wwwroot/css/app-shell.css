@@ -1079,3 +1079,88 @@ html.is-ajax-navigating [data-shell-page] .page-content.show {
     display: none;
   }
 }
+
+@media (max-width: 820px) {
+  #app-shell-navbar .app-shell-frame {
+    padding: 0 12px;
+  }
+
+  #app-shell-navbar .app-shell-inner {
+    padding: 0 12px;
+    gap: 10px;
+  }
+
+  #app-shell-navbar .app-shell-start {
+    gap: 12px;
+  }
+
+  #app-shell-navbar .app-shell-actions {
+    min-width: 0;
+  }
+
+  #app-shell-navbar .app-shell-action-group {
+    gap: 6px;
+  }
+
+  #app-shell-navbar .app-shell-btn {
+    padding: 0 12px;
+    font-size: 0.86rem;
+  }
+
+  #app-shell-sidebar {
+    top: 84px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-height: calc(100dvh - 96px);
+    overflow: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  #app-shell-navbar .app-shell-inner {
+    min-height: 58px;
+    padding: 0 10px;
+    border-radius: 20px;
+  }
+
+  #app-shell-navbar .app-shell-brand-text {
+    max-width: 128px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.92rem;
+  }
+
+  #app-shell-navbar .app-shell-btn.primary {
+    min-height: 36px;
+    padding: 0 10px;
+    font-size: 0.8rem;
+  }
+
+  #app-shell-navbar .app-shell-profile-toggle,
+  #app-shell-navbar .app-shell-menu-toggle {
+    width: 40px;
+    height: 40px;
+    border-radius: 13px;
+  }
+
+  #app-shell-navbar .app-shell-notify-flyout {
+    left: var(--shell-viewport-gutter) !important;
+    right: var(--shell-viewport-gutter) !important;
+    width: auto;
+    max-width: none;
+    transform-origin: top center;
+  }
+}
+
+@media (max-width: 420px) {
+  #app-shell-navbar .app-shell-brand-text {
+    display: none;
+  }
+
+  [data-shell-page] .page-content,
+  [data-shell-page] main {
+    padding-top: 76px;
+  }
+}

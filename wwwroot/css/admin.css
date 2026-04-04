@@ -2582,3 +2582,66 @@
     width: min(420px, calc(100vw - 36px));
   }
 }
+
+@media (max-width: 991.98px) {
+  .page-admin .workspace-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+
+  .page-admin .workspace-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .page-admin .workspace-tab {
+    flex: 0 0 auto;
+    min-width: max-content;
+  }
+
+  .page-admin .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .page-admin .admin-main {
+    padding-inline: 12px;
+  }
+
+  .page-admin .admin-hero,
+  .page-admin .overview-toolbar,
+  .page-admin .operations-card,
+  .page-admin .intel-panel,
+  .page-admin .admin-workspace,
+  .page-admin .admin-chart-shell,
+  .page-admin .admin-form-shell,
+  .page-admin .details-report-section {
+    padding: 16px;
+  }
+
+  .page-admin .command-strip {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .page-admin .portal-session {
+    justify-content: stretch;
+  }
+
+  .page-admin .portal-session > * {
+    width: 100%;
+  }
+
+  .page-admin .admin-alerts-flyout {
+    left: 0;
+    right: 0;
+    width: auto;
+  }
+
+  .page-admin .table-responsive table {
+    min-width: 720px;
+  }
+}

@@ -692,3 +692,41 @@ a {
     width: 100%;
   }
 }
+
+@media (max-width: 900px) {
+  .hero-actions {
+    width: 100%;
+  }
+
+  .hero-actions > * {
+    flex: 1 1 calc(50% - 14px);
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-actions {
+    flex-direction: column;
+  }
+
+  .hero-actions > * {
+    width: 100%;
+    flex-basis: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .brand-container {
+    width: min(var(--brand-max-width), calc(100% - 22px));
+  }
+
+  .hero-panel,
+  .highlight-panel,
+  .overview-card,
+  .content-card,
+  .comparison-card,
+  .step-card,
+  .note-panel,
+  .cta-panel {
+    padding: 18px;
+  }
+}

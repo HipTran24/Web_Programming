@@ -323,7 +323,8 @@
       cancel_on_tap_outside: true,
     });
 
-    const buttonWidth = Math.max(320, Math.min(googleButton.clientWidth || 420, 420));
+    const measuredWidth = googleButton.clientWidth || googleButton.getBoundingClientRect().width || 0;
+    const buttonWidth = Math.min(Math.max(Math.round(measuredWidth), 220), 420);
 
     window.google.accounts.id.renderButton(googleButton, {
       type: "standard",
