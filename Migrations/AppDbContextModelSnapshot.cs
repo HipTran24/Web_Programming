@@ -8,7 +8,7 @@ using Web_Project.Models;
 
 #nullable disable
 
-namespace Web_Project.Migrations
+namespace Wed_Project.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     partial class AppDbContextModelSnapshot : ModelSnapshot
