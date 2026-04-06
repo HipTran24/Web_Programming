@@ -29,19 +29,11 @@ namespace Web_Project.Models
             base.OnModelCreating(modelBuilder);
 
             ApplyUtcDateTimeConverters(modelBuilder);
-            var isPostgres = Database.IsNpgsql();
-
-            var userIdNotNullFilter = isPostgres ? "\"UserId\" IS NOT NULL" : "[UserId] IS NOT NULL";
-            var guestSessionIdNotNullFilter = isPostgres ? "\"GuestSessionId\" IS NOT NULL" : "[GuestSessionId] IS NOT NULL";
-            var dailyUsageActorConstraint = isPostgres
-                ? "((\"UserId\" IS NOT NULL AND \"GuestSessionId\" IS NULL) OR (\"UserId\" IS NULL AND \"GuestSessionId\" IS NOT NULL))"
-                : "(([UserId] IS NOT NULL AND [GuestSessionId] IS NULL) OR ([UserId] IS NULL AND [GuestSessionId] IS NOT NULL))";
-            var contentSourceTypeConstraint = isPostgres
-                ? "\"SourceType\" IN ('FileUpload', 'TextUrl', 'VideoUrl', 'DocumentUrl')"
-                : "[SourceType] IN (N'FileUpload', N'TextUrl', N'VideoUrl', N'DocumentUrl')";
-            var contentUrlFieldsConstraint = isPostgres
-                ? "((\"SourceType\" = 'FileUpload' AND \"SourceUrl\" IS NULL AND \"FetchStatus\" IS NULL AND \"FetchError\" IS NULL) OR (\"SourceType\" <> 'FileUpload' AND \"SourceUrl\" IS NOT NULL AND \"FetchStatus\" IS NOT NULL))"
-                : "(([SourceType] = N'FileUpload' AND [SourceUrl] IS NULL AND [FetchStatus] IS NULL AND [FetchError] IS NULL) OR ([SourceType] <> N'FileUpload' AND [SourceUrl] IS NOT NULL AND [FetchStatus] IS NOT NULL))";
+            const string userIdNotNullFilter = "[UserId] IS NOT NULL";
+            const string guestSessionIdNotNullFilter = "[GuestSessionId] IS NOT NULL";
+            const string dailyUsageActorConstraint = "(([UserId] IS NOT NULL AND [GuestSessionId] IS NULL) OR ([UserId] IS NULL AND [GuestSessionId] IS NOT NULL))";
+            const string contentSourceTypeConstraint = "[SourceType] IN (N'FileUpload', N'TextUrl', N'VideoUrl', N'DocumentUrl')";
+            const string contentUrlFieldsConstraint = "(([SourceType] = N'FileUpload' AND [SourceUrl] IS NULL AND [FetchStatus] IS NULL AND [FetchError] IS NULL) OR ([SourceType] <> N'FileUpload' AND [SourceUrl] IS NOT NULL AND [FetchStatus] IS NOT NULL))";
 
             foreach (var relationship in modelBuilder.Model.GetEntityTypes()
                          .SelectMany(e => e.GetForeignKeys()))

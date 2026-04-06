@@ -17,18 +17,9 @@ namespace Web_Project.Models
                 .Build();
 
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-            var databaseProvider = DatabaseConnectionResolver.ResolveDatabaseProvider(configuration);
-
-            if (databaseProvider.Equals("PostgreSQL", StringComparison.OrdinalIgnoreCase) ||
-                databaseProvider.Equals("Postgres", StringComparison.OrdinalIgnoreCase) ||
-                databaseProvider.Equals("Npgsql", StringComparison.OrdinalIgnoreCase))
-            {
-                optionsBuilder.UseNpgsql(DatabaseConnectionResolver.ResolvePostgresConnectionString(configuration));
-            }
-            else
-            {
-                optionsBuilder.UseSqlServer(DatabaseConnectionResolver.ResolveSqlServerConnectionString(configuration));
-            }
+            optionsBuilder.UseSqlServer(
+                DatabaseConnectionResolver.ResolveSqlServerConnectionString(configuration),
+                sqlServerOptions => sqlServerOptions.EnableRetryOnFailure());
 
             return new AppDbContext(optionsBuilder.Options);
         }

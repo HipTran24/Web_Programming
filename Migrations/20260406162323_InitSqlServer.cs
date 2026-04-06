@@ -1,13 +1,12 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
 namespace Wed_Project.Migrations
 {
     /// <inheritdoc />
-    public partial class InitPostgres : Migration
+    public partial class InitSqlServer : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -16,16 +15,16 @@ namespace Wed_Project.Migrations
                 name: "GuestSessions",
                 columns: table => new
                 {
-                    GuestSessionId = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    GuestToken = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
-                    FingerprintHash = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
-                    IpAddress = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
-                    UserAgent = table.Column<string>(type: "character varying(512)", maxLength: 512, nullable: false),
-                    FirstSeenAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    LastSeenAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    TrialUsedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    IsBlocked = table.Column<bool>(type: "boolean", nullable: false)
+                    GuestSessionId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    GuestToken = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
+                    FingerprintHash = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    IpAddress = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: false),
+                    UserAgent = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: false),
+                    FirstSeenAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    LastSeenAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    TrialUsedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsBlocked = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -36,9 +35,9 @@ namespace Wed_Project.Migrations
                 name: "Roles",
                 columns: table => new
                 {
-                    RoleId = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    RoleName = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false)
+                    RoleId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    RoleName = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -49,17 +48,17 @@ namespace Wed_Project.Migrations
                 name: "Users",
                 columns: table => new
                 {
-                    UserId = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Username = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
-                    FullName = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
-                    Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
-                    PasswordHash = table.Column<string>(type: "character varying(512)", maxLength: 512, nullable: false),
-                    RoleId = table.Column<int>(type: "integer", nullable: false),
-                    Status = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
-                    IsLocked = table.Column<bool>(type: "boolean", nullable: false),
-                    IsEmailVerified = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    UserId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Username = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: false),
+                    FullName = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    PasswordHash = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: false),
+                    RoleId = table.Column<int>(type: "int", nullable: false),
+                    Status = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    IsLocked = table.Column<bool>(type: "bit", nullable: false),
+                    IsEmailVerified = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -75,15 +74,15 @@ namespace Wed_Project.Migrations
                 name: "AdminAuditLogs",
                 columns: table => new
                 {
-                    AuditId = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    AdminUserId = table.Column<int>(type: "integer", nullable: false),
-                    ActionType = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
-                    TargetType = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
-                    TargetId = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
-                    DetailJson = table.Column<string>(type: "text", nullable: false),
-                    IpAddress = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    AuditId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    AdminUserId = table.Column<int>(type: "int", nullable: false),
+                    ActionType = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: false),
+                    TargetType = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: false),
+                    TargetId = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
+                    DetailJson = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IpAddress = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -99,14 +98,14 @@ namespace Wed_Project.Migrations
                 name: "AISystemLogs",
                 columns: table => new
                 {
-                    LogId = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    ActionType = table.Column<string>(type: "text", nullable: false),
-                    UserId = table.Column<int>(type: "integer", nullable: true),
-                    IsGuest = table.Column<bool>(type: "boolean", nullable: false),
-                    ProcessingTime = table.Column<double>(type: "double precision", nullable: false),
-                    IsError = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    LogId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ActionType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: true),
+                    IsGuest = table.Column<bool>(type: "bit", nullable: false),
+                    ProcessingTime = table.Column<double>(type: "float", nullable: false),
+                    IsError = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -123,27 +122,27 @@ namespace Wed_Project.Migrations
                 name: "Contents",
                 columns: table => new
                 {
-                    ContentId = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    UserId = table.Column<int>(type: "integer", nullable: true),
-                    IsGuest = table.Column<bool>(type: "boolean", nullable: false),
-                    FileName = table.Column<string>(type: "text", nullable: false),
-                    FileType = table.Column<string>(type: "text", nullable: false),
-                    FilePath = table.Column<string>(type: "text", nullable: false),
-                    SourceType = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
-                    SourceUrl = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),
-                    FetchStatus = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: true),
-                    FetchError = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
-                    ExtractedText = table.Column<string>(type: "text", nullable: false),
-                    AI_DetectedSubject = table.Column<string>(type: "text", nullable: false),
-                    AI_DetectedGrade = table.Column<string>(type: "text", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    ContentId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<int>(type: "int", nullable: true),
+                    IsGuest = table.Column<bool>(type: "bit", nullable: false),
+                    FileName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FileType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FilePath = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SourceType = table.Column<string>(type: "nvarchar(32)", maxLength: 32, nullable: false),
+                    SourceUrl = table.Column<string>(type: "nvarchar(2048)", maxLength: 2048, nullable: true),
+                    FetchStatus = table.Column<string>(type: "nvarchar(32)", maxLength: 32, nullable: true),
+                    FetchError = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    ExtractedText = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AI_DetectedSubject = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AI_DetectedGrade = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Contents", x => x.ContentId);
-                    table.CheckConstraint("CK_Contents_SourceType", "\"SourceType\" IN ('FileUpload', 'TextUrl', 'VideoUrl', 'DocumentUrl')");
-                    table.CheckConstraint("CK_Contents_UrlFieldsBySource", "((\"SourceType\" = 'FileUpload' AND \"SourceUrl\" IS NULL AND \"FetchStatus\" IS NULL AND \"FetchError\" IS NULL) OR (\"SourceType\" <> 'FileUpload' AND \"SourceUrl\" IS NOT NULL AND \"FetchStatus\" IS NOT NULL))");
+                    table.CheckConstraint("CK_Contents_SourceType", "[SourceType] IN (N'FileUpload', N'TextUrl', N'VideoUrl', N'DocumentUrl')");
+                    table.CheckConstraint("CK_Contents_UrlFieldsBySource", "(([SourceType] = N'FileUpload' AND [SourceUrl] IS NULL AND [FetchStatus] IS NULL AND [FetchError] IS NULL) OR ([SourceType] <> N'FileUpload' AND [SourceUrl] IS NOT NULL AND [FetchStatus] IS NOT NULL))");
                     table.ForeignKey(
                         name: "FK_Contents_Users_UserId",
                         column: x => x.UserId,
@@ -156,21 +155,21 @@ namespace Wed_Project.Migrations
                 name: "DailyUsageCounters",
                 columns: table => new
                 {
-                    CounterId = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    UsageDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UserId = table.Column<int>(type: "integer", nullable: true),
-                    GuestSessionId = table.Column<int>(type: "integer", nullable: true),
-                    UploadCount = table.Column<int>(type: "integer", nullable: false),
-                    AIProcessCount = table.Column<int>(type: "integer", nullable: false),
-                    QuizGenerationCount = table.Column<int>(type: "integer", nullable: false),
-                    TotalProcessingTime = table.Column<double>(type: "double precision", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CounterId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UsageDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: true),
+                    GuestSessionId = table.Column<int>(type: "int", nullable: true),
+                    UploadCount = table.Column<int>(type: "int", nullable: false),
+                    AIProcessCount = table.Column<int>(type: "int", nullable: false),
+                    QuizGenerationCount = table.Column<int>(type: "int", nullable: false),
+                    TotalProcessingTime = table.Column<double>(type: "float", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_DailyUsageCounters", x => x.CounterId);
-                    table.CheckConstraint("CK_DailyUsageCounters_Actor", "((\"UserId\" IS NOT NULL AND \"GuestSessionId\" IS NULL) OR (\"UserId\" IS NULL AND \"GuestSessionId\" IS NOT NULL))");
+                    table.CheckConstraint("CK_DailyUsageCounters_Actor", "(([UserId] IS NOT NULL AND [GuestSessionId] IS NULL) OR ([UserId] IS NULL AND [GuestSessionId] IS NOT NULL))");
                     table.ForeignKey(
                         name: "FK_DailyUsageCounters_GuestSessions_GuestSessionId",
                         column: x => x.GuestSessionId,
@@ -189,19 +188,19 @@ namespace Wed_Project.Migrations
                 name: "EmailVerificationOtps",
                 columns: table => new
                 {
-                    OtpId = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
-                    Purpose = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
-                    UserId = table.Column<int>(type: "integer", nullable: true),
-                    OtpHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
-                    OtpSalt = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
-                    AttemptCount = table.Column<int>(type: "integer", nullable: false),
-                    IsUsed = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    ExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UsedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    RequestedIp = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false)
+                    OtpId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    Purpose = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: true),
+                    OtpHash = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
+                    OtpSalt = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: false),
+                    AttemptCount = table.Column<int>(type: "int", nullable: false),
+                    IsUsed = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UsedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    RequestedIp = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -218,13 +217,13 @@ namespace Wed_Project.Migrations
                 name: "StudyStatistics",
                 columns: table => new
                 {
-                    StatId = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    UserId = table.Column<int>(type: "integer", nullable: false),
-                    AverageScore = table.Column<double>(type: "double precision", nullable: false),
-                    TotalAttempts = table.Column<int>(type: "integer", nullable: false),
-                    WeakTopic = table.Column<string>(type: "text", nullable: false),
-                    LastUpdated = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    StatId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    AverageScore = table.Column<double>(type: "float", nullable: false),
+                    TotalAttempts = table.Column<int>(type: "int", nullable: false),
+                    WeakTopic = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    LastUpdated = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -241,14 +240,14 @@ namespace Wed_Project.Migrations
                 name: "SystemSettings",
                 columns: table => new
                 {
-                    SettingId = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    SettingKey = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
-                    SettingValue = table.Column<string>(type: "text", nullable: false),
-                    Description = table.Column<string>(type: "character varying(512)", maxLength: 512, nullable: false),
-                    UpdatedByUserId = table.Column<int>(type: "integer", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    SettingId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SettingKey = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
+                    SettingValue = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: false),
+                    UpdatedByUserId = table.Column<int>(type: "int", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -265,13 +264,13 @@ namespace Wed_Project.Migrations
                 name: "AIProcesses",
                 columns: table => new
                 {
-                    ProcessId = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    ContentId = table.Column<int>(type: "integer", nullable: false),
-                    Summary = table.Column<string>(type: "text", nullable: false),
-                    KeyPoints = table.Column<string>(type: "text", nullable: false),
-                    ProcessingTime = table.Column<double>(type: "double precision", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    ProcessId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ContentId = table.Column<int>(type: "int", nullable: false),
+                    Summary = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    KeyPoints = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ProcessingTime = table.Column<double>(type: "float", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -288,15 +287,15 @@ namespace Wed_Project.Migrations
                 name: "ContentModerations",
                 columns: table => new
                 {
-                    ModerationId = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    ContentId = table.Column<int>(type: "integer", nullable: false),
-                    Status = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
-                    Reason = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
-                    ReviewedByUserId = table.Column<int>(type: "integer", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    ReviewedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    ModerationId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ContentId = table.Column<int>(type: "int", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(32)", maxLength: 32, nullable: false),
+                    Reason = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
+                    ReviewedByUserId = table.Column<int>(type: "int", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ReviewedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -319,15 +318,15 @@ namespace Wed_Project.Migrations
                 name: "Quizzes",
                 columns: table => new
                 {
-                    QuizId = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    ContentId = table.Column<int>(type: "integer", nullable: false),
-                    UserId = table.Column<int>(type: "integer", nullable: true),
-                    IsGuest = table.Column<bool>(type: "boolean", nullable: false),
-                    TotalQuestions = table.Column<int>(type: "integer", nullable: false),
-                    Difficulty = table.Column<string>(type: "text", nullable: false),
-                    QuizType = table.Column<string>(type: "text", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    QuizId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ContentId = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: true),
+                    IsGuest = table.Column<bool>(type: "bit", nullable: false),
+                    TotalQuestions = table.Column<int>(type: "int", nullable: false),
+                    Difficulty = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    QuizType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -350,16 +349,16 @@ namespace Wed_Project.Migrations
                 name: "Questions",
                 columns: table => new
                 {
-                    QuestionId = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    QuizId = table.Column<int>(type: "integer", nullable: false),
-                    QuestionText = table.Column<string>(type: "text", nullable: false),
-                    OptionA = table.Column<string>(type: "text", nullable: false),
-                    OptionB = table.Column<string>(type: "text", nullable: false),
-                    OptionC = table.Column<string>(type: "text", nullable: false),
-                    OptionD = table.Column<string>(type: "text", nullable: false),
-                    CorrectAnswer = table.Column<string>(type: "text", nullable: false),
-                    Explanation = table.Column<string>(type: "text", nullable: false)
+                    QuestionId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    QuizId = table.Column<int>(type: "int", nullable: false),
+                    QuestionText = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    OptionA = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    OptionB = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    OptionC = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    OptionD = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CorrectAnswer = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Explanation = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -376,13 +375,13 @@ namespace Wed_Project.Migrations
                 name: "QuizAttempts",
                 columns: table => new
                 {
-                    AttemptId = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    QuizId = table.Column<int>(type: "integer", nullable: false),
-                    UserId = table.Column<int>(type: "integer", nullable: true),
-                    Score = table.Column<double>(type: "double precision", nullable: false),
-                    StartedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    SubmittedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    AttemptId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    QuizId = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: true),
+                    Score = table.Column<double>(type: "float", nullable: false),
+                    StartedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    SubmittedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -405,12 +404,12 @@ namespace Wed_Project.Migrations
                 name: "UserAnswers",
                 columns: table => new
                 {
-                    AnswerId = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    AttemptId = table.Column<int>(type: "integer", nullable: false),
-                    QuestionId = table.Column<int>(type: "integer", nullable: false),
-                    SelectedAnswer = table.Column<string>(type: "text", nullable: false),
-                    IsCorrect = table.Column<bool>(type: "boolean", nullable: false)
+                    AnswerId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    AttemptId = table.Column<int>(type: "int", nullable: false),
+                    QuestionId = table.Column<int>(type: "int", nullable: false),
+                    SelectedAnswer = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsCorrect = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -480,14 +479,14 @@ namespace Wed_Project.Migrations
                 table: "DailyUsageCounters",
                 columns: new[] { "UsageDate", "GuestSessionId" },
                 unique: true,
-                filter: "\"GuestSessionId\" IS NOT NULL");
+                filter: "[GuestSessionId] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_DailyUsageCounters_UsageDate_UserId",
                 table: "DailyUsageCounters",
                 columns: new[] { "UsageDate", "UserId" },
                 unique: true,
-                filter: "\"UserId\" IS NOT NULL");
+                filter: "[UserId] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_DailyUsageCounters_UserId",

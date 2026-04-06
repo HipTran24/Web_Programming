@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -18,6 +19,7 @@ using Web_Project.Services.Quiz;
 using Web_Project.Services.Users;
 
 var builder = WebApplication.CreateBuilder(args);
+var forwardedHeadersEnabled = builder.Configuration.GetValue("ASPNETCORE_FORWARDEDHEADERS_ENABLED", false);
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -37,19 +39,17 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
 {
     options.Level = CompressionLevel.Fastest;
 });
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    var databaseProvider = DatabaseConnectionResolver.ResolveDatabaseProvider(builder.Configuration);
-
-    if (databaseProvider.Equals("PostgreSQL", StringComparison.OrdinalIgnoreCase) ||
-        databaseProvider.Equals("Postgres", StringComparison.OrdinalIgnoreCase) ||
-        databaseProvider.Equals("Npgsql", StringComparison.OrdinalIgnoreCase))
-    {
-        options.UseNpgsql(DatabaseConnectionResolver.ResolvePostgresConnectionString(builder.Configuration));
-        return;
-    }
-
-    options.UseSqlServer(DatabaseConnectionResolver.ResolveSqlServerConnectionString(builder.Configuration));
+    options.UseSqlServer(
+        DatabaseConnectionResolver.ResolveSqlServerConnectionString(builder.Configuration),
+        sqlServerOptions => sqlServerOptions.EnableRetryOnFailure());
 });
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"));
 builder.Services.Configure<EmailOtpSettings>(builder.Configuration.GetSection("EmailOtp"));
@@ -137,12 +137,6 @@ builder.Services.AddScoped<IQuizGenerationService, QuizGenerationService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
 var app = builder.Build();
-
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    context.Database.Migrate();
-}
 
 if (jwtSigningMaterial.IsAsymmetric && jwtSigningMaterial.IsEphemeral)
 {
@@ -283,6 +277,10 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+if (forwardedHeadersEnabled)
+{
+    app.UseForwardedHeaders();
+}
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseResponseCompression();
