@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>SynapLearn Premium - Content Library</title>
+    <link rel="icon" type="image/svg+xml" href="../images/favicon.svg" />
+    <link rel="shortcut icon" type="image/x-icon" href="../favicon.ico" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link href="./assets/premium-experience.css" rel="stylesheet" />
+  </head>
+  <body class="premium-page" data-page="library">
+    <header class="premium-topbar">
+      <div class="premium-topbar-inner">
+        <a class="premium-brand" href="dashboard.html">
+          <span class="premium-brand-mark">SP</span>
+          <span class="premium-brand-copy">
+            <span class="premium-brand-title">SynapLearn Premium</span>
+            <span class="premium-brand-subtitle">Thư viện học liệu ưu tiên cho sinh viên</span>
+          </span>
+        </a>
+        <nav class="premium-nav" aria-label="Premium navigation">
+          <ul class="premium-nav-list">
+            <li><a href="dashboard.html" data-page-link="dashboard">Dashboard</a></li>
+            <li><a href="study-workspace.html" data-page-link="workspace">Workspace</a></li>
+            <li><a href="content-library.html" data-page-link="library">Library</a></li>
+            <li><a href="content-detail.html" data-page-link="detail">Detail</a></li>
+            <li><a href="quiz-experience.html" data-page-link="quiz">Quiz</a></li>
+            <li><a href="quiz-result.html" data-page-link="result">Review</a></li>
+            <li><a href="analytics.html" data-page-link="analytics">Analytics</a></li>
+            <li><a href="learning-plan.html" data-page-link="plan">Learning Plan</a></li>
+          </ul>
+        </nav>
+        <div class="premium-account">
+          <span class="premium-plan-pill">Premium archive • 42 tài liệu hoạt động</span>
+          <div class="premium-user">
+            <div class="premium-user-avatar">TN</div>
+            <div class="premium-user-copy">
+              <div class="premium-user-name">Trâm Nguyễn</div>
+              <div class="premium-user-meta">Bộ lọc hiện tại: Midterm prep</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="premium-shell">
+      <section class="premium-ribbon">
+        <div class="premium-ribbon-copy">
+          <div>
+            <div class="premium-eyebrow">Premium Library • Học liệu theo mục tiêu</div>
+            <h1 class="premium-title">Thư viện không chỉ để lưu, mà để biết nên quay lại đâu trước.</h1>
+            <p class="premium-subtitle">
+              Library premium sắp tài liệu theo ngữ cảnh học thật: môn nào chuẩn bị kiểm tra, tài liệu nào còn dang dở,
+              nội dung nào nên ôn lại vì liên quan trực tiếp tới điểm yếu gần đây.
+            </p>
+          </div>
+          <div class="premium-chip-row">
+            <span class="premium-status-chip">11 tài liệu đang ở trạng thái cần review</span>
+            <span class="premium-chip">6 tài liệu đã có quiz</span>
+            <span class="premium-chip">3 tài liệu gắn trực tiếp vào learning plan</span>
+          </div>
+          <div class="premium-action-row">
+            <a class="premium-action premium-action-primary" href="content-detail.html">Mở tài liệu nổi bật</a>
+            <a class="premium-action premium-action-secondary" href="study-workspace.html">Vào workspace mới nhất</a>
+            <a class="premium-action premium-action-muted" href="dashboard.html">Quay lại dashboard</a>
+          </div>
+        </div>
+
+        <figure class="premium-ribbon-visual">
+          <img
+            src="https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=1200&q=80"
+            alt="Kệ sách trong không gian học tập"
+          />
+          <figcaption class="premium-visual-caption">
+            Trải nghiệm premium xem library như một kho học liệu có thứ tự ưu tiên, thay vì danh sách file đơn thuần.
+          </figcaption>
+        </figure>
+      </section>
+
+      <ul class="premium-metric-strip">
+        <li class="premium-metric-item">
+          <div class="premium-metric-label">Tài liệu active</div>
+          <div class="premium-metric-value">42</div>
+          <div class="premium-metric-meta">đang được theo dõi theo môn và kỳ kiểm tra</div>
+        </li>
+        <li class="premium-metric-item">
+          <div class="premium-metric-label">Review queue</div>
+          <div class="premium-metric-value">11</div>
+          <div class="premium-metric-meta">cần quay lại trong 72 giờ tới</div>
+        </li>
+        <li class="premium-metric-item">
+          <div class="premium-metric-label">Môn đang học</div>
+          <div class="premium-metric-value">6</div>
+          <div class="premium-metric-meta">ưu tiên cân bằng giữa môn khó và môn cần giữ nhịp</div>
+        </li>
+        <li class="premium-metric-item">
+          <div class="premium-metric-label">Coverage quiz</div>
+          <div class="premium-metric-value">73%</div>
+          <div class="premium-metric-meta">tài liệu đã có ít nhất một bộ câu hỏi luyện</div>
+        </li>
+      </ul>
+
+      <section class="premium-page-grid library">
+        <section class="premium-surface premium-surface-accent-mint" style="grid-column: span 2;">
+          <div class="premium-surface-head">
+            <div>
+              <h2 class="premium-surface-title">Thư viện theo ngữ cảnh học</h2>
+              <div class="premium-surface-subtitle">Bộ lọc premium thiên về quyết định học gì tiếp theo.</div>
+            </div>
+          </div>
+          <div class="premium-filter-row" data-chip-group>
+            <button class="premium-filter-chip is-active" type="button" data-chip>Midterm prep</button>
+            <button class="premium-filter-chip" type="button" data-chip>Chưa hoàn thành quiz</button>
+            <button class="premium-filter-chip" type="button" data-chip>Review trong 3 ngày</button>
+            <button class="premium-filter-chip" type="button" data-chip>Môn điểm yếu</button>
+            <button class="premium-filter-chip" type="button" data-chip>Tài liệu đã note</button>
+          </div>
+
+          <div class="premium-library-grid">
+            <article class="premium-library-item">
+              <img
+                src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1200&q=80"
+                alt="Tài liệu toán và bút viết"
+              />
+              <div class="premium-library-copy">
+                <h3>Giải tích 1 - Chuỗi số và chuỗi hàm</h3>
+                <p>Tài liệu trọng tâm tuần này. Đã có summary, note cá nhân và quiz drill 10 câu.</p>
+                <div class="premium-library-footer">
+                  <span class="premium-mini-chip">Rủi ro cao</span>
+                  <span class="premium-mini-chip">Review 19:30</span>
+                  <a class="premium-link" href="content-detail.html">Xem detail</a>
+                </div>
+              </div>
+            </article>
+
+            <article class="premium-library-item">
+              <img
+                src="https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=1200&q=80"
+                alt="Laptop mở tài liệu lập trình"
+              />
+              <div class="premium-library-copy">
+                <h3>Cấu trúc dữ liệu - Heap, Hashing, Tree</h3>
+                <p>Đã nắm nền tảng, cần một vòng quiz tổng hợp trước bài kiểm tra ngắn vào cuối tuần.</p>
+                <div class="premium-library-footer">
+                  <span class="premium-mini-chip">Ổn định</span>
+                  <span class="premium-mini-chip">24 câu đã luyện</span>
+                  <a class="premium-link" href="content-detail.html">Tiếp tục</a>
+                </div>
+              </div>
+            </article>
+
+            <article class="premium-library-item">
+              <img
+                src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=1200&q=80"
+                alt="Sách và tài liệu nghiên cứu"
+              />
+              <div class="premium-library-copy">
+                <h3>Kinh tế vi mô - Co giãn và tối ưu hóa</h3>
+                <p>Phù hợp cho phiên review nhẹ. Hệ thống đề xuất chuyển sang flashcards trước khi làm quiz.</p>
+                <div class="premium-library-footer">
+                  <span class="premium-mini-chip">Giữ nhịp</span>
+                  <span class="premium-mini-chip">Flashcards sẵn</span>
+                  <a class="premium-link" href="study-workspace.html">Mở workspace</a>
+                </div>
+              </div>
+            </article>
+
+            <article class="premium-library-item">
+              <img
+                src="https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1200&q=80"
+                alt="Sinh viên học nhóm với laptop"
+              />
+              <div class="premium-library-copy">
+                <h3>Xác suất thống kê - Biến cố và xác suất có điều kiện</h3>
+                <p>Tỷ lệ sai gần đây tăng. Premium xếp mục này vào cụm cần cứu điểm trước quiz tuần sau.</p>
+                <div class="premium-library-footer">
+                  <span class="premium-mini-chip">Cần cứu điểm</span>
+                  <span class="premium-mini-chip">Sai 8 câu gần đây</span>
+                  <a class="premium-link" href="quiz-result.html">Review lỗi</a>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="premium-surface premium-surface-accent-cyan">
+          <div class="premium-surface-head">
+            <div>
+              <h2 class="premium-surface-title">Review queue</h2>
+              <div class="premium-surface-subtitle">Danh sách ngắn để mở nhanh trong ngày.</div>
+            </div>
+          </div>
+          <div class="premium-mix-grid">
+            <div class="premium-queue-item">
+              <div class="premium-queue-index">A1</div>
+              <div>
+                <div class="premium-line-title">Chuỗi luân phiên</div>
+                <div class="premium-line-meta">Quiz còn thiếu 1 vòng review.</div>
+              </div>
+              <a class="premium-link" href="study-workspace.html">Mở</a>
+            </div>
+            <div class="premium-queue-item">
+              <div class="premium-queue-index">B4</div>
+              <div>
+                <div class="premium-line-title">Conditional probability</div>
+                <div class="premium-line-meta">Sai liên tiếp trong 2 phiên gần nhất.</div>
+              </div>
+              <a class="premium-link" href="quiz-result.html">Review</a>
+            </div>
+            <div class="premium-queue-item">
+              <div class="premium-queue-index">C2</div>
+              <div>
+                <div class="premium-line-title">Heap operations</div>
+                <div class="premium-line-meta">Chỉ cần ôn nhanh 15 phút.</div>
+              </div>
+              <a class="premium-link" href="content-detail.html">Xem</a>
+            </div>
+          </div>
+        </section>
+
+        <section class="premium-surface premium-surface-accent-rose">
+          <div class="premium-surface-head">
+            <div>
+              <h2 class="premium-surface-title">Phân cụm học liệu</h2>
+              <div class="premium-surface-subtitle">Sắp theo mục tiêu thay vì theo ngày upload.</div>
+            </div>
+          </div>
+          <ul class="premium-pill-list">
+            <li>Midterm trọng điểm</li>
+            <li>Review trong 48h</li>
+            <li>Quiz coverage thấp</li>
+            <li>Đã có note cá nhân</li>
+            <li>Phần dễ lấy điểm</li>
+            <li>Phần hay nhầm</li>
+          </ul>
+        </section>
+      </section>
+
+      <div class="premium-footer">Library premium định vị lại thư viện như một trung tâm điều phối học liệu sau khi user đã có gói, không phải kho file thụ động.</div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="./assets/premium-experience.js"></script>
+  </body>
+</html>

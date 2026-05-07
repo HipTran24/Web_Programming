@@ -4,9 +4,13 @@ obj/
 .vs/
 .vscode/
 .dotnet-cli-home/
+.dotnet/
+.dotnet-home/
 *.user
 *.suo
 Thumbs.db
+premium-run*.log
+restore-diag.log
 
 .fake
 .env.docker

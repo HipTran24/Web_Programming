@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>SynapLearn Premium - Study Workspace</title>
+    <link rel="icon" type="image/svg+xml" href="../images/favicon.svg" />
+    <link rel="shortcut icon" type="image/x-icon" href="../favicon.ico" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link href="./assets/premium-experience.css" rel="stylesheet" />
+  </head>
+  <body class="premium-page" data-page="workspace">
+    <header class="premium-topbar">
+      <div class="premium-topbar-inner">
+        <a class="premium-brand" href="dashboard.html">
+          <span class="premium-brand-mark">SP</span>
+          <span class="premium-brand-copy">
+            <span class="premium-brand-title">SynapLearn Premium</span>
+            <span class="premium-brand-subtitle">Study workspace cho phiên học sâu</span>
+          </span>
+        </a>
+        <nav class="premium-nav" aria-label="Premium navigation">
+          <ul class="premium-nav-list">
+            <li><a href="dashboard.html" data-page-link="dashboard">Dashboard</a></li>
+            <li><a href="study-workspace.html" data-page-link="workspace">Workspace</a></li>
+            <li><a href="content-library.html" data-page-link="library">Library</a></li>
+            <li><a href="content-detail.html" data-page-link="detail">Detail</a></li>
+            <li><a href="quiz-experience.html" data-page-link="quiz">Quiz</a></li>
+            <li><a href="quiz-result.html" data-page-link="result">Review</a></li>
+            <li><a href="analytics.html" data-page-link="analytics">Analytics</a></li>
+            <li><a href="learning-plan.html" data-page-link="plan">Learning Plan</a></li>
+          </ul>
+        </nav>
+        <div class="premium-account">
+          <span class="premium-plan-pill">Phiên học premium • 45 phút</span>
+          <div class="premium-user">
+            <div class="premium-user-avatar">TN</div>
+            <div class="premium-user-copy">
+              <div class="premium-user-name">Trâm Nguyễn</div>
+              <div class="premium-user-meta">Focus mode • Giải tích 1</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="premium-shell">
+      <section class="premium-ribbon">
+        <div class="premium-ribbon-copy">
+          <div>
+            <div class="premium-eyebrow">Premium Workspace • One session, one clear objective</div>
+            <h1 class="premium-title">Một workspace để đọc, hiểu, ghi chú và chuyển sang luyện ngay.</h1>
+            <p class="premium-subtitle">
+              Bản premium gom toàn bộ những gì sinh viên cần trong một buổi học: summary, ý chính, ghi chú cá nhân,
+              flashcards và lối tắt sang quiz. Mục tiêu là không phải nhảy nhiều page khi đang tập trung.
+            </p>
+          </div>
+          <div class="premium-chip-row">
+            <span class="premium-status-chip">Tài liệu đang mở: Chuỗi số và chuỗi hàm</span>
+            <span class="premium-chip">Mức độ khó: Cao</span>
+            <span class="premium-chip">Mục tiêu phiên này: Nắm điều kiện hội tụ</span>
+          </div>
+          <div class="premium-action-row">
+            <a class="premium-action premium-action-primary" href="quiz-experience.html">Chuyển sang quiz drill</a>
+            <a class="premium-action premium-action-secondary" href="content-detail.html">Xem chi tiết tài liệu</a>
+            <a class="premium-action premium-action-muted" href="analytics.html">Xem ảnh hưởng lên analytics</a>
+          </div>
+        </div>
+
+        <figure class="premium-ribbon-visual">
+          <img
+            src="https://images.unsplash.com/photo-1516321318423-f06f85e504b?auto=format&fit=crop&w=1200&q=80"
+            alt="Laptop và sổ tay trên bàn học"
+          />
+          <figcaption class="premium-visual-caption">
+            Workspace premium thiên về “học có điều hướng”: đọc ngắn, note đúng trọng tâm, rồi đóng phiên bằng luyện tập.
+          </figcaption>
+        </figure>
+      </section>
+
+      <ul class="premium-metric-strip">
+        <li class="premium-metric-item">
+          <div class="premium-metric-label">Tóm tắt lõi</div>
+          <div class="premium-metric-value">8</div>
+          <div class="premium-metric-meta">ý chính đã rút ra cho phiên ôn này</div>
+        </li>
+        <li class="premium-metric-item">
+          <div class="premium-metric-label">Flashcards</div>
+          <div class="premium-metric-value">14</div>
+          <div class="premium-metric-meta">thẻ cần ôn lại trong vòng 48 giờ</div>
+        </li>
+        <li class="premium-metric-item">
+          <div class="premium-metric-label">Note cá nhân</div>
+          <div class="premium-metric-value">3</div>
+          <div class="premium-metric-meta">mẹo giải nhanh đã được lưu cho đề thi</div>
+        </li>
+        <li class="premium-metric-item">
+          <div class="premium-metric-label">Quiz đề xuất</div>
+          <div class="premium-metric-value">10</div>
+          <div class="premium-metric-meta">câu để kiểm tra ngay sau phiên đọc</div>
+        </li>
+      </ul>
+
+      <section class="premium-page-grid workspace">
+        <section class="premium-surface premium-surface-accent-mint">
+          <div class="premium-surface-head">
+            <div>
+              <h2 class="premium-surface-title">Không gian học chính</h2>
+              <div class="premium-surface-subtitle">Chuyển nhanh giữa summary, flashcards và note cá nhân.</div>
+            </div>
+          </div>
+
+          <div data-tab-group>
+            <div class="premium-tab-buttons">
+              <button class="premium-tab-button is-active" type="button" data-tab-button="summary">Summary</button>
+              <button class="premium-tab-button" type="button" data-tab-button="flashcards">Flashcards</button>
+              <button class="premium-tab-button" type="button" data-tab-button="notes">Notes</button>
+            </div>
+
+            <div class="premium-tab-panels">
+              <div class="premium-tab-panel is-active" data-tab-panel="summary">
+                <ul class="premium-summary-list">
+                  <li>
+                    <strong>Chuỗi số chỉ hội tụ tuyệt đối khi tổng trị tuyệt đối hội tụ.</strong>
+                    <span class="premium-line-meta">Đây là điểm tách giữa hiểu khái niệm và giải bài thi nhanh.</span>
+                  </li>
+                  <li>
+                    <strong>Chuỗi luân phiên cần nhìn vào hai điều kiện: giảm dần và tiến về 0.</strong>
+                    <span class="premium-line-meta">Nên viết thành checklist hai bước thay vì nhớ mơ hồ.</span>
+                  </li>
+                  <li>
+                    <strong>Kiểm tra hội tụ nên ưu tiên ratio test và so sánh nếu cấu trúc đề quen thuộc.</strong>
+                    <span class="premium-line-meta">Premium gợi ý đúng thứ tự thao tác để giảm thời gian dò đề.</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="premium-tab-panel" data-tab-panel="flashcards">
+                <ul class="premium-summary-list">
+                  <li>
+                    <strong>Card 01 - Điều kiện cần để chuỗi luân phiên hội tụ?</strong>
+                    <span class="premium-line-meta">Dãy số hạng giảm dần và tiến về 0.</span>
+                  </li>
+                  <li>
+                    <strong>Card 02 - Khi nào nên dùng ratio test?</strong>
+                    <span class="premium-line-meta">Khi biểu thức có giai thừa, lũy thừa hoặc cấu trúc nhân chia rõ ràng.</span>
+                  </li>
+                  <li>
+                    <strong>Card 03 - Dấu hiệu phải chuyển sang comparison test?</strong>
+                    <span class="premium-line-meta">Khi nhìn thấy dạng gần với chuỗi p hoặc chuỗi hình học quen thuộc.</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="premium-tab-panel" data-tab-panel="notes">
+                <div class="premium-note-board">
+                  - Khi gặp chuỗi có ln(n), thử so với 1/n hoặc 1/(n ln n) trước.<br />
+                  - Không nhảy vội vào công thức nếu chưa nhận diện loại chuỗi.<br />
+                  - Trong đề giữa kỳ, phần chứng minh thường ăn điểm nếu trình bày điều kiện hội tụ rõ ràng.
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="premium-surface premium-surface-accent-cyan">
+          <div class="premium-surface-head">
+            <div>
+              <h2 class="premium-surface-title">Khối điều hướng phiên học</h2>
+              <div class="premium-surface-subtitle">Giữ nhịp bằng các bước rất cụ thể.</div>
+            </div>
+          </div>
+          <ul class="premium-line-list">
+            <li>
+              <span class="premium-line-title">1. Đọc summary lõi trong 8 phút</span>
+              <span class="premium-line-meta">Chỉ tập trung 3 khái niệm: hội tụ tuyệt đối, luân phiên, so sánh.</span>
+            </li>
+            <li>
+              <span class="premium-line-title">2. Chép lại 2 mẹo giải nhanh</span>
+              <span class="premium-line-meta">Mục tiêu là hình thành phản xạ khi gặp đề thật.</span>
+            </li>
+            <li>
+              <span class="premium-line-title">3. Làm quiz 10 câu ngay sau phiên đọc</span>
+              <span class="premium-line-meta">Không để khoảng nghỉ quá dài giữa hiểu bài và kiểm tra nhớ bài.</span>
+            </li>
+          </ul>
+          <div class="premium-callout" style="margin-top: 16px;">
+            <strong>Phiên học nên kết thúc bằng hành động</strong>
+            <p>Premium không dừng ở tóm tắt. Mọi phiên đều có một đường ra rõ ràng: quiz, review hoặc lên kế hoạch tiếp.</p>
+          </div>
+        </section>
+
+        <section class="premium-surface premium-surface-accent-rose">
+          <div class="premium-surface-head">
+            <div>
+              <h2 class="premium-surface-title">Gợi ý luyện ngay sau phiên đọc</h2>
+              <div class="premium-surface-subtitle">Bộ câu ngắn để đóng phiên học gọn và chắc.</div>
+            </div>
+            <a class="premium-link" href="quiz-experience.html">Mở quiz experience</a>
+          </div>
+          <ul class="premium-summary-list">
+            <li>
+              <strong>10 câu multiple-choice</strong>
+              <span class="premium-line-meta">Tập trung vào nhận diện điều kiện hội tụ và chọn test phù hợp.</span>
+            </li>
+            <li>
+              <strong>3 câu “vì sao”</strong>
+              <span class="premium-line-meta">Giúp chuyển từ học thuộc sang hiểu cấu trúc giải bài.</span>
+            </li>
+            <li>
+              <strong>1 block review lỗi</strong>
+              <span class="premium-line-meta">Câu sai sẽ tự gom thành cụm để ôn tiếp trong lần sau.</span>
+            </li>
+          </ul>
+        </section>
+
+        <section class="premium-surface premium-surface-accent-lime">
+          <div class="premium-surface-head">
+            <div>
+              <h2 class="premium-surface-title">Nguồn đang mở trong workspace</h2>
+              <div class="premium-surface-subtitle">Đủ ngữ cảnh nhưng không làm loãng trọng tâm.</div>
+            </div>
+          </div>
+          <div class="premium-figure-block">
+            <img
+              src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=1200&q=80"
+              alt="Sách và tài liệu ghi chú trên bàn học"
+            />
+            <div class="premium-copy-muted">
+              Bản premium cho phép tài liệu chính, summary và note cá nhân cùng nằm trong một mặt bằng hiển thị,
+              giúp sinh viên không bị đứt mạch khi đang ôn chuyên đề khó.
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <div class="premium-footer">Study workspace là màn premium trung tâm: sau khi đã có gói, user vào đây để học sâu mà không cần chuyển quá nhiều page.</div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="./assets/premium-experience.js"></script>
+  </body>
+</html>
