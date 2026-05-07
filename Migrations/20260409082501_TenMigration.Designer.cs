@@ -12,8 +12,8 @@ using Web_Project.Models;
 namespace Wed_Project.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260406162323_InitSqlServer")]
-    partial class InitSqlServer
+    [Migration("20260409082501_TenMigration")]
+    partial class TenMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
