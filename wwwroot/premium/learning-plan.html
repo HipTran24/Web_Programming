@@ -10,7 +10,7 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
-    <link href="./assets/premium-experience.css?v=20260507" rel="stylesheet" />
+    <link href="./assets/premium-experience.css?v=20260508-1" rel="stylesheet" />
   </head>
   <body class="premium-page" data-page="plan">
     <header class="premium-topbar">
@@ -35,12 +35,12 @@
           </ul>
         </nav>
         <div class="premium-account">
-          <span class="premium-plan-pill">7-day plan • ưu tiên midterm</span>
+          <span class="premium-plan-pill" data-premium-plan>Đang tải gói...</span>
           <div class="premium-user">
-            <div class="premium-user-avatar">TN</div>
+            <div class="premium-user-avatar" data-auth-avatar></div>
             <div class="premium-user-copy">
-              <div class="premium-user-name">Trâm Nguyễn</div>
-              <div class="premium-user-meta">4 block học sâu • 3 block review nhẹ</div>
+              <div class="premium-user-name" data-auth-name>Đang tải...</div>
+              <div class="premium-user-meta" data-plan-meta>Đang đồng bộ kế hoạch</div>
             </div>
           </div>
         </div>
@@ -59,9 +59,9 @@
             </p>
           </div>
           <div class="premium-chip-row">
-            <span class="premium-status-chip">Tuần này đang hoàn thành 68%</span>
-            <span class="premium-chip">2 block cứu điểm</span>
-            <span class="premium-chip">3 block giữ nhịp</span>
+            <span class="premium-status-chip" data-plan-chip="progress">--</span>
+            <span class="premium-chip" data-plan-chip="focus">--</span>
+            <span class="premium-chip" data-plan-chip="active">--</span>
           </div>
           <div class="premium-action-row">
             <a class="premium-action premium-action-primary" href="study-workspace.html">Mở block hôm nay</a>
@@ -84,22 +84,22 @@
       <ul class="premium-metric-strip">
         <li class="premium-metric-item">
           <div class="premium-metric-label">Block học tuần này</div>
-          <div class="premium-metric-value">7</div>
+          <div class="premium-metric-value" data-plan-metric="goal">--</div>
           <div class="premium-metric-meta">4 block học sâu, 3 block review nhẹ</div>
         </li>
         <li class="premium-metric-item">
           <div class="premium-metric-label">Khối giờ đã khóa</div>
-          <div class="premium-metric-value">9.5h</div>
+          <div class="premium-metric-value" data-plan-metric="active">--</div>
           <div class="premium-metric-meta">đã cân lại theo lịch học trên lớp</div>
         </li>
         <li class="premium-metric-item">
           <div class="premium-metric-label">Môn ưu tiên số 1</div>
-          <div class="premium-metric-value">Giải tích</div>
+          <div class="premium-metric-value" data-plan-metric="topic">--</div>
           <div class="premium-metric-meta">vì còn một cụm lỗi kéo điểm xuống</div>
         </li>
         <li class="premium-metric-item">
           <div class="premium-metric-label">Khung giờ tốt nhất</div>
-          <div class="premium-metric-value">19:00</div>
+          <div class="premium-metric-value" data-plan-metric="window">--</div>
           <div class="premium-metric-meta">được dùng cho hầu hết block khó</div>
         </li>
       </ul>
@@ -113,31 +113,8 @@
             </div>
           </div>
 
-          <div class="premium-plan-board">
-            <article class="premium-plan-item is-done" data-plan-item>
-              <button class="premium-plan-toggle" type="button" data-plan-toggle></button>
-              <div>
-                <div class="premium-line-title">Rà summary “Chuỗi số” trong 10 phút</div>
-                <div class="premium-line-meta">Mục tiêu: chắc lại điều kiện hội tụ trước khi làm quiz.</div>
-              </div>
-              <span class="premium-inline-kpi">Done</span>
-            </article>
-            <article class="premium-plan-item" data-plan-item>
-              <button class="premium-plan-toggle" type="button" data-plan-toggle></button>
-              <div>
-                <div class="premium-line-title">Làm quiz drill 10 câu cho comparison test</div>
-                <div class="premium-line-meta">Block cứu điểm chính của buổi tối.</div>
-              </div>
-              <span class="premium-inline-kpi">22 phút</span>
-            </article>
-            <article class="premium-plan-item" data-plan-item>
-              <button class="premium-plan-toggle" type="button" data-plan-toggle></button>
-              <div>
-                <div class="premium-line-title">Ghi lại 2 lỗi lặp vào note cá nhân</div>
-                <div class="premium-line-meta">Giúp lần review sau đi thẳng vào phần yếu.</div>
-              </div>
-              <span class="premium-inline-kpi">8 phút</span>
-            </article>
+          <div class="premium-plan-board" data-plan-tasks>
+            <div class="premium-copy-muted">Đang tải nhiệm vụ...</div>
           </div>
         </section>
 
@@ -149,28 +126,8 @@
             </div>
           </div>
 
-          <div class="premium-roadmap">
-            <article class="premium-roadmap-step">
-              <div class="premium-roadmap-index">01</div>
-              <div class="premium-roadmap-copy">
-                <strong>Thứ 2 - Vá lỗi comparison test</strong>
-                <p>1 block học sâu và 1 micro-review sau 4 giờ.</p>
-              </div>
-            </article>
-            <article class="premium-roadmap-step">
-              <div class="premium-roadmap-index">02</div>
-              <div class="premium-roadmap-copy">
-                <strong>Thứ 3 - Giữ nhịp Cấu trúc dữ liệu</strong>
-                <p>Chỉ 25 phút quiz tổng hợp để không rớt mạch môn ổn định.</p>
-              </div>
-            </article>
-            <article class="premium-roadmap-step">
-              <div class="premium-roadmap-index">03</div>
-              <div class="premium-roadmap-copy">
-                <strong>Thứ 4 - Ôn nhẹ kinh tế vi mô</strong>
-                <p>Flashcards và đọc note, không mở thêm tài liệu mới.</p>
-              </div>
-            </article>
+          <div class="premium-roadmap" data-plan-recommendations>
+            <div class="premium-copy-muted">Đang tải lộ trình...</div>
           </div>
         </section>
 
@@ -217,6 +174,6 @@
       <div class="premium-footer">Learning plan là điểm hội tụ của premium experience: mọi dữ liệu đều được biến thành block học đủ rõ để sinh viên có thể bắt đầu ngay.</div>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="./assets/premium-experience.js?v=20260507"></script>
+    <script src="./assets/premium-experience.js?v=20260508-1"></script>
   </body>
 </html>

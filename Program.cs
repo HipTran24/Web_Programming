@@ -353,7 +353,8 @@ app.Use(async (context, next) =>
         httpContext.Response.Headers["X-Frame-Options"] = "DENY";
 
         var requestPath = httpContext.Request.Path.Value ?? string.Empty;
-        if (requestPath.StartsWith("/home/", StringComparison.OrdinalIgnoreCase) &&
+        if ((requestPath.StartsWith("/home/", StringComparison.OrdinalIgnoreCase) ||
+             requestPath.StartsWith("/premium/", StringComparison.OrdinalIgnoreCase)) &&
             requestPath.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
         {
             httpContext.Response.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0";
@@ -375,7 +376,12 @@ app.Use(async (context, next) =>
 
         if (isStaticAsset)
         {
-            httpContext.Response.Headers["Cache-Control"] = "public, max-age=604800";
+            // Avoid sticky caching during local development so UI tweaks show up immediately.
+            httpContext.Response.Headers["Cache-Control"] = httpContext.RequestServices
+                .GetRequiredService<IWebHostEnvironment>()
+                .IsDevelopment()
+                    ? "no-store, no-cache, must-revalidate, max-age=0"
+                    : "public, max-age=604800";
             httpContext.Response.Headers["Vary"] = "Accept-Encoding";
         }
     }

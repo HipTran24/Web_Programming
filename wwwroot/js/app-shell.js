@@ -835,7 +835,7 @@
               <span class="app-shell-profile-heading-avatar-wrap">${avatarMarkup}</span>
               <span class="app-shell-profile-heading-name">${user.fullName || user.name}</span>
             </div>
-            <a class="app-shell-profile-item" href="/home/profile.html" role="menuitem">Hồ sơ người dùng</a>
+            <button type="button" class="app-shell-profile-item" id="appShellProfileOpen" role="menuitem">Hồ sơ người dùng</button>
             <button type="button" class="app-shell-profile-item app-shell-profile-item--notify" id="appShellNotificationButton" role="menuitem" aria-expanded="false"><span class="app-shell-profile-item-label" id="appShellNotificationButtonLabel">Thông báo hệ thống</span><span class="app-shell-item-dot" id="appShellNotificationMenuDot" hidden></span></button>
             <a class="app-shell-profile-item" href="/home/analytics.html" role="menuitem">Tiến độ</a>
             <a class="app-shell-profile-item" href="/home/learning-plan.html" role="menuitem">Lộ trình học</a>
@@ -863,6 +863,41 @@
               <div class="app-shell-notify-modal-message" id="appShellNotificationModalMessage"></div>
               <div class="app-shell-notify-modal-actions">
                 <button type="button" class="app-shell-notify-secondary" id="appShellNotificationModalDismiss">Đóng</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="app-shell-notify-modal" id="appShellProfileModal" hidden>
+            <div class="app-shell-notify-modal-backdrop" id="appShellProfileModalBackdrop"></div>
+            <div class="app-shell-notify-modal-card" role="dialog" aria-modal="true" aria-labelledby="appShellProfileModalTitle">
+              <button type="button" class="app-shell-notify-modal-close" id="appShellProfileModalClose" aria-label="Đóng hồ sơ">×</button>
+              <div class="app-shell-notify-modal-kicker">Tài khoản</div>
+              <h3 class="app-shell-notify-modal-title" id="appShellProfileModalTitle">Hồ sơ người dùng</h3>
+              <div class="app-shell-notify-modal-meta" id="appShellProfileModalMeta">Đang tải dữ liệu...</div>
+              <div class="app-shell-notify-modal-message">
+                <form id="appShellProfileForm">
+                  <div class="mb-3">
+                    <label class="form-label">Họ và tên</label>
+                    <input class="form-control" id="appShellProfileFullName" type="text" placeholder="Nhập họ và tên" />
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input class="form-control" id="appShellProfileEmail" type="email" placeholder="name@gmail.com" />
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Số điện thoại</label>
+                    <input class="form-control" id="appShellProfilePhone" type="tel" placeholder="+84 ..." />
+                  </div>
+                  <div class="mb-0">
+                    <label class="form-label">Giới thiệu</label>
+                    <textarea class="form-control" id="appShellProfileBio" rows="3" placeholder="Viết vài dòng về bạn..."></textarea>
+                  </div>
+                  <div class="text-danger small mt-2" id="appShellProfileError" style="display:none;"></div>
+                </form>
+              </div>
+              <div class="app-shell-notify-modal-actions">
+                <a class="app-shell-notify-secondary" href="/home/profile.html">Mở trang hồ sơ</a>
+                <button type="button" class="app-shell-notify-primary" id="appShellProfileSave">Lưu</button>
               </div>
             </div>
           </div>
@@ -909,7 +944,7 @@
     const groups = isAdminShell ? SIDEBAR_GROUPS_ADMIN : SIDEBAR_GROUPS;
     return groups.map((g) => {
       const links = g.links
-        .map((l) => `<a href="${l.href}"${l.section === section ? " class=\"active\"" : ""}>${l.label}</a>`)
+        .map((l) => `<a href="${l.href}" data-shell-section="${l.section}"${l.section === section ? " class=\"active\"" : ""}>${l.label}</a>`)
         .join("");
       return `<div class="app-shell-group"><div class="app-shell-group-title">${g.title}</div>${links}</div>`;
     }).join("");
@@ -1151,9 +1186,127 @@
     const notificationModalTitle = document.getElementById("appShellNotificationModalTitle");
     const notificationModalMeta = document.getElementById("appShellNotificationModalMeta");
     const notificationModalMessage = document.getElementById("appShellNotificationModalMessage");
+    const profileOpen = document.getElementById("appShellProfileOpen");
+    const profileModal = document.getElementById("appShellProfileModal");
+    const profileModalBackdrop = document.getElementById("appShellProfileModalBackdrop");
+    const profileModalClose = document.getElementById("appShellProfileModalClose");
+    const profileModalMeta = document.getElementById("appShellProfileModalMeta");
+    const profileForm = document.getElementById("appShellProfileForm");
+    const profileFullName = document.getElementById("appShellProfileFullName");
+    const profileEmail = document.getElementById("appShellProfileEmail");
+    const profilePhone = document.getElementById("appShellProfilePhone");
+    const profileBio = document.getElementById("appShellProfileBio");
+    const profileError = document.getElementById("appShellProfileError");
+    const profileSave = document.getElementById("appShellProfileSave");
     const searchRoot = nav.querySelector(".app-shell-search");
     const searchInput = document.getElementById("appShellSearchInput");
     const searchClearButton = document.getElementById("appShellSearchClear");
+
+    const showProfileError = (message) => {
+      if (!profileError) return;
+      const msg = String(message || "").trim();
+      profileError.textContent = msg;
+      profileError.style.display = msg ? "block" : "none";
+    };
+
+    const openProfileModal = () => {
+      if (!profileModal) return;
+      profileModal.hidden = false;
+      showProfileError("");
+      if (profileModalMeta) profileModalMeta.textContent = "Đang tải dữ liệu...";
+    };
+
+    const closeProfileModal = () => {
+      if (!profileModal) return;
+      profileModal.hidden = true;
+      showProfileError("");
+    };
+
+    const loadProfileIntoModal = async () => {
+      if (!profileModal) return;
+      try {
+        const response = await fetch("/api/profile", {
+          method: "GET",
+          headers: getAuthHeaders(),
+          cache: "no-store",
+        });
+        const payload = await response.json().catch(() => null);
+        if (!response.ok || !payload) {
+          throw new Error(payload?.message || "Không tải được hồ sơ tài khoản.");
+        }
+
+        if (profileModalMeta) {
+          const role = String(payload?.role || "").trim();
+          const verified = payload?.isEmailVerified ? "Đã xác thực email" : "Chưa xác thực email";
+          profileModalMeta.textContent = [role, verified].filter(Boolean).join(" • ") || "Đã đồng bộ";
+        }
+
+        if (profileFullName) profileFullName.value = String(payload?.fullName || "").trim();
+        if (profileEmail) profileEmail.value = String(payload?.email || "").trim();
+        if (profilePhone) profilePhone.value = String(payload?.phone || "").trim();
+        if (profileBio) profileBio.value = String(payload?.bio || "").trim();
+      } catch (error) {
+        if (profileModalMeta) profileModalMeta.textContent = "Không tải được dữ liệu";
+        showProfileError(error instanceof Error ? error.message : "Không tải được hồ sơ.");
+      }
+    };
+
+    const saveProfileFromModal = async () => {
+      if (!profileSave) return;
+      profileSave.disabled = true;
+      showProfileError("");
+      const originalText = profileSave.textContent;
+      profileSave.textContent = "Đang lưu...";
+
+      try {
+        const response = await fetch("/api/profile", {
+          method: "PUT",
+          headers: {
+            ...getAuthHeaders(),
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            fullName: String(profileFullName?.value || "").trim(),
+            email: String(profileEmail?.value || "").trim(),
+            phone: String(profilePhone?.value || "").trim(),
+            bio: String(profileBio?.value || "").trim(),
+            avatarUrl: String(user?.avatarUrl || ""),
+          }),
+        });
+        const payload = await response.json().catch(() => null);
+        if (!response.ok) {
+          throw new Error(payload?.message || "Không thể cập nhật hồ sơ.");
+        }
+
+        if (window.AuthClient?.validateSession) {
+          await window.AuthClient.validateSession();
+        }
+
+        if (profileModalMeta) profileModalMeta.textContent = "Đã lưu thay đổi";
+        closeProfileModal();
+      } catch (error) {
+        showProfileError(error instanceof Error ? error.message : "Không thể cập nhật hồ sơ.");
+      } finally {
+        profileSave.disabled = false;
+        profileSave.textContent = originalText || "Lưu";
+      }
+    };
+
+    if (sidebar) {
+      sidebar.addEventListener("click", async (event) => {
+        const target = event.target instanceof Element
+          ? event.target.closest("[data-shell-section='profile']")
+          : null;
+        if (!target) {
+          return;
+        }
+
+        event.preventDefault();
+        openProfileModal();
+        closeSidebar();
+        await loadProfileIntoModal();
+      });
+    }
 
     if (searchInput && searchClearButton && searchRoot) {
       const openSearchResult = (href) => {
@@ -1417,9 +1570,26 @@
     notificationModalClose?.addEventListener("click", closeNotificationModal);
     notificationModalDismiss?.addEventListener("click", closeNotificationModal);
 
+    profileOpen?.addEventListener("click", async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      openProfileModal();
+      closeProfileMenu();
+      await loadProfileIntoModal();
+    });
+
+    profileModalBackdrop?.addEventListener("click", closeProfileModal);
+    profileModalClose?.addEventListener("click", closeProfileModal);
+    profileForm?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      void saveProfileFromModal();
+    });
+    profileSave?.addEventListener("click", () => void saveProfileFromModal());
+
     activeEscapeKeyHandler = function (e) {
       if (e.key === "Escape") {
         closeNotificationModal();
+        closeProfileModal();
         closeSidebar();
         closeProfileMenu();
       }

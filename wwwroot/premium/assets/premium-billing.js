@@ -42,7 +42,9 @@
     const limit = status.dailyTokenLimit || 200000;
     const used = status.tokenUsedToday || 0;
     const percent = Math.min(100, Math.round((used / limit) * 100));
-    const tier = status.isPremium ? "Premium active" : "Gói thường";
+    const tier = status.isPremium
+      ? (status.subscriptionTier ? String(status.subscriptionTier).trim() : "Premium")
+      : "Gói thường";
 
     setText("[data-premium-tier]", tier);
     setText("[data-premium-token-used]", nf.format(used));
@@ -50,7 +52,14 @@
     setText("[data-premium-token-remaining]", nf.format(Math.max(0, limit - used)));
     setText("[data-premium-token-percent]", `${percent}%`);
     setText("[data-premium-started]", status.premiumStartedAt ? new Date(status.premiumStartedAt).toLocaleDateString("vi-VN") : "Chưa kích hoạt");
-    setText("[data-premium-expires]", status.premiumExpiresAt ? new Date(status.premiumExpiresAt).toLocaleDateString("vi-VN") : status.isPremium ? "Không giới hạn" : "Chưa có");
+    setText(
+      "[data-premium-expires]",
+      status.premiumExpiresAt
+        ? new Date(status.premiumExpiresAt).toLocaleDateString("vi-VN")
+        : status.isPremium
+          ? "Không giới hạn"
+          : "Chưa có",
+    );
 
     document.querySelectorAll("[data-premium-meter-fill]").forEach((node) => {
       node.style.width = `${percent}%`;

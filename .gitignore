@@ -14,3 +14,4 @@ restore-diag.log
 
 .fake
 .env.docker
+.aider*
