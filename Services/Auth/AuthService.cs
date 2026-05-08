@@ -595,6 +595,7 @@ namespace Web_Project.Services.Auth
                 new(ClaimTypes.Name, user.Username),
                 new(ClaimTypes.Email, user.Email),
                 new(ClaimTypes.Role, user.Role?.RoleName ?? DefaultUserRoleName),
+                new("subscriptionTier", ResolveActiveSubscriptionTier(user)),
                 new("isAdmin", string.Equals(user.Role?.RoleName, "Admin", StringComparison.OrdinalIgnoreCase) ? "true" : "false")
             };
 
@@ -646,9 +647,28 @@ namespace Web_Project.Services.Auth
                 AvatarUrl = resolvedAvatarUrl,
                 Role = user.Role?.RoleName ?? DefaultUserRoleName,
                 IsAdmin = string.Equals(user.Role?.RoleName, "Admin", StringComparison.OrdinalIgnoreCase),
+                IsPremium = IsPremiumActive(user),
+                SubscriptionTier = ResolveActiveSubscriptionTier(user),
+                PremiumStartedAt = user.PremiumStartedAt,
+                PremiumExpiresAt = user.PremiumExpiresAt,
                 AccessToken = accessToken,
                 ExpiresAt = expiresAt
             };
+        }
+
+        private static string ResolveActiveSubscriptionTier(User user)
+        {
+            return IsPremiumActive(user) ? "Premium" : "Normal";
+        }
+
+        private static bool IsPremiumActive(User user)
+        {
+            if (!user.IsPremium && !string.Equals(user.SubscriptionTier, "Premium", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            return !user.PremiumExpiresAt.HasValue || user.PremiumExpiresAt.Value > DateTime.UtcNow;
         }
     }
 }

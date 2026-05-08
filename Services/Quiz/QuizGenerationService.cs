@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Web_Project.Models;
 using Web_Project.Services.AI;
+using Web_Project.Services.Premium;
 
 namespace Web_Project.Services.Quiz
 {
@@ -18,13 +19,16 @@ namespace Web_Project.Services.Quiz
 
         private readonly AppDbContext _dbContext;
         private readonly IGroqSummaryService _groqSummaryService;
+        private readonly IUserTokenQuotaService? _tokenQuotaService;
 
         public QuizGenerationService(
             AppDbContext dbContext,
-            IGroqSummaryService groqSummaryService)
+            IGroqSummaryService groqSummaryService,
+            IUserTokenQuotaService? tokenQuotaService = null)
         {
             _dbContext = dbContext;
             _groqSummaryService = groqSummaryService;
+            _tokenQuotaService = tokenQuotaService;
         }
 
         public async Task<GenerateQuizResponse> GenerateQuizAsync(
@@ -99,6 +103,15 @@ namespace Web_Project.Services.Quiz
             if (string.IsNullOrWhiteSpace(sourceText))
             {
                 throw new InvalidOperationException("Nội dung chưa đủ dữ liệu để sinh câu hỏi trắc nghiệm.");
+            }
+
+            if (_tokenQuotaService is not null)
+            {
+                await _tokenQuotaService.EnsureCanConsumeAsync(
+                    userId,
+                    _tokenQuotaService.EstimateQuizTokens(sourceText, totalQuestions),
+                    "Quiz.Generate",
+                    cancellationToken);
             }
 
             var previousQuestionTexts = await GetPreviousQuestionTextsAsync(
@@ -244,6 +257,30 @@ namespace Web_Project.Services.Quiz
             if (quiz.UserId.HasValue && quiz.UserId != userId)
             {
                 throw new UnauthorizedAccessException("Bạn không có quyền truy cập quiz này.");
+            }
+
+            return MapQuiz(quiz, includeAnswers: false, guestToken: string.Empty);
+        }
+
+        public async Task<GenerateQuizResponse?> GetLatestQuizAsync(
+            int? userId,
+            CancellationToken cancellationToken)
+        {
+            if (!userId.HasValue)
+            {
+                throw new UnauthorizedAccessException("Vui lòng đăng nhập để xem quiz.");
+            }
+
+            var quiz = await _dbContext.Quizzes
+                .AsNoTracking()
+                .Include(x => x.Questions)
+                .Where(x => x.UserId == userId && !x.IsGuest)
+                .OrderByDescending(x => x.CreatedAt)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (quiz is null)
+            {
+                return null;
             }
 
             return MapQuiz(quiz, includeAnswers: false, guestToken: string.Empty);

@@ -16,12 +16,16 @@
     "/home/guide.html",
     "/home/upload.html",
     "/home/unauthorized.html",
+    "/premium/upgrade.html",
   ]);
   const protectedPageRoles = new Map([
     ["/admin", ["admin"]],
-    ["/dashboard", ["user"]],
+    ["/dashboard", ["user", "premium"]],
     ["/home/admin.html", ["admin"]],
-    ["/home/dashboard.html", ["user"]],
+    ["/home/dashboard.html", ["user", "premium"]],
+    ["/premium/checkout.html", ["user", "premium"]],
+    ["/premium/payment-success.html", ["user", "premium"]],
+    ["/premium/payment-failed.html", ["user", "premium"]],
   ]);
   const sessionKeys = [
     tokenStorageKey,
@@ -63,6 +67,10 @@
       return adminLandingPage;
     }
 
+    if (normalizedRole === "premium") {
+      return "/premium/dashboard.html";
+    }
+
     return defaultLandingPage;
   };
 
@@ -85,8 +93,12 @@
       return { path, kind: "protected", roles: ["admin"] };
     }
 
+    if (path.startsWith("/premium/") && path.endsWith(".html")) {
+      return { path, kind: "protected", roles: ["premium"] };
+    }
+
     if (path.startsWith("/home/") && path.endsWith(".html")) {
-      return { path, kind: "protected", roles: ["user"] };
+      return { path, kind: "protected", roles: ["user", "premium"] };
     }
 
     return { path, kind: "public", roles: [] };
@@ -391,7 +403,15 @@
       return true;
     }
 
-    return normalizedRequiredRoles.includes(normalizedActualRole);
+    if (normalizedRequiredRoles.includes(normalizedActualRole)) {
+      return true;
+    }
+
+    if (normalizedActualRole === "premium" && normalizedRequiredRoles.includes("user")) {
+      return true;
+    }
+
+    return false;
   };
 
   const requireAuth = async (options) => {

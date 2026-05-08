@@ -137,6 +137,10 @@ namespace Web_Project.Controllers
                     x.Username,
                     x.FullName,
                     x.Email,
+                    x.IsPremium,
+                    x.SubscriptionTier,
+                    x.PremiumStartedAt,
+                    x.PremiumExpiresAt,
                     RoleName = x.Role.RoleName
                 })
                 .FirstOrDefaultAsync(cancellationToken);
@@ -156,7 +160,15 @@ namespace Web_Project.Controllers
                 email = string.IsNullOrWhiteSpace(user.Email) ? email : user.Email,
                 avatarUrl,
                 role = string.IsNullOrWhiteSpace(user.RoleName) ? role : user.RoleName,
-                isAdmin = string.Equals(string.IsNullOrWhiteSpace(user.RoleName) ? role : user.RoleName, "Admin", StringComparison.OrdinalIgnoreCase)
+                isAdmin = string.Equals(string.IsNullOrWhiteSpace(user.RoleName) ? role : user.RoleName, "Admin", StringComparison.OrdinalIgnoreCase),
+                isPremium = (user.IsPremium || string.Equals(user.SubscriptionTier, "Premium", StringComparison.OrdinalIgnoreCase)) &&
+                    (!user.PremiumExpiresAt.HasValue || user.PremiumExpiresAt.Value > DateTime.UtcNow),
+                subscriptionTier = (user.IsPremium || string.Equals(user.SubscriptionTier, "Premium", StringComparison.OrdinalIgnoreCase)) &&
+                    (!user.PremiumExpiresAt.HasValue || user.PremiumExpiresAt.Value > DateTime.UtcNow)
+                        ? "Premium"
+                        : "Normal",
+                premiumStartedAt = user.PremiumStartedAt,
+                premiumExpiresAt = user.PremiumExpiresAt
             });
         }
 

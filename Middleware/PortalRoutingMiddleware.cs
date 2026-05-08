@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
+using Web_Project.Models;
 
 namespace Web_Project.Middleware
 {
@@ -45,6 +47,18 @@ namespace Web_Project.Middleware
             if (IsAdminPortalPath(path))
             {
                 await HandleAdminPortalAsync(context);
+                return;
+            }
+
+            if (IsPremiumAssetPath(path))
+            {
+                await _next(context);
+                return;
+            }
+
+            if (IsPremiumPortalPath(path))
+            {
+                await HandlePremiumPortalAsync(context);
                 return;
             }
 
@@ -111,6 +125,12 @@ namespace Web_Project.Middleware
                 return;
             }
 
+            if (await IsPremiumActiveAsync(context))
+            {
+                context.Response.Redirect("/premium/dashboard.html");
+                return;
+            }
+
             await SendHtmlAsync(context, Path.Combine(_environment.ContentRootPath, "PrivatePages", "user", "dashboard.html"));
         }
 
@@ -130,6 +150,83 @@ namespace Web_Project.Middleware
             }
 
             await _next(context);
+        }
+
+        private async Task HandlePremiumPortalAsync(HttpContext context)
+        {
+            var path = context.Request.Path;
+
+            if (IsPremiumPublicPage(path))
+            {
+                await _next(context);
+                return;
+            }
+
+            if (context.User.Identity?.IsAuthenticated != true)
+            {
+                var returnUrl = Uri.EscapeDataString($"{context.Request.Path}{context.Request.QueryString}");
+                context.Response.Redirect($"/home/login.html?returnUrl={returnUrl}");
+                return;
+            }
+
+            if (IsAdmin(context.User))
+            {
+                context.Response.Redirect("/admin");
+                return;
+            }
+
+            if (IsPremiumAccountOrPaymentPage(path))
+            {
+                await _next(context);
+                return;
+            }
+
+            var userIdRaw = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdRaw, out var userId))
+            {
+                context.Response.Redirect("/home/login.html?returnUrl=%2Fpremium%2Fupgrade.html");
+                return;
+            }
+
+            if (!await IsPremiumActiveAsync(context, userId))
+            {
+                var returnUrl = Uri.EscapeDataString($"{context.Request.Path}{context.Request.QueryString}");
+                context.Response.Redirect($"/premium/upgrade.html?returnUrl={returnUrl}");
+                return;
+            }
+
+            await _next(context);
+        }
+
+        private static async Task<bool> IsPremiumActiveAsync(HttpContext context, int? userId = null)
+        {
+            var resolvedUserId = userId;
+            if (!resolvedUserId.HasValue)
+            {
+                var userIdRaw = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!int.TryParse(userIdRaw, out var parsedUserId))
+                {
+                    return false;
+                }
+
+                resolvedUserId = parsedUserId;
+            }
+
+            var dbContext = context.RequestServices.GetService<AppDbContext>();
+            if (dbContext is null)
+            {
+                return false;
+            }
+
+            var user = await dbContext.Users
+                .AsNoTracking()
+                .Where(x => x.UserId == resolvedUserId.Value)
+                .Select(x => new { x.IsPremium, x.SubscriptionTier, x.PremiumExpiresAt })
+                .FirstOrDefaultAsync(context.RequestAborted);
+
+            return user is not null &&
+                (user.IsPremium || string.Equals(user.SubscriptionTier, "Premium", StringComparison.OrdinalIgnoreCase)) &&
+                (!user.PremiumExpiresAt.HasValue || user.PremiumExpiresAt.Value > DateTime.UtcNow);
         }
 
         private static bool IsUserPortalPage(PathString path)
@@ -155,6 +252,33 @@ namespace Web_Project.Middleware
                    && !value.Equals("/home/admin.html", StringComparison.OrdinalIgnoreCase)
                    && !value.Equals("/home/dashboard.html", StringComparison.OrdinalIgnoreCase)
                    && !value.Equals("/home/unauthorized.html", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsPremiumAssetPath(PathString path)
+        {
+            return path.StartsWithSegments("/premium/assets", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsPremiumPortalPath(PathString path)
+        {
+            var value = path.Value ?? string.Empty;
+            return value.StartsWith("/premium/", StringComparison.OrdinalIgnoreCase) &&
+                   value.EndsWith(".html", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsPremiumPublicPage(PathString path)
+        {
+            var value = path.Value ?? string.Empty;
+            return value.Equals("/premium/upgrade.html", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsPremiumAccountOrPaymentPage(PathString path)
+        {
+            var value = path.Value ?? string.Empty;
+            return value.Equals("/premium/checkout.html", StringComparison.OrdinalIgnoreCase) ||
+                   value.Equals("/premium/payment-success.html", StringComparison.OrdinalIgnoreCase) ||
+                   value.Equals("/premium/payment-failed.html", StringComparison.OrdinalIgnoreCase) ||
+                   value.Equals("/premium/account.html", StringComparison.OrdinalIgnoreCase);
         }
 
         private static bool IsAdminPortalPath(PathString path)

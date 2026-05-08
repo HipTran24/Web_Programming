@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Web_Project.Models;
 using Web_Project.Services.AI;
 using Web_Project.Services.Notifications;
+using Web_Project.Services.Premium;
 using UglyToad.PdfPig;
 
 namespace Web_Project.Services.Content
@@ -49,6 +50,7 @@ namespace Web_Project.Services.Content
         private readonly IContentSafetyService _contentSafetyService;
         private readonly ILogger<SummaryProcessingService> _logger;
         private readonly ISystemNotificationService? _systemNotificationService;
+        private readonly IUserTokenQuotaService? _tokenQuotaService;
 
         public SummaryProcessingService(
             IGroqSummaryService groqSummaryService,
@@ -56,7 +58,8 @@ namespace Web_Project.Services.Content
             IHttpClientFactory httpClientFactory,
             IContentSafetyService contentSafetyService,
             ILogger<SummaryProcessingService> logger,
-            ISystemNotificationService? systemNotificationService = null)
+            ISystemNotificationService? systemNotificationService = null,
+            IUserTokenQuotaService? tokenQuotaService = null)
         {
             _groqSummaryService = groqSummaryService;
             _dbContext = dbContext;
@@ -64,6 +67,7 @@ namespace Web_Project.Services.Content
             _contentSafetyService = contentSafetyService;
             _logger = logger;
             _systemNotificationService = systemNotificationService;
+            _tokenQuotaService = tokenQuotaService;
         }
 
         public async Task<SummarizeUploadResponse> SummarizeUploadAsync(
@@ -719,6 +723,15 @@ namespace Web_Project.Services.Content
             try
             {
                 var mimeType = GetImageMimeType(extension);
+                if (_tokenQuotaService is not null)
+                {
+                    await _tokenQuotaService.EnsureCanConsumeAsync(
+                        userId,
+                        _tokenQuotaService.EstimateImageTokens(),
+                        "Summary.Image",
+                        cancellationToken);
+                }
+
                 var result = await _groqSummaryService.SummarizeImageAsync(
                     imageBytes: payload,
                     mimeType: mimeType,
@@ -796,6 +809,15 @@ namespace Web_Project.Services.Content
                 await File.WriteAllBytesAsync(videoPath, payload, cancellationToken);
                 await ExtractAudioFromVideoAsync(videoPath, audioPath, cancellationToken);
 
+                if (_tokenQuotaService is not null)
+                {
+                    await _tokenQuotaService.EnsureCanConsumeAsync(
+                        userId,
+                        _tokenQuotaService.EstimateTextTokens($"{fileName}:{payload.Length}", 1_500),
+                        "Summary.Video",
+                        cancellationToken);
+                }
+
                 var transcript = await _groqSummaryService.TranscribeAudioAsync(audioPath, cancellationToken);
                 var normalized = NormalizeText(transcript, ".txt", "text/plain");
                 return await BuildTextSummaryResponseAsync(
@@ -835,6 +857,15 @@ namespace Web_Project.Services.Content
             var startedAt = Stopwatch.StartNew();
             try
             {
+                if (_tokenQuotaService is not null)
+                {
+                    await _tokenQuotaService.EnsureCanConsumeAsync(
+                        userId,
+                        _tokenQuotaService.EstimateTextTokens(extractedText),
+                        BuildSummaryActionType(inputType, usedVisionModel, usedTranscription),
+                        cancellationToken);
+                }
+
                 var safetyReview = await _contentSafetyService.AnalyzeAsync(
                     extractedText: extractedText,
                     summary: string.Empty,
@@ -1394,6 +1425,15 @@ namespace Web_Project.Services.Content
 
             var inputType = ResolveInputTypeForStoredContent(content);
             var startedAt = Stopwatch.StartNew();
+            if (_tokenQuotaService is not null)
+            {
+                await _tokenQuotaService.EnsureCanConsumeAsync(
+                    content.UserId,
+                    _tokenQuotaService.EstimateTextTokens(content.ExtractedText),
+                    "Summary.ApprovedDeferred",
+                    cancellationToken);
+            }
+
             var summary = await GenerateSummaryPayloadAsync(content.ExtractedText, inputType, cancellationToken);
             startedAt.Stop();
 

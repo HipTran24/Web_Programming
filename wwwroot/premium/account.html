@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>SynapLearn Premium - Tài khoản</title>
+    <link rel="icon" type="image/svg+xml" href="../images/favicon.svg" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="./assets/premium-experience.css?v=20260507" rel="stylesheet" />
+  </head>
+  <body class="premium-page" data-page="account">
+    <header class="premium-topbar">
+      <div class="premium-topbar-inner">
+        <a class="premium-brand" href="account.html">
+          <span class="premium-brand-mark">SP</span>
+          <span class="premium-brand-copy">
+            <span class="premium-brand-title">SynapLearn Premium</span>
+            <span class="premium-brand-subtitle">Quản lý gói và token hôm nay</span>
+          </span>
+        </a>
+        <nav class="premium-nav" aria-label="Premium navigation">
+          <ul class="premium-nav-list">
+            <li><a href="dashboard.html" data-page-link="dashboard">Dashboard</a></li>
+            <li><a href="upgrade.html" data-page-link="upgrade">Nâng cấp</a></li>
+            <li><a href="account.html" data-page-link="account">Tài khoản</a></li>
+          </ul>
+        </nav>
+        <div class="premium-account">
+          <span class="premium-plan-pill" data-premium-tier>Đang tải gói</span>
+          <a class="premium-action premium-action-muted" href="../home/profile.html">Hồ sơ</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="premium-shell" data-premium-status>
+      <section class="premium-ribbon">
+        <div class="premium-ribbon-copy">
+          <div>
+            <div class="premium-eyebrow">Subscription • Token usage</div>
+            <h1 class="premium-title">Trạng thái gói học tập của bạn.</h1>
+            <p class="premium-subtitle">
+              User thường có 200k token/ngày. Premium có 500k token/ngày, mở khóa dashboard, workspace, analytics
+              và learning plan nâng cao. Backend kiểm tra token trước mỗi tính năng AI.
+            </p>
+          </div>
+          <div class="premium-chip-row">
+            <span class="premium-status-chip" data-premium-tier>Đang tải</span>
+            <span class="premium-chip"><span data-premium-token-limit>...</span> token/ngày</span>
+            <span class="premium-chip">Reset theo ngày</span>
+          </div>
+          <div class="premium-action-row" data-normal-only>
+            <a class="premium-action premium-action-primary" href="checkout.html">Nâng cấp Premium</a>
+            <a class="premium-action premium-action-secondary" href="upgrade.html">Xem quyền lợi</a>
+          </div>
+          <div class="premium-action-row" data-premium-only hidden>
+            <a class="premium-action premium-action-primary" href="dashboard.html">Vào Premium Dashboard</a>
+            <a class="premium-action premium-action-secondary" href="learning-plan.html">Mở learning plan</a>
+          </div>
+          <div class="premium-message" data-premium-message hidden></div>
+        </div>
+        <figure class="premium-ribbon-visual">
+          <img src="https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=1200&q=80" alt="Bàn học với laptop và sổ ghi chú" />
+          <figcaption class="premium-visual-caption">Theo dõi token hôm nay để biết mình còn bao nhiêu dung lượng AI cho tóm tắt, quiz và review.</figcaption>
+        </figure>
+      </section>
+
+      <section class="premium-pricing-grid">
+        <article class="premium-surface">
+          <div class="premium-surface-head">
+            <div>
+              <h2 class="premium-surface-title">Token hôm nay</h2>
+              <div class="premium-surface-subtitle">Dữ liệu lấy trực tiếp từ backend.</div>
+            </div>
+            <span class="premium-inline-kpi"><span data-premium-token-percent>0%</span> đã dùng</span>
+          </div>
+          <div class="premium-token-meter">
+            <div class="premium-token-meter-track">
+              <div class="premium-token-meter-fill" data-premium-meter-fill></div>
+            </div>
+            <div class="premium-token-meter-meta">
+              <span>Đã dùng <strong data-premium-token-used>0</strong></span>
+              <span>Còn lại <strong data-premium-token-remaining>0</strong></span>
+              <span>Giới hạn <strong data-premium-token-limit>0</strong></span>
+            </div>
+          </div>
+        </article>
+
+        <article class="premium-surface">
+          <div class="premium-surface-head">
+            <div>
+              <h2 class="premium-surface-title">Chu kỳ gói</h2>
+              <div class="premium-surface-subtitle">Premium có thể dùng ngày bắt đầu và hết hạn khi tích hợp provider thật.</div>
+            </div>
+          </div>
+          <div class="premium-payment-summary">
+            <div class="premium-payment-line"><span>Trạng thái</span><strong data-premium-tier>Đang tải</strong></div>
+            <div class="premium-payment-line"><span>Ngày bắt đầu</span><strong data-premium-started>...</strong></div>
+            <div class="premium-payment-line"><span>Ngày hết hạn</span><strong data-premium-expires>...</strong></div>
+            <div class="premium-payment-line"><span>Premium daily limit</span><strong>500,000 token</strong></div>
+            <div class="premium-payment-line"><span>Normal daily limit</span><strong>200,000 token</strong></div>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="./assets/premium-experience.js?v=20260507"></script>
+    <script src="./assets/premium-billing.js"></script>
+  </body>
+</html>

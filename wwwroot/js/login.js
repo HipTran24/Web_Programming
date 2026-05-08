@@ -33,6 +33,10 @@
       return "/admin";
     }
 
+    if (normalizedRole === "premium") {
+      return "/premium/dashboard.html";
+    }
+
     return "/dashboard";
   };
 
@@ -65,6 +69,7 @@
     const normalizedRequestedUrl = normalizeReturnUrl(requestedUrl);
     const isAdminRequest = normalizedRequestedUrl === "/admin" || normalizedRequestedUrl.startsWith("/admin/");
     const isUserDashboardRequest = normalizedRequestedUrl === "/dashboard" || normalizedRequestedUrl.startsWith("/dashboard/");
+    const isPremiumRequest = normalizedRequestedUrl.startsWith("/premium/");
 
     if (normalizedRole === "admin") {
       if (isUserDashboardRequest) {
@@ -72,6 +77,18 @@
       }
 
       return normalizedRequestedUrl || "/admin";
+    }
+
+    if (normalizedRole === "premium") {
+      if (isAdminRequest || isUserDashboardRequest) {
+        return "/premium/dashboard.html";
+      }
+
+      return normalizedRequestedUrl || "/premium/dashboard.html";
+    }
+
+    if (isPremiumRequest) {
+      return "/dashboard";
     }
 
     if (isAdminRequest) {

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>SynapLearn Premium - Thanh toán thành công</title>
+    <link rel="icon" type="image/svg+xml" href="../images/favicon.svg" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="./assets/premium-experience.css?v=20260507" rel="stylesheet" />
+  </head>
+  <body class="premium-page" data-page="upgrade" data-payment-success>
+    <header class="premium-topbar">
+      <div class="premium-topbar-inner">
+        <a class="premium-brand" href="dashboard.html">
+          <span class="premium-brand-mark">SP</span>
+          <span class="premium-brand-copy">
+            <span class="premium-brand-title">SynapLearn Premium</span>
+            <span class="premium-brand-subtitle">Gói học sâu đã được kích hoạt</span>
+          </span>
+        </a>
+        <nav class="premium-nav" aria-label="Premium navigation">
+          <ul class="premium-nav-list">
+            <li><a href="dashboard.html" data-page-link="dashboard">Dashboard</a></li>
+            <li><a href="study-workspace.html" data-page-link="workspace">Workspace</a></li>
+            <li><a href="analytics.html" data-page-link="analytics">Analytics</a></li>
+            <li><a href="account.html" data-page-link="account">Tài khoản</a></li>
+          </ul>
+        </nav>
+        <div class="premium-account">
+          <span class="premium-plan-pill">Premium active</span>
+          <a class="premium-action premium-action-primary" href="dashboard.html">Vào Premium Dashboard</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="premium-shell" data-premium-status>
+      <section class="premium-ribbon">
+        <div class="premium-ribbon-copy">
+          <div>
+            <div class="premium-eyebrow">Payment Success • Xin chào Premium</div>
+            <h1 class="premium-title">Tài khoản của bạn đã lên Premium.</h1>
+            <p class="premium-subtitle">
+              SynapLearn đã mở khóa 500k token/ngày, Premium dashboard, workspace học sâu, analytics hành động
+              và learning plan nâng cao cho tài khoản này.
+            </p>
+          </div>
+          <div class="premium-chip-row">
+            <span class="premium-status-chip">500k token/ngày</span>
+            <span class="premium-chip">Dashboard premium</span>
+            <span class="premium-chip">Learning plan nâng cao</span>
+          </div>
+          <div class="premium-action-row">
+            <a class="premium-action premium-action-primary" href="dashboard.html">Vào Premium Dashboard</a>
+            <a class="premium-action premium-action-secondary" href="account.html">Xem trạng thái gói</a>
+          </div>
+          <div class="premium-message" data-premium-message hidden></div>
+        </div>
+        <figure class="premium-ribbon-visual">
+          <img src="https://images.unsplash.com/photo-1523580846011-d3a5bc25702b?auto=format&fit=crop&w=1200&q=80" alt="Sinh viên học tập trong thư viện" />
+          <figcaption class="premium-visual-caption">Mã giao dịch <span data-payment-id>...</span> • Trạng thái <span data-payment-status>Đang xác nhận</span></figcaption>
+        </figure>
+      </section>
+
+      <ul class="premium-metric-strip">
+        <li class="premium-metric-item">
+          <div class="premium-metric-label">Token hôm nay</div>
+          <div class="premium-metric-value"><span data-premium-token-limit>500,000</span></div>
+          <div class="premium-metric-meta">giới hạn Premium mỗi ngày</div>
+        </li>
+        <li class="premium-metric-item">
+          <div class="premium-metric-label">Đã dùng</div>
+          <div class="premium-metric-value"><span data-premium-token-used>0</span></div>
+          <div class="premium-metric-meta">reset tự động vào ngày mới</div>
+        </li>
+        <li class="premium-metric-item">
+          <div class="premium-metric-label">Bắt đầu</div>
+          <div class="premium-metric-value" style="font-size: 1.35rem;"><span data-premium-started>...</span></div>
+          <div class="premium-metric-meta">ngày kích hoạt Premium</div>
+        </li>
+        <li class="premium-metric-item">
+          <div class="premium-metric-label">Hết hạn</div>
+          <div class="premium-metric-value" style="font-size: 1.35rem;"><span data-premium-expires>...</span></div>
+          <div class="premium-metric-meta">theo chu kỳ gói hiện tại</div>
+        </li>
+      </ul>
+    </main>
+
+    <script src="./assets/premium-experience.js?v=20260507"></script>
+    <script src="./assets/premium-billing.js"></script>
+  </body>
+</html>

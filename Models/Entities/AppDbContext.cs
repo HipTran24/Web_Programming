@@ -23,6 +23,7 @@ namespace Web_Project.Models
         public DbSet<AdminAuditLog> AdminAuditLogs { get; set; }
         public DbSet<SystemSetting> SystemSettings { get; set; }
         public DbSet<EmailVerificationOtp> EmailVerificationOtps { get; set; }
+        public DbSet<PaymentTransaction> PaymentTransactions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -34,6 +35,8 @@ namespace Web_Project.Models
             const string dailyUsageActorConstraint = "(([UserId] IS NOT NULL AND [GuestSessionId] IS NULL) OR ([UserId] IS NULL AND [GuestSessionId] IS NOT NULL))";
             const string contentSourceTypeConstraint = "[SourceType] IN (N'FileUpload', N'TextUrl', N'VideoUrl', N'DocumentUrl')";
             const string contentUrlFieldsConstraint = "(([SourceType] = N'FileUpload' AND [SourceUrl] IS NULL AND [FetchStatus] IS NULL AND [FetchError] IS NULL) OR ([SourceType] <> N'FileUpload' AND [SourceUrl] IS NOT NULL AND [FetchStatus] IS NOT NULL))";
+            const string subscriptionTierConstraint = "[SubscriptionTier] IN (N'Normal', N'Premium')";
+            const string paymentStatusConstraint = "[Status] IN (N'Pending', N'Success', N'Failed', N'Cancelled')";
 
             foreach (var relationship in modelBuilder.Model.GetEntityTypes()
                          .SelectMany(e => e.GetForeignKeys()))
@@ -54,6 +57,14 @@ namespace Web_Project.Models
                 .HasDefaultValue(true);
 
             modelBuilder.Entity<User>()
+                .Property(x => x.SubscriptionTier)
+                .HasDefaultValue("Normal");
+
+            modelBuilder.Entity<User>()
+                .Property(x => x.IsPremium)
+                .HasDefaultValue(false);
+
+            modelBuilder.Entity<User>()
                 .HasQueryFilter(x => x.Status);
 
             modelBuilder.Entity<User>()
@@ -63,6 +74,11 @@ namespace Web_Project.Models
             modelBuilder.Entity<User>()
                 .HasIndex(x => x.Email)
                 .IsUnique();
+
+            modelBuilder.Entity<User>()
+                .ToTable(t => t.HasCheckConstraint(
+                    "CK_Users_SubscriptionTier",
+                    subscriptionTierConstraint));
 
             modelBuilder.Entity<EmailVerificationOtp>()
                 .HasIndex(x => new { x.Email, x.Purpose, x.IsUsed, x.ExpiresAt });
@@ -101,6 +117,27 @@ namespace Web_Project.Models
                 .HasOne(x => x.GuestSession)
                 .WithMany(x => x.DailyUsageCounters)
                 .HasForeignKey(x => x.GuestSessionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PaymentTransaction>()
+                .Property(x => x.Amount)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<PaymentTransaction>()
+                .HasIndex(x => new { x.UserId, x.CreatedAt });
+
+            modelBuilder.Entity<PaymentTransaction>()
+                .HasIndex(x => x.Status);
+
+            modelBuilder.Entity<PaymentTransaction>()
+                .ToTable(t => t.HasCheckConstraint(
+                    "CK_PaymentTransactions_Status",
+                    paymentStatusConstraint));
+
+            modelBuilder.Entity<PaymentTransaction>()
+                .HasOne(x => x.User)
+                .WithMany(x => x.PaymentTransactions)
+                .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<ContentModeration>()

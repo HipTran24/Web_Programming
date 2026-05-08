@@ -20,5 +20,9 @@ namespace Web_Project.Services.Quiz
             int quizId,
             int? userId,
             CancellationToken cancellationToken);
+
+        Task<GenerateQuizResponse?> GetLatestQuizAsync(
+            int? userId,
+            CancellationToken cancellationToken);
     }
 }

@@ -15,6 +15,7 @@ using Web_Project.Services.Content;
 using Web_Project.Services.Email;
 using Web_Project.Services.Notifications;
 using Web_Project.Services.Otp;
+using Web_Project.Services.Premium;
 using Web_Project.Services.Quiz;
 using Web_Project.Services.Users;
 
@@ -119,7 +120,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
-    options.AddPolicy("UserOnly", policy => policy.RequireRole("User"));
+    options.AddPolicy("UserOnly", policy => policy.RequireRole("User", "Premium"));
+    options.AddPolicy("PremiumOnly", policy => policy.RequireRole("Premium"));
 });
 
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -135,6 +137,8 @@ builder.Services.AddScoped<IContentSafetyService, GeminiContentSafetyService>();
 builder.Services.AddScoped<ISummaryProcessingService, SummaryProcessingService>();
 builder.Services.AddScoped<IQuizGenerationService, QuizGenerationService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUserTokenQuotaService, UserTokenQuotaService>();
+builder.Services.AddScoped<IPremiumPaymentService, PremiumPaymentService>();
 
 var app = builder.Build();
 
@@ -268,7 +272,62 @@ async Task SeedAdminAccountAsync()
     app.Logger.LogInformation("Created admin account: {Username}", newAdmin.Username);
 }
 
+async Task SeedPremiumUserAsync()
+{
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    if (!app.Environment.IsDevelopment())
+    {
+        app.Logger.LogInformation("Skipping premium user seeding in non-development environment.");
+        return;
+    }
+
+    const string premiumUsername = "premiumuser";
+    const string premiumEmail = "premium@local";
+    const string premiumPassword = "PremiumUser123!";
+    const string premiumFullName = "Premium User";
+
+    var premiumRole = await dbContext.Roles.FirstOrDefaultAsync(x => x.RoleName == "Premium");
+    if (premiumRole == null)
+    {
+        premiumRole = new Role { RoleName = "Premium" };
+        dbContext.Roles.Add(premiumRole);
+        await dbContext.SaveChangesAsync();
+    }
+
+    var existingUser = await dbContext.Users
+        .IgnoreQueryFilters()
+        .FirstOrDefaultAsync(x => x.Username == premiumUsername || x.Email == premiumEmail);
+
+    if (existingUser != null)
+    {
+        app.Logger.LogInformation("Premium test user account already exists: {Username}", existingUser.Username);
+        return;
+    }
+
+    var newUser = new User
+    {
+        Username = premiumUsername,
+        FullName = premiumFullName,
+        Email = premiumEmail,
+        PasswordHash = PasswordHashUtility.HashPassword(premiumPassword),
+        RoleId = premiumRole.RoleId,
+        Status = true,
+        IsLocked = false,
+        IsEmailVerified = true,
+        IsPremium = true,
+        SubscriptionTier = "Premium",
+        CreatedAt = DateTime.UtcNow
+    };
+
+    dbContext.Users.Add(newUser);
+    await dbContext.SaveChangesAsync();
+    app.Logger.LogInformation("Created premium test user account: {Username}", newUser.Username);
+}
+
 await SeedAdminAccountAsync();
+await SeedPremiumUserAsync();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -311,7 +370,8 @@ app.Use(async (context, next) =>
             || requestPath.StartsWith("/home/js/", StringComparison.OrdinalIgnoreCase)
             || requestPath.StartsWith("/home/images/", StringComparison.OrdinalIgnoreCase)
             || requestPath.StartsWith("/home/assets/", StringComparison.OrdinalIgnoreCase)
-            || requestPath.StartsWith("/home/lib/", StringComparison.OrdinalIgnoreCase);
+            || requestPath.StartsWith("/home/lib/", StringComparison.OrdinalIgnoreCase)
+            || requestPath.StartsWith("/premium/assets/", StringComparison.OrdinalIgnoreCase);
 
         if (isStaticAsset)
         {

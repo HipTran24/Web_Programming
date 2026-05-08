@@ -10,7 +10,7 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
-    <link href="./assets/premium-experience.css" rel="stylesheet" />
+    <link href="./assets/premium-experience.css?v=20260508" rel="stylesheet" />
   </head>
   <body class="premium-page" data-page="analytics">
     <header class="premium-topbar">
@@ -35,12 +35,12 @@
           </ul>
         </nav>
         <div class="premium-account">
-          <span class="premium-plan-pill">Analytics view • 30 ngày gần nhất</span>
+          <span class="premium-plan-pill" data-premium-plan>Dang tai...</span>
           <div class="premium-user">
-            <div class="premium-user-avatar">TN</div>
+            <div class="premium-user-avatar" data-auth-avatar></div>
             <div class="premium-user-copy">
-              <div class="premium-user-name">Trâm Nguyễn</div>
-              <div class="premium-user-meta">Hiệu suất học đang đi lên ổn định</div>
+              <div class="premium-user-name" data-auth-name>Dang tai...</div>
+              <div class="premium-user-meta" data-user-meta>Dang dong bo tai khoan</div>
             </div>
           </div>
         </div>
@@ -48,20 +48,18 @@
     </header>
 
     <main class="premium-shell">
+      <div class="premium-message" data-premium-status style="display: none;"></div>
       <section class="premium-ribbon">
         <div class="premium-ribbon-copy">
           <div>
-            <div class="premium-eyebrow">Premium Analytics • Hiệu suất học có thể hành động</div>
-            <h1 class="premium-title">Analytics cho biết phải đầu tư thời gian vào đâu, không chỉ kể lại số liệu.</h1>
-            <p class="premium-subtitle">
-              Ở bản premium, analytics tập trung vào các quyết định học tập: chủ đề nào đang kéo điểm xuống,
-              khung giờ nào học hiệu quả nhất, và phiên nào nên là revision thay vì học mới.
-            </p>
+            <div class="premium-eyebrow" data-analytics-eyebrow>Premium Analytics</div>
+            <h1 class="premium-title" data-analytics-title>Dang tai du lieu...</h1>
+            <p class="premium-subtitle" data-analytics-subtitle>Dang dong bo thong ke hoc tap.</p>
           </div>
           <div class="premium-chip-row">
-            <span class="premium-status-chip">30 ngày gần nhất</span>
-            <span class="premium-chip">3 môn cải thiện rõ</span>
-            <span class="premium-chip">1 cụm lỗi vẫn lặp lại</span>
+            <span class="premium-status-chip" data-analytics-chip="window">Khoang thoi gian: --</span>
+            <span class="premium-chip" data-analytics-chip="attempts">So quiz: --</span>
+            <span class="premium-chip" data-analytics-chip="wrong">Cau sai: --</span>
           </div>
           <div class="premium-action-row">
             <a class="premium-action premium-action-primary" href="learning-plan.html">Chuyển insight sang plan</a>
@@ -72,35 +70,34 @@
 
         <figure class="premium-ribbon-visual">
           <img
-            src="https://images.unsplash.com/photo-1516321497487-e288fb19713f?auto=format&fit=crop&w=1200&q=80"
-            alt="Bàn học với laptop và biểu đồ"
+            alt=""
+            data-analytics-image
+            hidden
           />
-          <figcaption class="premium-visual-caption">
-            Analytics premium giữ ngôn ngữ dashboard, nhưng mọi block đều phải hướng tới lựa chọn học tiếp theo của user.
-          </figcaption>
+          <figcaption class="premium-visual-caption" data-analytics-caption>--</figcaption>
         </figure>
       </section>
 
       <ul class="premium-metric-strip">
         <li class="premium-metric-item">
-          <div class="premium-metric-label">Điểm trung bình</div>
-          <div class="premium-metric-value">8.1</div>
-          <div class="premium-metric-meta">cao hơn kỳ đầu tháng 0.9 điểm</div>
+          <div class="premium-metric-label">Diem trung binh</div>
+          <div class="premium-metric-value" data-analytics-metric="average">--</div>
+          <div class="premium-metric-meta" data-analytics-metric-meta="average">--</div>
         </li>
         <li class="premium-metric-item">
-          <div class="premium-metric-label">Ngày học active</div>
-          <div class="premium-metric-value">21</div>
-          <div class="premium-metric-meta">duy trì đều thay vì dồn cuối tuần</div>
+          <div class="premium-metric-label">Ngay hoc active</div>
+          <div class="premium-metric-value" data-analytics-metric="active">--</div>
+          <div class="premium-metric-meta" data-analytics-metric-meta="active">--</div>
         </li>
         <li class="premium-metric-item">
-          <div class="premium-metric-label">Topic yếu nhất</div>
-          <div class="premium-metric-value">So sánh test</div>
-          <div class="premium-metric-meta">lỗi xuất hiện ở 4 lượt quiz gần đây</div>
+          <div class="premium-metric-label">Quiz da lam</div>
+          <div class="premium-metric-value" data-analytics-metric="attempts">--</div>
+          <div class="premium-metric-meta" data-analytics-metric-meta="attempts">--</div>
         </li>
         <li class="premium-metric-item">
-          <div class="premium-metric-label">Khung giờ tốt nhất</div>
-          <div class="premium-metric-value">19:00</div>
-          <div class="premium-metric-meta">độ chính xác trung bình cao nhất trong ngày</div>
+          <div class="premium-metric-label">Cau sai</div>
+          <div class="premium-metric-value" data-analytics-metric="wrong">--</div>
+          <div class="premium-metric-meta" data-analytics-metric-meta="wrong">--</div>
         </li>
       </ul>
 
@@ -113,26 +110,7 @@
             </div>
           </div>
           <div class="premium-chart">
-            <div class="premium-chart-row">
-              <div class="premium-chart-label">Chuỗi luân phiên</div>
-              <div class="premium-chart-bar"><div class="premium-chart-fill" style="width: 88%;"></div></div>
-              <div class="premium-chart-value">88%</div>
-            </div>
-            <div class="premium-chart-row">
-              <div class="premium-chart-label">Ratio test</div>
-              <div class="premium-chart-bar"><div class="premium-chart-fill" style="width: 79%;"></div></div>
-              <div class="premium-chart-value">79%</div>
-            </div>
-            <div class="premium-chart-row">
-              <div class="premium-chart-label">Comparison test</div>
-              <div class="premium-chart-bar"><div class="premium-chart-fill" style="width: 63%;"></div></div>
-              <div class="premium-chart-value">63%</div>
-            </div>
-            <div class="premium-chart-row">
-              <div class="premium-chart-label">Kết luận chứng minh</div>
-              <div class="premium-chart-bar"><div class="premium-chart-fill" style="width: 67%;"></div></div>
-              <div class="premium-chart-value">67%</div>
-            </div>
+            <div data-analytics-topic-chart></div>
           </div>
         </section>
 
@@ -143,13 +121,8 @@
               <div class="premium-surface-subtitle">Mật độ hoạt động trong 4 tuần gần nhất.</div>
             </div>
           </div>
-          <div class="premium-heat-grid">
-            <div class="premium-heat-cell level-1"></div><div class="premium-heat-cell level-2"></div><div class="premium-heat-cell"></div><div class="premium-heat-cell level-3"></div><div class="premium-heat-cell level-2"></div><div class="premium-heat-cell"></div><div class="premium-heat-cell level-1"></div>
-            <div class="premium-heat-cell"></div><div class="premium-heat-cell level-1"></div><div class="premium-heat-cell level-2"></div><div class="premium-heat-cell"></div><div class="premium-heat-cell level-2"></div><div class="premium-heat-cell level-3"></div><div class="premium-heat-cell"></div>
-            <div class="premium-heat-cell level-2"></div><div class="premium-heat-cell"></div><div class="premium-heat-cell level-1"></div><div class="premium-heat-cell level-2"></div><div class="premium-heat-cell"></div><div class="premium-heat-cell level-3"></div><div class="premium-heat-cell level-1"></div>
-            <div class="premium-heat-cell"></div><div class="premium-heat-cell level-1"></div><div class="premium-heat-cell"></div><div class="premium-heat-cell level-2"></div><div class="premium-heat-cell level-2"></div><div class="premium-heat-cell"></div><div class="premium-heat-cell level-1"></div>
-          </div>
-          <div class="premium-copy-muted" style="margin-top: 12px;">Nhịp học tốt nhất đang rơi vào tối thứ 2, 4 và 6.</div>
+          <div class="premium-heat-grid" data-analytics-heatmap></div>
+          <div class="premium-copy-muted" style="margin-top: 12px;" data-analytics-heatmap-note>--</div>
         </section>
 
         <section class="premium-surface premium-surface-accent-rose">
@@ -160,18 +133,7 @@
             </div>
           </div>
           <ul class="premium-line-list">
-            <li>
-              <span class="premium-line-title">Giảm học mới trong 2 ngày tới</span>
-              <span class="premium-line-meta">Bạn đang có một cụm lỗi cần vá, nên ưu tiên review hơn mở thêm tài liệu.</span>
-            </li>
-            <li>
-              <span class="premium-line-title">Đặt quiz comparison test vào tối mai</span>
-              <span class="premium-line-meta">Đây là block yếu nhất nhưng chỉ cần một phiên tập trung ngắn để kéo lại.</span>
-            </li>
-            <li>
-              <span class="premium-line-title">Giữ khung 19:00 cho các môn khó</span>
-              <span class="premium-line-meta">Độ chính xác ở khung giờ này đang tốt hơn các thời điểm khác.</span>
-            </li>
+            <div data-analytics-suggestions></div>
           </ul>
         </section>
 
@@ -183,33 +145,14 @@
             </div>
           </div>
           <div class="premium-chart">
-            <div class="premium-chart-row">
-              <div class="premium-chart-label">Tuần 1</div>
-              <div class="premium-chart-bar"><div class="premium-chart-fill" style="width: 61%;"></div></div>
-              <div class="premium-chart-value">6.1</div>
-            </div>
-            <div class="premium-chart-row">
-              <div class="premium-chart-label">Tuần 2</div>
-              <div class="premium-chart-bar"><div class="premium-chart-fill" style="width: 69%;"></div></div>
-              <div class="premium-chart-value">6.9</div>
-            </div>
-            <div class="premium-chart-row">
-              <div class="premium-chart-label">Tuần 3</div>
-              <div class="premium-chart-bar"><div class="premium-chart-fill" style="width: 76%;"></div></div>
-              <div class="premium-chart-value">7.6</div>
-            </div>
-            <div class="premium-chart-row">
-              <div class="premium-chart-label">Tuần 4</div>
-              <div class="premium-chart-bar"><div class="premium-chart-fill" style="width: 81%;"></div></div>
-              <div class="premium-chart-value">8.1</div>
-            </div>
+            <div data-analytics-trend></div>
           </div>
         </section>
       </section>
 
-      <div class="premium-footer">Analytics premium đứng ở cuối vòng học để phản hồi lại toàn bộ hành vi của user, rồi đẩy ngược insight về dashboard và plan.</div>
+      <div class="premium-footer" data-analytics-footer>--</div>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="./assets/premium-experience.js"></script>
+    <script src="./assets/premium-experience.js?v=20260508"></script>
   </body>
 </html>

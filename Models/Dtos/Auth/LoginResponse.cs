@@ -16,6 +16,14 @@ namespace Web_Project.Models
 
         public bool IsAdmin { get; set; }
 
+        public bool IsPremium { get; set; }
+
+        public string SubscriptionTier { get; set; } = "Normal";
+
+        public DateTime? PremiumStartedAt { get; set; }
+
+        public DateTime? PremiumExpiresAt { get; set; }
+
         public string AccessToken { get; set; } = string.Empty;
 
         public DateTime ExpiresAt { get; set; }

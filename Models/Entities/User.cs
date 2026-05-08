@@ -32,6 +32,15 @@ namespace Web_Project.Models
 
         public bool IsEmailVerified { get; set; }
 
+        public bool IsPremium { get; set; }
+
+        [MaxLength(32)]
+        public string SubscriptionTier { get; set; } = "Normal";
+
+        public DateTime? PremiumStartedAt { get; set; }
+
+        public DateTime? PremiumExpiresAt { get; set; }
+
         public DateTime CreatedAt { get; set; }
 
         [ForeignKey(nameof(RoleId))]
@@ -46,6 +55,8 @@ namespace Web_Project.Models
         public StudyStatistic? StudyStatistic { get; set; }
 
         public ICollection<DailyUsageCounter> DailyUsageCounters { get; set; } = new List<DailyUsageCounter>();
+
+        public ICollection<PaymentTransaction> PaymentTransactions { get; set; } = new List<PaymentTransaction>();
 
         public ICollection<ContentModeration> ReviewedContentModerations { get; set; } = new List<ContentModeration>();
 

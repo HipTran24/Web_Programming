@@ -599,7 +599,9 @@ namespace Web_Project.Controllers
                 Status = true,
                 IsLocked = false,
                 IsEmailVerified = true,
-                CreatedAt = now
+                CreatedAt = now,
+                IsPremium = true,
+                SubscriptionTier = "Premium"
             };
 
             _dbContext.Users.Add(user);
@@ -754,6 +756,8 @@ namespace Web_Project.Controllers
 
             var roleName = NormalizeRoleName(request.Role);
             var roleId = await EnsureRoleIdAsync(roleName, cancellationToken);
+            var isPremium = string.Equals(roleName, "Premium", StringComparison.OrdinalIgnoreCase);
+
             var user = new User
             {
                 Username = request.Username.Trim(),
@@ -764,7 +768,9 @@ namespace Web_Project.Controllers
                 Status = true,
                 IsLocked = request.IsLocked,
                 IsEmailVerified = request.IsEmailVerified,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                IsPremium = isPremium,
+                SubscriptionTier = isPremium ? "Premium" : "Normal"
             };
 
             _dbContext.Users.Add(user);
@@ -790,7 +796,8 @@ namespace Web_Project.Controllers
                     user.Email,
                     role = roleName,
                     user.IsLocked,
-                    user.IsEmailVerified
+                    user.IsEmailVerified,
+                    user.IsPremium
                 }),
                 cancellationToken);
 
@@ -864,12 +871,16 @@ namespace Web_Project.Controllers
 
             var roleName = NormalizeRoleName(request.Role);
             var wasLocked = user.IsLocked;
+            var isPremium = string.Equals(roleName, "Premium", StringComparison.OrdinalIgnoreCase);
+
             user.Username = request.Username.Trim();
             user.FullName = request.FullName.Trim();
             user.Email = request.Email.Trim().ToLowerInvariant();
             user.RoleId = await EnsureRoleIdAsync(roleName, cancellationToken);
             user.IsLocked = request.IsLocked;
             user.IsEmailVerified = request.IsEmailVerified;
+            user.IsPremium = isPremium;
+            user.SubscriptionTier = isPremium ? "Premium" : "Normal";
 
             try
             {
@@ -892,7 +903,8 @@ namespace Web_Project.Controllers
                     user.Email,
                     role = roleName,
                     user.IsLocked,
-                    user.IsEmailVerified
+                    user.IsEmailVerified,
+                    user.IsPremium
                 }),
                 cancellationToken);
 
@@ -920,7 +932,8 @@ namespace Web_Project.Controllers
                     user.Email,
                     role = roleName,
                     user.IsLocked,
-                    user.IsEmailVerified
+                    user.IsEmailVerified,
+                    user.IsPremium
                 }
             });
         }
@@ -1771,7 +1784,14 @@ namespace Web_Project.Controllers
 
         private static string NormalizeRoleName(string? value)
         {
-            return string.Equals(value, "Admin", StringComparison.OrdinalIgnoreCase) ? "Admin" : "User";
+            var lowered = (value ?? "User").Trim().ToLowerInvariant();
+            return lowered switch
+            {
+                "admin" => "Admin",
+                "administrator" => "Admin",
+                "premium" => "Premium",
+                _ => "User"
+            };
         }
 
         private static bool HasStrongPassword(string password)

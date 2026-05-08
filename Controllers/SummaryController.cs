@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Web_Project.Models;
 using Web_Project.Services.Content;
+using Web_Project.Services.Premium;
 
 namespace Web_Project.Controllers
 {
@@ -78,6 +79,15 @@ namespace Web_Project.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
+            catch (TokenQuotaExceededException ex)
+            {
+                return StatusCode(StatusCodes.Status429TooManyRequests, new
+                {
+                    message = ex.Message,
+                    dailyTokenLimit = ex.Limit,
+                    tokenUsedToday = ex.UsedToday
+                });
+            }
             catch (InvalidOperationException ex)
             {
                 return BadRequest(new { message = ex.Message });
@@ -131,6 +141,15 @@ namespace Web_Project.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
+            catch (TokenQuotaExceededException ex)
+            {
+                return StatusCode(StatusCodes.Status429TooManyRequests, new
+                {
+                    message = ex.Message,
+                    dailyTokenLimit = ex.Limit,
+                    tokenUsedToday = ex.UsedToday
+                });
+            }
             catch (InvalidOperationException ex)
             {
                 return BadRequest(new { message = ex.Message });
@@ -182,6 +201,15 @@ namespace Web_Project.Controllers
             catch (NotSupportedException ex)
             {
                 return BadRequest(new { message = ex.Message });
+            }
+            catch (TokenQuotaExceededException ex)
+            {
+                return StatusCode(StatusCodes.Status429TooManyRequests, new
+                {
+                    message = ex.Message,
+                    dailyTokenLimit = ex.Limit,
+                    tokenUsedToday = ex.UsedToday
+                });
             }
             catch (InvalidOperationException ex)
             {

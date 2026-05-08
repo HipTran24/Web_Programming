@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Web_Project.Models;
+using Web_Project.Services.Premium;
 using Web_Project.Services.Quiz;
 
 namespace Web_Project.Controllers
@@ -40,6 +41,15 @@ namespace Web_Project.Controllers
                     cancellationToken);
                 return Ok(result);
             }
+            catch (TokenQuotaExceededException ex)
+            {
+                return StatusCode(StatusCodes.Status429TooManyRequests, new
+                {
+                    message = ex.Message,
+                    dailyTokenLimit = ex.Limit,
+                    tokenUsedToday = ex.UsedToday
+                });
+            }
             catch (InvalidOperationException ex)
             {
                 return BadRequest(new { message = ex.Message });
@@ -73,6 +83,33 @@ namespace Web_Project.Controllers
                 if (quiz is null)
                 {
                     return NotFound(new { message = "Không tìm thấy quiz." });
+                }
+
+                return Ok(quiz);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+            }
+        }
+
+        [Authorize(Policy = "UserOnly")]
+        [HttpGet("latest")]
+        public async Task<ActionResult<GenerateQuizResponse>> GetLatestQuiz(
+            CancellationToken cancellationToken)
+        {
+            var userId = ResolveCurrentUserId();
+            if (userId is null)
+            {
+                return Unauthorized(new { message = "Vui lòng đăng nhập để xem quiz." });
+            }
+
+            try
+            {
+                var quiz = await _quizGenerationService.GetLatestQuizAsync(userId, cancellationToken);
+                if (quiz is null)
+                {
+                    return NotFound(new { message = "Chưa có quiz nào để hiển thị." });
                 }
 
                 return Ok(quiz);

@@ -19,6 +19,8 @@ namespace Web_Project.Models
 
         public int QuizGenerationCount { get; set; }
 
+        public int TokenUsed { get; set; }
+
         public double TotalProcessingTime { get; set; }
 
         public DateTime UpdatedAt { get; set; }
