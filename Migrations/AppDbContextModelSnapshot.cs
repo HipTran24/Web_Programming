@@ -411,6 +411,85 @@ namespace Wed_Project.Migrations
                     b.ToTable("GuestSessions");
                 });
 
+            modelBuilder.Entity("Web_Project.Models.PaymentTransaction", b =>
+                {
+                    b.Property<int>("PaymentTransactionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PaymentTransactionId"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FailedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("OrderId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PayUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("nvarchar(2048)");
+
+                    b.Property<string>("PlanCode")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("ProviderMessage")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<int?>("ProviderResultCode")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ProviderTransactionId")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("RequestId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("nvarchar(24)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("PaymentTransactionId");
+
+                    b.HasIndex("OrderId")
+                        .IsUnique();
+
+                    b.HasIndex("RequestId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "Status", "CreatedAt");
+
+                    b.ToTable("PaymentTransactions");
+                });
+
             modelBuilder.Entity("Web_Project.Models.Question", b =>
                 {
                     b.Property<int>("QuestionId")
@@ -623,6 +702,49 @@ namespace Wed_Project.Migrations
                     b.ToTable("SystemSettings");
                 });
 
+            modelBuilder.Entity("Web_Project.Models.UserSubscription", b =>
+                {
+                    b.Property<int>("UserSubscriptionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserSubscriptionId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("PaymentTransactionId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PlanCode")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<DateTime>("StartsAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserSubscriptionId");
+
+                    b.HasIndex("PaymentTransactionId");
+
+                    b.HasIndex("UserId", "PlanCode", "IsActive", "ExpiresAt");
+
+                    b.ToTable("UserSubscriptions");
+                });
+
             modelBuilder.Entity("Web_Project.Models.User", b =>
                 {
                     b.Property<int>("UserId")
@@ -798,6 +920,17 @@ namespace Wed_Project.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Web_Project.Models.PaymentTransaction", b =>
+                {
+                    b.HasOne("Web_Project.Models.User", "User")
+                        .WithMany("PaymentTransactions")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Web_Project.Models.Question", b =>
                 {
                     b.HasOne("Web_Project.Models.Quiz", "Quiz")
@@ -864,6 +997,24 @@ namespace Wed_Project.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("UpdatedBy");
+                });
+
+            modelBuilder.Entity("Web_Project.Models.UserSubscription", b =>
+                {
+                    b.HasOne("Web_Project.Models.PaymentTransaction", "PaymentTransaction")
+                        .WithMany()
+                        .HasForeignKey("PaymentTransactionId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Web_Project.Models.User", "User")
+                        .WithMany("UserSubscriptions")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("PaymentTransaction");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Web_Project.Models.User", b =>
@@ -940,6 +1091,8 @@ namespace Wed_Project.Migrations
 
                     b.Navigation("DailyUsageCounters");
 
+                    b.Navigation("PaymentTransactions");
+
                     b.Navigation("QuizAttempts");
 
                     b.Navigation("Quizzes");
@@ -949,6 +1102,8 @@ namespace Wed_Project.Migrations
                     b.Navigation("StudyStatistic");
 
                     b.Navigation("UpdatedSystemSettings");
+
+                    b.Navigation("UserSubscriptions");
                 });
 #pragma warning restore 612, 618
         }

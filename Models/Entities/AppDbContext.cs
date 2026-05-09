@@ -23,6 +23,8 @@ namespace Web_Project.Models
         public DbSet<AdminAuditLog> AdminAuditLogs { get; set; }
         public DbSet<SystemSetting> SystemSettings { get; set; }
         public DbSet<EmailVerificationOtp> EmailVerificationOtps { get; set; }
+        public DbSet<PaymentTransaction> PaymentTransactions { get; set; }
+        public DbSet<UserSubscription> UserSubscriptions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -148,6 +150,38 @@ namespace Web_Project.Models
                 .HasOne(x => x.UpdatedBy)
                 .WithMany(x => x.UpdatedSystemSettings)
                 .HasForeignKey(x => x.UpdatedByUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<PaymentTransaction>()
+                .HasIndex(x => x.OrderId)
+                .IsUnique();
+
+            modelBuilder.Entity<PaymentTransaction>()
+                .HasIndex(x => x.RequestId)
+                .IsUnique();
+
+            modelBuilder.Entity<PaymentTransaction>()
+                .HasIndex(x => new { x.UserId, x.Status, x.CreatedAt });
+
+            modelBuilder.Entity<PaymentTransaction>()
+                .HasOne(x => x.User)
+                .WithMany(x => x.PaymentTransactions)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<UserSubscription>()
+                .HasIndex(x => new { x.UserId, x.PlanCode, x.IsActive, x.ExpiresAt });
+
+            modelBuilder.Entity<UserSubscription>()
+                .HasOne(x => x.User)
+                .WithMany(x => x.UserSubscriptions)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<UserSubscription>()
+                .HasOne(x => x.PaymentTransaction)
+                .WithMany()
+                .HasForeignKey(x => x.PaymentTransactionId)
                 .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<Content>()

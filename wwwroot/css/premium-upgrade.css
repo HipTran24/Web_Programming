@@ -1,0 +1,203 @@
+.premium-upgrade-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 12% 12%, rgba(236, 72, 153, 0.18), transparent 28%),
+    radial-gradient(circle at 82% 18%, rgba(56, 189, 248, 0.2), transparent 30%),
+    linear-gradient(135deg, #08131b 0%, #10202a 48%, #130c1d 100%);
+}
+
+.premium-upgrade-shell {
+  position: relative;
+  z-index: 1;
+}
+
+.premium-upgrade-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.55fr);
+  gap: 28px;
+  overflow: hidden;
+  padding: clamp(28px, 5vw, 56px);
+}
+
+.premium-upgrade-copy h1 {
+  max-width: 760px;
+  margin: 12px 0 14px;
+  font-family: "Sora", "Be Vietnam Pro", sans-serif;
+  font-size: clamp(2.1rem, 5vw, 4.8rem);
+  font-weight: 800;
+  letter-spacing: -0.06em;
+  line-height: 0.98;
+}
+
+.premium-upgrade-copy p {
+  max-width: 720px;
+  color: rgba(238, 246, 247, 0.76);
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+.premium-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(244, 114, 182, 0.32);
+  border-radius: 999px;
+  padding: 8px 13px;
+  background: rgba(244, 114, 182, 0.1);
+  color: #f9a8d4;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.premium-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.premium-pay-button,
+.premium-outline-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  border-radius: 999px;
+  padding: 0 22px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform 0.16s ease, border-color 0.16s ease, opacity 0.16s ease;
+}
+
+.premium-pay-button {
+  border: 0;
+  background: linear-gradient(135deg, #ec4899, #f97316);
+  color: #fff;
+  box-shadow: 0 18px 40px rgba(236, 72, 153, 0.28);
+}
+
+.premium-outline-button {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: #eef6f7;
+}
+
+.premium-pay-button:hover,
+.premium-outline-button:hover {
+  transform: translateY(-2px);
+}
+
+.premium-pay-button:disabled {
+  cursor: wait;
+  opacity: 0.62;
+  transform: none;
+}
+
+.premium-plan-card {
+  align-self: stretch;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 28px;
+  padding: 26px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)),
+    rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.premium-plan-tag {
+  color: #f9a8d4;
+  font-size: 0.84rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.premium-plan-price {
+  margin-top: 14px;
+  font-family: "Sora", "Be Vietnam Pro", sans-serif;
+  font-size: 2.5rem;
+  font-weight: 800;
+}
+
+.premium-plan-meta,
+.premium-status-text {
+  color: rgba(238, 246, 247, 0.66);
+  line-height: 1.6;
+}
+
+.premium-feature-list {
+  display: grid;
+  gap: 10px;
+  margin: 22px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.premium-feature-list li {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: rgba(8, 19, 27, 0.38);
+  color: rgba(238, 246, 247, 0.78);
+}
+
+.premium-notice {
+  margin-top: 18px;
+  border: 1px solid rgba(125, 211, 252, 0.3);
+  border-radius: 18px;
+  padding: 14px 16px;
+  background: rgba(14, 165, 233, 0.1);
+  color: #bae6fd;
+}
+
+.premium-notice.is-error {
+  border-color: rgba(248, 113, 113, 0.36);
+  background: rgba(248, 113, 113, 0.1);
+  color: #fecaca;
+}
+
+.premium-notice.is-success {
+  border-color: rgba(74, 222, 128, 0.34);
+  background: rgba(34, 197, 94, 0.1);
+  color: #bbf7d0;
+}
+
+.premium-flow-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.premium-flow-card {
+  padding: 22px;
+}
+
+.premium-flow-card span {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 14px;
+  background: rgba(56, 189, 248, 0.16);
+  color: #7dd3fc;
+  font-weight: 800;
+}
+
+.premium-flow-card h2 {
+  margin: 14px 0 8px;
+  font-size: 1.08rem;
+  font-weight: 800;
+}
+
+.premium-flow-card p {
+  margin: 0;
+  color: rgba(238, 246, 247, 0.68);
+}
+
+@media (max-width: 900px) {
+  .premium-upgrade-hero,
+  .premium-flow-grid {
+    grid-template-columns: 1fr;
+  }
+}
