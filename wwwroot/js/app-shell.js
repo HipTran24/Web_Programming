@@ -51,6 +51,7 @@
         { section: "upload", href: "/home/upload.html", label: "Upload" },
         { section: "learning-plan", href: "/home/learning-plan.html", label: "Lộ trình" },
         { section: "analytics", href: "/home/analytics.html", label: "Phân tích" },
+        { section: "premium", href: "/home/premium-upgrade.html", label: "Premium" },
       ],
     },
     {
@@ -269,6 +270,7 @@
       "/home/quiz.html": ["quiz", "cau hoi", "kiem tra", "trac nghiem"],
       "/home/analytics.html": ["phan tich", "analytics", "thong ke"],
       "/home/learning-plan.html": ["lo trinh", "ke hoach hoc", "learning plan"],
+      "/home/premium-upgrade.html": ["premium", "momo", "thanh toan", "nang cap"],
       "/home/profile.html": ["ho so", "tai khoan", "trang ca nhan", "bao mat"],
       "/admin": ["admin", "quan tri"],
     };
@@ -604,6 +606,7 @@
     if (p.includes("/upload")) return "upload";
     if (p.includes("/content-list") || p.includes("/history") || p.includes("/content-detail")) return "history";
     if (p.includes("/learning-plan")) return "learning-plan";
+    if (p.includes("/premium")) return "premium";
     if (p.includes("/quiz")) return "quiz";
     if (p.includes("/admin")) return "admin";
     if (p.includes("/analytics")) return "analytics";

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style id="instant-page-bg">html,body{background:#08131b!important;color:#eef6f7;}</style>
+    <title>SynapLearn - Premium</title>
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg?v=20260402-tab3" />
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=20260402-tab3" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link href="../css/style.css" rel="stylesheet" />
+    <link href="../css/app-shell.css" rel="stylesheet" />
+    <link href="../css/premium-upgrade.css" rel="stylesheet" />
+  </head>
+  <body class="premium-upgrade-page">
+    <div id="page-loader" class="logo-loader">
+      <div class="logo-loader-box">
+        <div class="ai-orbit orbit-1"></div>
+        <div class="ai-orbit orbit-2"></div>
+        <div class="ai-logo-core">
+          <span>AI</span>
+        </div>
+        <h4>SynapLearn</h4>
+        <p>Dang kiem tra goi Premium</p>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <main class="premium-upgrade-shell container py-5">
+        <section class="premium-upgrade-hero glass">
+          <div class="premium-upgrade-copy">
+            <span class="premium-eyebrow">SynapLearn Premium</span>
+            <h1>Nang cap Premium bang MoMo sandbox</h1>
+            <p>
+              Goi demo don gian cho do an: thanh toan MoMo, he thong nhan IPN hop le,
+              sau do mo khoa khu vuc Premium trong 30 ngay.
+            </p>
+            <div id="premiumPaymentNotice" class="premium-notice d-none" role="alert"></div>
+            <div class="premium-actions">
+              <button id="momoPayButton" class="premium-pay-button" type="button">
+                Thanh toan bang MoMo
+              </button>
+              <a id="openPremiumButton" class="premium-outline-button d-none" href="/premium/dashboard.html">
+                Vao Premium
+              </a>
+            </div>
+          </div>
+
+          <aside class="premium-plan-card">
+            <div class="premium-plan-tag">PREMIUM_30D</div>
+            <div class="premium-plan-price">10.000 VND</div>
+            <div class="premium-plan-meta">Hieu luc 30 ngay sau khi IPN MoMo thanh cong.</div>
+            <ul class="premium-feature-list">
+              <li>Mo khoa cac trang /premium/*</li>
+              <li>Luu giao dich MoMo vao database</li>
+              <li>Cap Premium chi khi chu ky IPN hop le</li>
+            </ul>
+            <div id="premiumStatusText" class="premium-status-text">Dang tai trang thai...</div>
+          </aside>
+        </section>
+
+        <section class="premium-flow-grid">
+          <article class="glass premium-flow-card">
+            <span>1</span>
+            <h2>Tao giao dich</h2>
+            <p>Backend tao order pending va ky request bang HMAC SHA256.</p>
+          </article>
+          <article class="glass premium-flow-card">
+            <span>2</span>
+            <h2>Mo MoMo</h2>
+            <p>Trinh duyet chuyen sang payUrl cua MoMo sandbox de thanh toan.</p>
+          </article>
+          <article class="glass premium-flow-card">
+            <span>3</span>
+            <h2>Nhan IPN</h2>
+            <p>Server verify signature, doi giao dich thanh Paid va kich hoat Premium.</p>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../js/app-shell.js"></script>
+    <script src="../js/premium-upgrade.js"></script>
+  </body>
+</html>

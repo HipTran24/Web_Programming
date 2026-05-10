@@ -15,6 +15,7 @@ using Web_Project.Services.Content;
 using Web_Project.Services.Email;
 using Web_Project.Services.Notifications;
 using Web_Project.Services.Otp;
+using Web_Project.Services.Payments;
 using Web_Project.Services.Quiz;
 using Web_Project.Services.Users;
 
@@ -58,6 +59,7 @@ builder.Services.Configure<GeminiSettings>(builder.Configuration.GetSection("Gem
 builder.Services.Configure<AiRoutingSettings>(builder.Configuration.GetSection("AiRouting"));
 builder.Services.Configure<GoogleAuthSettings>(builder.Configuration.GetSection(GoogleAuthSettings.SectionName));
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SectionName));
+builder.Services.Configure<MoMoPaymentSettings>(builder.Configuration.GetSection(MoMoPaymentSettings.SectionName));
 
 var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>() ?? new JwtSettings();
 if (string.IsNullOrWhiteSpace(jwtSettings.SecretKey))
@@ -135,6 +137,8 @@ builder.Services.AddScoped<IContentSafetyService, GeminiContentSafetyService>();
 builder.Services.AddScoped<ISummaryProcessingService, SummaryProcessingService>();
 builder.Services.AddScoped<IQuizGenerationService, QuizGenerationService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IPremiumSubscriptionService, PremiumSubscriptionService>();
+builder.Services.AddScoped<IMoMoPaymentService, MoMoPaymentService>();
 
 var app = builder.Build();
 
@@ -332,6 +336,7 @@ app.Use(async (context, next) =>
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<PremiumAccessMiddleware>();
 app.UseMiddleware<PortalRoutingMiddleware>();
 
 app.MapControllers();
