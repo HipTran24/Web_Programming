@@ -2,12 +2,12 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
 COPY global.json ./
-COPY Wed_Project.sln ./
-COPY Wed_Project.csproj ./
-RUN dotnet restore Wed_Project.csproj
+COPY Web_Project.sln ./
+COPY Web_Project.csproj ./
+RUN dotnet restore Web_Project.csproj
 
 COPY . ./
-RUN dotnet publish Wed_Project.csproj -c Release -o /app/publish --no-restore /p:UseAppHost=false
+RUN dotnet publish Web_Project.csproj -c Release -o /app/publish --no-restore /p:UseAppHost=false
 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app
@@ -24,4 +24,4 @@ ENV ASPNETCORE_URLS=http://+:8080 \
 
 EXPOSE 8080
 
-ENTRYPOINT ["dotnet", "Wed_Project.dll"]
+ENTRYPOINT ["dotnet", "Web_Project.dll"]
