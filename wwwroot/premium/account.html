@@ -12,22 +12,21 @@
     <header class="premium-topbar">
       <div class="premium-topbar-inner">
         <a class="premium-brand" href="account.html">
-          <span class="premium-brand-mark">SP</span>
+          <span class="premium-brand-mark"><img src="../images/favicon.svg" alt="SynapLearn" /></span>
           <span class="premium-brand-copy">
             <span class="premium-brand-title">SynapLearn Premium</span>
-            <span class="premium-brand-subtitle">Quản lý gói và token hôm nay</span>
           </span>
         </a>
         <nav class="premium-nav" aria-label="Premium navigation">
           <ul class="premium-nav-list">
-            <li><a href="dashboard.html" data-page-link="dashboard">Dashboard</a></li>
+            <li><a href="dashboard.html" data-page-link="dashboard">Tổng quan</a></li>
             <li><a href="upgrade.html" data-page-link="upgrade">Nâng cấp</a></li>
             <li><a href="account.html" data-page-link="account">Tài khoản</a></li>
           </ul>
         </nav>
         <div class="premium-account">
           <span class="premium-plan-pill" data-premium-tier>Đang tải gói</span>
-          <a class="premium-action premium-action-muted" href="../home/profile.html">Hồ sơ</a>
+          <a class="premium-user-avatar" href="../home/profile.html" data-auth-avatar aria-label="Hồ sơ"></a>
         </div>
       </div>
     </header>
@@ -103,7 +102,8 @@
       </section>
     </main>
 
-    <script src="./assets/premium-experience.js?v=20260508-1"></script>
-    <script src="./assets/premium-billing.js"></script>
-  </body>
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/auth.js?v=20260511-1"></script>
+    <script src="./assets/premium-experience.js?v=20260511-1"></script>
+</body>
 </html>

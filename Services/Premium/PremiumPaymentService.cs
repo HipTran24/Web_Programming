@@ -35,14 +35,19 @@ namespace Web_Project.Services.Premium
             var transaction = new PaymentTransaction
             {
                 UserId = userId,
+                Provider = "Mock",
                 Amount = PremiumMonthlyPriceVnd,
                 Currency = "VND",
-                Status = "Pending",
+                Status = PaymentTransactionStatuses.Pending,
                 CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
                 PaidAt = null,
                 PlanName = normalizedPlanName,
+                PlanCode = normalizedPlanName,
                 ProviderReference = $"mock-{Guid.NewGuid():N}"
             };
+            transaction.OrderId = transaction.ProviderReference;
+            transaction.RequestId = $"{transaction.ProviderReference}-request";
 
             _dbContext.PaymentTransactions.Add(transaction);
             await _dbContext.SaveChangesAsync(cancellationToken);
@@ -75,11 +80,12 @@ namespace Web_Project.Services.Premium
                 throw new InvalidOperationException("Không tìm thấy giao dịch thanh toán.");
             }
 
-            if (!string.Equals(transaction.Status, "Success", StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(transaction.Status, PaymentTransactionStatuses.Success, StringComparison.OrdinalIgnoreCase))
             {
                 var now = DateTime.UtcNow;
-                transaction.Status = "Success";
+                transaction.Status = PaymentTransactionStatuses.Success;
                 transaction.PaidAt = now;
+                transaction.UpdatedAt = now;
                 transaction.User.IsPremium = true;
                 transaction.User.SubscriptionTier = "Premium";
                 transaction.User.PremiumStartedAt ??= now;
@@ -97,8 +103,8 @@ namespace Web_Project.Services.Premium
             CancellationToken cancellationToken)
         {
             var normalizedStatus = string.Equals(status, "Cancelled", StringComparison.OrdinalIgnoreCase)
-                ? "Cancelled"
-                : "Failed";
+                ? PaymentTransactionStatuses.Cancelled
+                : PaymentTransactionStatuses.Failed;
 
             var transaction = await _dbContext.PaymentTransactions
                 .FirstOrDefaultAsync(
@@ -110,9 +116,11 @@ namespace Web_Project.Services.Premium
                 throw new InvalidOperationException("Không tìm thấy giao dịch thanh toán.");
             }
 
-            if (!string.Equals(transaction.Status, "Success", StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(transaction.Status, PaymentTransactionStatuses.Success, StringComparison.OrdinalIgnoreCase))
             {
                 transaction.Status = normalizedStatus;
+                transaction.FailedAt = DateTime.UtcNow;
+                transaction.UpdatedAt = DateTime.UtcNow;
                 await _dbContext.SaveChangesAsync(cancellationToken);
             }
 

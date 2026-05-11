@@ -434,11 +434,43 @@ namespace Wed_Project.Migrations
                         .HasMaxLength(8)
                         .HasColumnType("nvarchar(8)");
 
+                    b.Property<DateTime?>("FailedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("OrderId")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
                     b.Property<DateTime?>("PaidAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("PayUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("nvarchar(2048)");
+
+                    b.Property<string>("PlanCode")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
                     b.Property<string>("PlanName")
                         .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("ProviderMessage")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<int?>("ProviderResultCode")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ProviderTransactionId")
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
 
@@ -447,23 +479,40 @@ namespace Wed_Project.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("nvarchar(128)");
 
+                    b.Property<string>("RequestId")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("nvarchar(32)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("PaymentTransactionId");
 
+                    b.HasIndex("OrderId")
+                        .IsUnique()
+                        .HasFilter("[OrderId] IS NOT NULL");
+
+                    b.HasIndex("RequestId")
+                        .IsUnique()
+                        .HasFilter("[RequestId] IS NOT NULL");
+
                     b.HasIndex("Status");
 
                     b.HasIndex("UserId", "CreatedAt");
 
+                    b.HasIndex("UserId", "Status", "CreatedAt");
+
                     b.ToTable("PaymentTransactions", t =>
                         {
-                            t.HasCheckConstraint("CK_PaymentTransactions_Status", "[Status] IN (N'Pending', N'Success', N'Failed', N'Cancelled')");
+                            t.HasCheckConstraint("CK_PaymentTransactions_Status", "[Status] IN (N'Pending', N'Success', N'Paid', N'Failed', N'Cancelled')");
                         });
                 });
 
@@ -677,6 +726,49 @@ namespace Wed_Project.Migrations
                     b.HasIndex("UpdatedByUserId");
 
                     b.ToTable("SystemSettings");
+                });
+
+            modelBuilder.Entity("Web_Project.Models.UserSubscription", b =>
+                {
+                    b.Property<int>("UserSubscriptionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserSubscriptionId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("PaymentTransactionId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PlanCode")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<DateTime>("StartsAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserSubscriptionId");
+
+                    b.HasIndex("PaymentTransactionId");
+
+                    b.HasIndex("UserId", "PlanCode", "IsActive", "ExpiresAt");
+
+                    b.ToTable("UserSubscriptions");
                 });
 
             modelBuilder.Entity("Web_Project.Models.User", b =>
@@ -954,6 +1046,24 @@ namespace Wed_Project.Migrations
                     b.Navigation("UpdatedBy");
                 });
 
+            modelBuilder.Entity("Web_Project.Models.UserSubscription", b =>
+                {
+                    b.HasOne("Web_Project.Models.PaymentTransaction", "PaymentTransaction")
+                        .WithMany()
+                        .HasForeignKey("PaymentTransactionId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Web_Project.Models.User", "User")
+                        .WithMany("UserSubscriptions")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("PaymentTransaction");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Web_Project.Models.User", b =>
                 {
                     b.HasOne("Web_Project.Models.Role", "Role")
@@ -1039,6 +1149,8 @@ namespace Wed_Project.Migrations
                     b.Navigation("StudyStatistic");
 
                     b.Navigation("UpdatedSystemSettings");
+
+                    b.Navigation("UserSubscriptions");
                 });
 #pragma warning restore 612, 618
         }

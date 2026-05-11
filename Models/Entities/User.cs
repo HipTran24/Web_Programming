@@ -63,5 +63,7 @@ namespace Web_Project.Models
         public ICollection<AdminAuditLog> AdminAuditLogs { get; set; } = new List<AdminAuditLog>();
 
         public ICollection<SystemSetting> UpdatedSystemSettings { get; set; } = new List<SystemSetting>();
+
+        public ICollection<UserSubscription> UserSubscriptions { get; set; } = new List<UserSubscription>();
     }
 }

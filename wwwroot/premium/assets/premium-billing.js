@@ -20,11 +20,24 @@
     });
   };
 
+  const redirectToMain = (delayMs = 3500) => {
+    window.setTimeout(() => {
+      window.location.href = "/premium/dashboard.html";
+    }, delayMs);
+  };
+
+  const getAuthHeaders = () => {
+    const token = window.AuthClient?.getAccessToken?.() || "";
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   const fetchJson = async (url, options = {}) => {
     const response = await fetch(url, {
       credentials: "include",
       headers: {
+        Accept: "application/json",
         "Content-Type": "application/json",
+        ...getAuthHeaders(),
         ...(options.headers || {}),
       },
       ...options,
@@ -76,13 +89,16 @@
 
   const loadStatus = async () => {
     if (!document.querySelector("[data-premium-status]")) {
-      return;
+      return null;
     }
 
     try {
-      renderStatus(await fetchJson("/api/premium/status"));
+      const status = await fetchJson("/api/premium/status");
+      renderStatus(status);
+      return status;
     } catch (error) {
       showMessage(error.message || "Vui lòng đăng nhập để xem trạng thái gói.", "warning");
+      return null;
     }
   };
 
@@ -95,13 +111,17 @@
         button.textContent = "Đang tạo giao dịch...";
 
         try {
-          const checkout = await fetchJson("/api/premium/checkout", {
+          const checkout = await fetchJson("/api/payments/payos/create", {
             method: "POST",
-            body: JSON.stringify({ planName: "Premium" }),
+            body: JSON.stringify({ planCode: "PREMIUM_30D" }),
           });
 
+          if (!checkout?.success || !checkout?.payUrl) {
+            throw new Error(checkout?.message || "PayOS chưa tạo được liên kết thanh toán.");
+          }
+
           setText("[data-premium-price]", money.format(checkout.amount || 0));
-          window.location.href = checkout.checkoutUrl;
+          window.location.href = checkout.payUrl;
         } catch (error) {
           button.disabled = false;
           button.classList.remove("is-loading");
@@ -118,17 +138,51 @@
       return;
     }
 
-    const transactionId = new URLSearchParams(window.location.search).get("transactionId");
-    if (!transactionId) {
-      showMessage("Thiếu mã giao dịch để kích hoạt Premium.", "danger");
-      return;
+    const params = new URLSearchParams(window.location.search);
+    const transactionId = params.get("transactionId");
+    const orderId = params.get("orderId") || params.get("orderCode");
+    const message = params.get("message");
+
+    if (orderId) {
+      setText("[data-payment-id]", orderId);
     }
 
+    if (message) {
+      showMessage(message, "info");
+    }
+
+    const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    const pollStatus = async () => {
+      for (let attempt = 0; attempt < 5; attempt += 1) {
+        const status = await loadStatus();
+        if (status?.isPremium) {
+          return status;
+        }
+        await wait(2000);
+      }
+      return null;
+    };
+
     try {
-      const payment = await fetchJson(`/api/premium/payments/${transactionId}/success`, { method: "POST" });
-      setText("[data-payment-id]", payment.paymentTransactionId);
-      setText("[data-payment-status]", "Thành công");
-      await loadStatus();
+      if (transactionId) {
+        const payment = await fetchJson(`/api/premium/payments/${transactionId}/success`, { method: "POST" });
+        setText("[data-payment-id]", payment.paymentTransactionId);
+        setText("[data-payment-status]", "Thành công");
+        showMessage("Thanh toán thành công. Cảm ơn bạn đã nâng cấp Premium. Hệ thống sẽ quay lại màn hình chính sau vài giây.", "success");
+        redirectToMain();
+        await loadStatus();
+        return;
+      }
+
+      setText("[data-payment-status]", "Đang xác nhận");
+      const status = await pollStatus();
+      if (status?.isPremium) {
+        setText("[data-payment-status]", "Thành công");
+        showMessage("Thanh toán thành công. Cảm ơn bạn đã nâng cấp Premium. Hệ thống sẽ quay lại màn hình chính sau vài giây.", "success");
+        redirectToMain();
+      } else if (!message) {
+        showMessage("Hệ thống đang xác nhận thanh toán PayOS. Vui lòng đợi vài phút và tải lại trang.", "info");
+      }
     } catch (error) {
       showMessage(error.message || "Chưa thể xác nhận thanh toán.", "danger");
     }
@@ -140,7 +194,14 @@
       return;
     }
 
-    const transactionId = new URLSearchParams(window.location.search).get("transactionId");
+    const params = new URLSearchParams(window.location.search);
+    const transactionId = params.get("transactionId");
+    const message = params.get("message");
+
+    if (message) {
+      showMessage(message, "warning");
+    }
+
     if (!transactionId) {
       return;
     }

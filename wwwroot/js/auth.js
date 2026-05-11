@@ -14,9 +14,23 @@
     "/home/index.html",
     "/home/about.html",
     "/home/guide.html",
-    "/home/upload.html",
     "/home/unauthorized.html",
     "/premium/upgrade.html",
+  ]);
+  const premiumPublicPages = new Set([
+    "/premium/upgrade.html",
+  ]);
+  const premiumPaymentPages = new Set([
+    "/premium/checkout.html",
+    "/premium/payment-success.html",
+    "/premium/payment-failed.html",
+  ]);
+  const premiumBlockedPages = new Set([
+    "/home/premium-upgrade.html",
+    "/premium/upgrade.html",
+    "/premium/checkout.html",
+    "/premium/payment-success.html",
+    "/premium/payment-failed.html",
   ]);
   const protectedPageRoles = new Map([
     ["/admin", ["admin"]],
@@ -89,6 +103,18 @@
       return { path, kind: "protected", roles: protectedPageRoles.get(path) || [] };
     }
 
+    if (premiumPublicPages.has(path)) {
+      return { path, kind: "public", roles: [] };
+    }
+
+    if (premiumPaymentPages.has(path)) {
+      return { path, kind: "protected", roles: ["user", "premium"] };
+    }
+
+    if (path === "/premium/account.html") {
+      return { path, kind: "protected", roles: ["premium"] };
+    }
+
     if (path.startsWith("/admin/")) {
       return { path, kind: "protected", roles: ["admin"] };
     }
@@ -133,15 +159,28 @@
     }
   };
 
-  const normalizeUser = (user) => ({
-    userId: user?.userId ?? null,
-    username: user?.username ?? "",
-    fullName: user?.fullName ?? "",
-    email: user?.email ?? "",
-    role: user?.role ?? "",
-    avatarUrl: user?.avatarUrl ?? readFromStorages(avatarStorageKey).value ?? "",
-    expiresAt: user?.expiresAt ?? null,
-  });
+  const normalizeUser = (user) => {
+    const rawRole = String(user?.role || "").trim();
+    const subscriptionTier = String(user?.subscriptionTier || "").trim();
+    const isPremium = Boolean(user?.isPremium) || subscriptionTier.toLowerCase() === "premium";
+    const resolvedRole = rawRole.toLowerCase() === "admin"
+      ? "Admin"
+      : isPremium
+        ? "Premium"
+        : rawRole;
+
+    return {
+      userId: user?.userId ?? null,
+      username: user?.username ?? "",
+      fullName: user?.fullName ?? "",
+      email: user?.email ?? "",
+      role: resolvedRole,
+      isPremium,
+      subscriptionTier: isPremium ? "Premium" : subscriptionTier,
+      avatarUrl: user?.avatarUrl ?? readFromStorages(avatarStorageKey).value ?? "",
+      expiresAt: user?.expiresAt ?? null,
+    };
+  };
 
   const getCurrentUser = () => {
     if (validatedUser) {
@@ -414,6 +453,25 @@
     return false;
   };
 
+  const isPremiumOnlyPage = (path) =>
+    path.startsWith("/premium/") &&
+    path.endsWith(".html") &&
+    !premiumPublicPages.has(path) &&
+    !premiumPaymentPages.has(path);
+
+  const redirectIfPremiumOnBlockedPage = (me, path) => {
+    if (!me?.isPremium) {
+      return false;
+    }
+
+    if (!premiumBlockedPages.has(path)) {
+      return false;
+    }
+
+    window.location.replace("/premium/account.html");
+    return true;
+  };
+
   const requireAuth = async (options) => {
     const opts = options || {};
     const requiredRoles = Array.isArray(opts.roles) ? opts.roles : [];
@@ -504,6 +562,7 @@
 
   const guardCurrentPage = async () => {
     const page = getPageAccess();
+    const path = page.path;
 
     if (page.kind === "auth") {
       const me = await validateSession();
@@ -517,7 +576,28 @@
     }
 
     if (page.kind === "protected") {
-      return requireAuth({ roles: page.roles });
+      const needsPremium = isPremiumOnlyPage(path);
+      const requiredRoles = needsPremium ? ["premium"] : page.roles;
+      const me = await requireAuth({
+        roles: requiredRoles,
+        onForbidden: needsPremium
+          ? () => window.location.replace("/premium/upgrade.html")
+          : null,
+      });
+
+      if (me && redirectIfPremiumOnBlockedPage(me, path)) {
+        return me;
+      }
+
+      return me;
+    }
+
+    if (premiumBlockedPages.has(path)) {
+      const me = await validateSession();
+      if (me && redirectIfPremiumOnBlockedPage(me, path)) {
+        return me;
+      }
+      return me;
     }
 
     if (!hasSessionArtifacts()) {

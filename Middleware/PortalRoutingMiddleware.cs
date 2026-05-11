@@ -69,6 +69,12 @@ namespace Web_Project.Middleware
                 return;
             }
 
+            if (path.Equals("/home/premium-upgrade.html", StringComparison.OrdinalIgnoreCase))
+            {
+                await HandlePremiumUpgradePageAsync(context);
+                return;
+            }
+
             if (IsUserPortalPage(path))
             {
                 await HandleUserPortalPageAsync(context);
@@ -152,12 +158,45 @@ namespace Web_Project.Middleware
             await _next(context);
         }
 
+        private async Task HandlePremiumUpgradePageAsync(HttpContext context)
+        {
+            if (context.User.Identity?.IsAuthenticated != true)
+            {
+                var returnUrl = Uri.EscapeDataString($"{context.Request.Path}{context.Request.QueryString}");
+                context.Response.Redirect($"/home/login.html?returnUrl={returnUrl}");
+                return;
+            }
+
+            if (IsAdmin(context.User))
+            {
+                context.Response.Redirect("/admin");
+                return;
+            }
+
+            if (await IsPremiumActiveAsync(context))
+            {
+                context.Response.Redirect("/premium/account.html");
+                return;
+            }
+
+            await _next(context);
+        }
+
         private async Task HandlePremiumPortalAsync(HttpContext context)
         {
             var path = context.Request.Path;
 
             if (IsPremiumPublicPage(path))
             {
+                if (context.User.Identity?.IsAuthenticated == true && !IsAdmin(context.User))
+                {
+                    if (await IsPremiumActiveAsync(context))
+                    {
+                        context.Response.Redirect("/premium/account.html");
+                        return;
+                    }
+                }
+
                 await _next(context);
                 return;
             }
@@ -177,6 +216,12 @@ namespace Web_Project.Middleware
 
             if (IsPremiumAccountOrPaymentPage(path))
             {
+                if (await IsPremiumActiveAsync(context))
+                {
+                    context.Response.Redirect("/premium/account.html");
+                    return;
+                }
+
                 await _next(context);
                 return;
             }
@@ -248,7 +293,6 @@ namespace Web_Project.Middleware
                    && !value.Equals("/home/login.html", StringComparison.OrdinalIgnoreCase)
                    && !value.Equals("/home/register.html", StringComparison.OrdinalIgnoreCase)
                    && !value.Equals("/home/otp.html", StringComparison.OrdinalIgnoreCase)
-                   && !value.Equals("/home/upload.html", StringComparison.OrdinalIgnoreCase)
                    && !value.Equals("/home/admin.html", StringComparison.OrdinalIgnoreCase)
                    && !value.Equals("/home/dashboard.html", StringComparison.OrdinalIgnoreCase)
                    && !value.Equals("/home/unauthorized.html", StringComparison.OrdinalIgnoreCase);
@@ -277,8 +321,7 @@ namespace Web_Project.Middleware
             var value = path.Value ?? string.Empty;
             return value.Equals("/premium/checkout.html", StringComparison.OrdinalIgnoreCase) ||
                    value.Equals("/premium/payment-success.html", StringComparison.OrdinalIgnoreCase) ||
-                   value.Equals("/premium/payment-failed.html", StringComparison.OrdinalIgnoreCase) ||
-                   value.Equals("/premium/account.html", StringComparison.OrdinalIgnoreCase);
+                   value.Equals("/premium/payment-failed.html", StringComparison.OrdinalIgnoreCase);
         }
 
         private static bool IsAdminPortalPath(PathString path)

@@ -24,6 +24,7 @@ namespace Web_Project.Models
         public DbSet<SystemSetting> SystemSettings { get; set; }
         public DbSet<EmailVerificationOtp> EmailVerificationOtps { get; set; }
         public DbSet<PaymentTransaction> PaymentTransactions { get; set; }
+        public DbSet<UserSubscription> UserSubscriptions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -36,7 +37,7 @@ namespace Web_Project.Models
             const string contentSourceTypeConstraint = "[SourceType] IN (N'FileUpload', N'TextUrl', N'VideoUrl', N'DocumentUrl')";
             const string contentUrlFieldsConstraint = "(([SourceType] = N'FileUpload' AND [SourceUrl] IS NULL AND [FetchStatus] IS NULL AND [FetchError] IS NULL) OR ([SourceType] <> N'FileUpload' AND [SourceUrl] IS NOT NULL AND [FetchStatus] IS NOT NULL))";
             const string subscriptionTierConstraint = "[SubscriptionTier] IN (N'Normal', N'Premium')";
-            const string paymentStatusConstraint = "[Status] IN (N'Pending', N'Success', N'Failed', N'Cancelled')";
+            const string paymentStatusConstraint = "[Status] IN (N'Pending', N'Success', N'Paid', N'Failed', N'Cancelled')";
 
             foreach (var relationship in modelBuilder.Model.GetEntityTypes()
                          .SelectMany(e => e.GetForeignKeys()))
@@ -130,6 +131,19 @@ namespace Web_Project.Models
                 .HasIndex(x => x.Status);
 
             modelBuilder.Entity<PaymentTransaction>()
+                .HasIndex(x => x.OrderId)
+                .IsUnique()
+                .HasFilter("[OrderId] IS NOT NULL");
+
+            modelBuilder.Entity<PaymentTransaction>()
+                .HasIndex(x => x.RequestId)
+                .IsUnique()
+                .HasFilter("[RequestId] IS NOT NULL");
+
+            modelBuilder.Entity<PaymentTransaction>()
+                .HasIndex(x => new { x.UserId, x.Status, x.CreatedAt });
+
+            modelBuilder.Entity<PaymentTransaction>()
                 .ToTable(t => t.HasCheckConstraint(
                     "CK_PaymentTransactions_Status",
                     paymentStatusConstraint));
@@ -185,6 +199,21 @@ namespace Web_Project.Models
                 .HasOne(x => x.UpdatedBy)
                 .WithMany(x => x.UpdatedSystemSettings)
                 .HasForeignKey(x => x.UpdatedByUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<UserSubscription>()
+                .HasIndex(x => new { x.UserId, x.PlanCode, x.IsActive, x.ExpiresAt });
+
+            modelBuilder.Entity<UserSubscription>()
+                .HasOne(x => x.User)
+                .WithMany(x => x.UserSubscriptions)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<UserSubscription>()
+                .HasOne(x => x.PaymentTransaction)
+                .WithMany()
+                .HasForeignKey(x => x.PaymentTransactionId)
                 .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<Content>()

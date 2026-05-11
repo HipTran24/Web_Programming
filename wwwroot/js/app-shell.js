@@ -1,7 +1,7 @@
 (function () {
   const FALLBACK_FAVICON_PATH = "/images/favicon.svg?v=20260402-tab3";
   const FALLBACK_SHORTCUT_ICON_PATH = "/favicon.ico?v=20260402-tab3";
-  const FALLBACK_TOUCH_ICON_PATH = "/images/Logo.png";
+  const FALLBACK_TOUCH_ICON_PATH = "/images/favicon.svg?v=20260402-tab3";
   const NAV_ID = "app-shell-navbar";
   const SIDEBAR_ID = "app-shell-sidebar";
   const BACKDROP_ID = "app-shell-backdrop";
@@ -51,6 +51,7 @@
         { section: "upload", href: "/home/upload.html", label: "Upload" },
         { section: "learning-plan", href: "/home/learning-plan.html", label: "Lộ trình" },
         { section: "analytics", href: "/home/analytics.html", label: "Phân tích" },
+        { section: "premium", href: "/home/premium-upgrade.html", label: "Premium" },
       ],
     },
     {
@@ -103,7 +104,7 @@
 
     ensureLink("icon", iconHref, "image/svg+xml");
     ensureLink("shortcut icon", shortcutIconHref, "image/x-icon");
-    ensureLink("apple-touch-icon", touchIconHref, "image/png");
+    ensureLink("apple-touch-icon", touchIconHref, "image/svg+xml");
   }
 
   ensureSiteFavicon();
@@ -269,6 +270,7 @@
       "/home/quiz.html": ["quiz", "cau hoi", "kiem tra", "trac nghiem"],
       "/home/analytics.html": ["phan tich", "analytics", "thong ke"],
       "/home/learning-plan.html": ["lo trinh", "ke hoach hoc", "learning plan"],
+      "/home/premium-upgrade.html": ["premium", "momo", "thanh toan", "nang cap"],
       "/home/profile.html": ["ho so", "tai khoan", "trang ca nhan", "bao mat"],
       "/admin": ["admin", "quan tri"],
     };
@@ -604,6 +606,7 @@
     if (p.includes("/upload")) return "upload";
     if (p.includes("/content-list") || p.includes("/history") || p.includes("/content-detail")) return "history";
     if (p.includes("/learning-plan")) return "learning-plan";
+    if (p.includes("/premium")) return "premium";
     if (p.includes("/quiz")) return "quiz";
     if (p.includes("/admin")) return "admin";
     if (p.includes("/analytics")) return "analytics";
@@ -639,12 +642,17 @@
         return null;
       }
 
+      const subscriptionTier = String(currentUser.subscriptionTier || "").trim();
+      const isPremium = Boolean(currentUser.isPremium) || subscriptionTier.toLowerCase() === "premium";
+
       return {
         token,
         name: resolveDisplayName(currentUser.fullName, currentUser.email),
         fullName: String(currentUser.fullName || "").trim(),
         role: currentUser.role || "",
         avatarUrl: currentUser.avatarUrl || "",
+        isPremium,
+        subscriptionTier: isPremium ? "Premium" : subscriptionTier,
       };
     }
 
@@ -678,6 +686,8 @@
       localStorage.getItem("avatar") ||
       sessionStorage.getItem("avatar") ||
       "";
+    const subscriptionTier = String(currentUser?.subscriptionTier || "").trim();
+    const isPremium = Boolean(currentUser?.isPremium) || subscriptionTier.toLowerCase() === "premium" || String(role || "").trim().toLowerCase() === "premium";
 
     if (!role && !currentUser) return null;
     return {
@@ -686,6 +696,8 @@
       fullName: String(currentUser?.fullName || "").trim(),
       role: role || "",
       avatarUrl,
+      isPremium,
+      subscriptionTier: isPremium ? "Premium" : subscriptionTier,
     };
   }
 
@@ -770,9 +782,21 @@
 
   function renderNav(section, user) {
     const isAdminShell = section === "admin" || document.body.classList.contains("page-admin");
-    const links = (isAdminShell ? NAV_LINKS_ADMIN : NAV_LINKS).map((l) => {
-      const active = l.section === section ? " class=\"active\"" : "";
-      return `<li><a href="${l.href}"${active}>${l.label}</a></li>`;
+    const isPremium = Boolean(user?.isPremium);
+    const navLinks = (isAdminShell ? NAV_LINKS_ADMIN : NAV_LINKS).map((link) => {
+      if (link.section !== "premium") {
+        return link;
+      }
+
+      if (isPremium) {
+        return { ...link, href: "/premium/account.html", label: "Premium" };
+      }
+
+      return link;
+    });
+    const links = navLinks.map((link) => {
+      const active = link.section === section ? " class=\"active\"" : "";
+      return `<li><a href="${link.href}"${active}>${link.label}</a></li>`;
     }).join("");
 
     const normalizedRole = String(user?.role || "").trim().toLowerCase();
@@ -939,14 +963,28 @@
     `;
   }
 
-  function renderSidebar(section) {
-    const isAdminShell = section === "admin" || document.body.classList.contains("page-admin");
-    const groups = isAdminShell ? SIDEBAR_GROUPS_ADMIN : SIDEBAR_GROUPS;
-    return groups.map((g) => {
-      const links = g.links
-        .map((l) => `<a href="${l.href}" data-shell-section="${l.section}"${l.section === section ? " class=\"active\"" : ""}>${l.label}</a>`)
-        .join("");
-      return `<div class="app-shell-group"><div class="app-shell-group-title">${g.title}</div>${links}</div>`;
+  function renderSidebar(user, activeSection) {
+    const isPremium = Boolean(user?.isPremium);
+
+    return SIDEBAR_GROUPS.map((group) => {
+      const linksMarkup = (group.links || []).map((link) => {
+        const isActive = link.section === activeSection;
+        const resolvedLink = { ...link };
+
+        if (resolvedLink.section === "premium") {
+          if (isPremium) {
+            resolvedLink.label = "Xem gói";
+            resolvedLink.href = "/premium/account.html";
+          } else {
+            resolvedLink.label = "Nâng cấp tài khoản";
+            resolvedLink.href = "/premium/upgrade.html";
+          }
+        }
+
+        return `<a href="${resolvedLink.href}"${isActive ? " class=\"active\"" : ""}>${escapeHtml(resolvedLink.label)}</a>`;
+      }).join("");
+
+      return `<div class="app-shell-group"><div class="app-shell-group-title">${escapeHtml(group.title)}</div>${linksMarkup}</div>`;
     }).join("");
   }
 
@@ -1122,7 +1160,7 @@
         sidebar.id = SIDEBAR_ID;
         document.body.appendChild(sidebar);
       }
-      sidebar.innerHTML = renderSidebar(section);
+      sidebar.innerHTML = renderSidebar(user, section);
 
       if (!backdrop) {
         backdrop = document.createElement("div");

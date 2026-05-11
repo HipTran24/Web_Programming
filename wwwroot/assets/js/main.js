@@ -5,7 +5,7 @@ let loaderRemoved = false;
 const prefetchedPageUrls = new Set();
 const SITE_FAVICON_PATH = "/images/favicon.svg?v=20260402-tab3";
 const SITE_SHORTCUT_ICON_PATH = "/favicon.ico?v=20260402-tab3";
-const SITE_TOUCH_ICON_PATH = "/images/Logo.png";
+const SITE_TOUCH_ICON_PATH = "/images/favicon.svg?v=20260402-tab3";
 const SITE_TITLE = "SynapLearn";
 const AJAX_NAV_OVERLAY_ID = "ajax-navigation-overlay";
 const AJAX_NAV_STYLE_ID = "ajax-navigation-overlay-style";
@@ -102,7 +102,7 @@ function ensureSiteFavicon() {
 
   ensureLink("icon", iconHref, "image/svg+xml");
   ensureLink("shortcut icon", shortcutIconHref, "image/x-icon");
-  ensureLink("apple-touch-icon", touchIconHref, "image/png");
+  ensureLink("apple-touch-icon", touchIconHref, "image/svg+xml");
 }
 
 window.ensureSiteFavicon = ensureSiteFavicon;

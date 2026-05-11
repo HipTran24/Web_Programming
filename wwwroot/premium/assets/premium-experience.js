@@ -257,6 +257,7 @@
       setText("[data-auth-avatar]", getInitials(me.fullName, me.email));
     }
 
+
     const meta = document.querySelector("[data-user-meta]");
     if (meta && me) {
       const roleLabel = String(me.role || "premium").toUpperCase();
@@ -303,6 +304,25 @@
     document.querySelectorAll(".premium-sidebar-status").forEach((node) => {
       node.textContent = tierLabel;
     });
+
+    if (data.isPremium) {
+      document.querySelectorAll('[data-page-link="upgrade"]').forEach((link) => {
+        const parent = link.closest("li");
+        if (parent) {
+          parent.remove();
+          return;
+        }
+        link.remove();
+      });
+
+      document.querySelectorAll('#premium-sidebar a[href="upgrade.html"]').forEach((link) => {
+        link.remove();
+      });
+
+      if (document.body.dataset.page === "upgrade") {
+        window.location.replace("account.html");
+      }
+    }
 
     return data;
   };
