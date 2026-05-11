@@ -8,7 +8,7 @@ on:
 
 env:
   DEPLOY_PACKAGE: deploy-package.tgz
-  PROJECT_NAME: Wed_Project 
+  PROJECT_NAME: Web_Project 
 
 jobs:
   build-and-deploy:
