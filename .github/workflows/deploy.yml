@@ -1,4 +1,4 @@
-name: CI/CD
+name: CI/CD SynapLearn
 
 on:
   push:
@@ -8,16 +8,12 @@ on:
 
 env:
   DEPLOY_PACKAGE: deploy-package.tgz
+  PROJECT_NAME: Wed_Project 
 
 jobs:
-  # Giữ lại các job ci và docker cũ của bạn ở đây nếu muốn
-  # Nếu chỉ muốn tập trung sửa lỗi deploy thì dùng đoạn dưới này:
-
-  deploy:
-    name: Deploy To Server
+  build-and-deploy:
+    name: Build and Deploy to AWS
     runs-on: ubuntu-latest
-    # needs: docker  <-- Comment dòng này lại nếu bạn bỏ qua job docker phía trên
-    if: github.ref == 'refs/heads/main'
     environment:
       name: production
 
@@ -25,9 +21,20 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Package application
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Publish Application
         run: |
-          tar --warning=no-file-changed --exclude=.git --exclude=.github --exclude=bin --exclude=obj -czf ${{ env.DEPLOY_PACKAGE }} .
+          dotnet publish ${{ env.PROJECT_NAME }}.csproj -c Release -o ./publish
+
+      - name: Prepare Deployment Package
+        run: |
+          cp Dockerfile ./publish/
+          cp docker-compose.yml ./publish/
+          tar -czf ${{ env.DEPLOY_PACKAGE }} -C ./publish .
 
       - name: Copy package to server
         uses: appleboy/scp-action@v0.1.7
@@ -38,7 +45,7 @@ jobs:
           source: ${{ env.DEPLOY_PACKAGE }}
           target: "/tmp"
 
-      - name: Extract and Run
+      - name: Extract and Run on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.DEPLOY_HOST }}
@@ -46,8 +53,14 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
             mkdir -p ${{ secrets.DEPLOY_PATH }}
+            
             tar -xzf /tmp/${{ env.DEPLOY_PACKAGE }} -C ${{ secrets.DEPLOY_PATH }}
+            
             cd ${{ secrets.DEPLOY_PATH }}
+            
             echo "${{ secrets.ENV_DOCKER }}" > .env.docker
+            
             docker compose --env-file .env.docker up -d --build
+            
             rm /tmp/${{ env.DEPLOY_PACKAGE }}
+            docker image prune -f
