@@ -10,6 +10,8 @@ env:
   DEPLOY_PACKAGE: deploy-package.tgz
   PROJECT_NAME: Web_Project 
 
+
+
 jobs:
   build-and-deploy:
     name: Build and Deploy to AWS
