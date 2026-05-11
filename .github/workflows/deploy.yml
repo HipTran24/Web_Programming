@@ -1,8 +1,23 @@
-deploy:
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  DEPLOY_PACKAGE: deploy-package.tgz
+
+jobs:
+  # Giữ lại các job ci và docker cũ của bạn ở đây nếu muốn
+  # Nếu chỉ muốn tập trung sửa lỗi deploy thì dùng đoạn dưới này:
+
+  deploy:
     name: Deploy To Server
     runs-on: ubuntu-latest
-    needs: docker
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    # needs: docker  <-- Comment dòng này lại nếu bạn bỏ qua job docker phía trên
+    if: github.ref == 'refs/heads/main'
     environment:
       name: production
 
