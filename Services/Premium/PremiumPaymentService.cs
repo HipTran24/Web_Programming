@@ -5,12 +5,15 @@ namespace Web_Project.Services.Premium
 {
     public sealed class PremiumPaymentService : IPremiumPaymentService
     {
-        private const decimal PremiumMonthlyPriceVnd = 99000m;
         private readonly AppDbContext _dbContext;
+        private readonly IPremiumPlanSettingsService _premiumPlanSettingsService;
 
-        public PremiumPaymentService(AppDbContext dbContext)
+        public PremiumPaymentService(
+            AppDbContext dbContext,
+            IPremiumPlanSettingsService premiumPlanSettingsService)
         {
             _dbContext = dbContext;
+            _premiumPlanSettingsService = premiumPlanSettingsService;
         }
 
         public async Task<CheckoutResponse> CreateCheckoutAsync(
@@ -31,12 +34,13 @@ namespace Web_Project.Services.Premium
             var normalizedPlanName = string.Equals(planName, "Premium", StringComparison.OrdinalIgnoreCase)
                 ? "Premium"
                 : "Premium";
+            var planSettings = await _premiumPlanSettingsService.GetSettingsAsync(cancellationToken);
 
             var transaction = new PaymentTransaction
             {
                 UserId = userId,
                 Provider = "Mock",
-                Amount = PremiumMonthlyPriceVnd,
+                Amount = planSettings.Amount,
                 Currency = "VND",
                 Status = PaymentTransactionStatuses.Pending,
                 CreatedAt = DateTime.UtcNow,
@@ -83,13 +87,14 @@ namespace Web_Project.Services.Premium
             if (!string.Equals(transaction.Status, PaymentTransactionStatuses.Success, StringComparison.OrdinalIgnoreCase))
             {
                 var now = DateTime.UtcNow;
+                var planSettings = await _premiumPlanSettingsService.GetSettingsAsync(cancellationToken);
                 transaction.Status = PaymentTransactionStatuses.Success;
                 transaction.PaidAt = now;
                 transaction.UpdatedAt = now;
                 transaction.User.IsPremium = true;
                 transaction.User.SubscriptionTier = "Premium";
                 transaction.User.PremiumStartedAt ??= now;
-                transaction.User.PremiumExpiresAt = now.AddDays(30);
+                transaction.User.PremiumExpiresAt = now.AddDays(planSettings.Days);
                 await _dbContext.SaveChangesAsync(cancellationToken);
             }
 

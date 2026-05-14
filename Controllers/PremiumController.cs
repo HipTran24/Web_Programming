@@ -13,13 +13,33 @@ namespace Web_Project.Controllers
     {
         private readonly IUserTokenQuotaService _tokenQuotaService;
         private readonly IPremiumPaymentService _paymentService;
+        private readonly IPremiumPlanSettingsService _planSettingsService;
 
         public PremiumController(
             IUserTokenQuotaService tokenQuotaService,
-            IPremiumPaymentService paymentService)
+            IPremiumPaymentService paymentService,
+            IPremiumPlanSettingsService planSettingsService)
         {
             _tokenQuotaService = tokenQuotaService;
             _paymentService = paymentService;
+            _planSettingsService = planSettingsService;
+        }
+
+        [AllowAnonymous]
+        [HttpGet("plan")]
+        public async Task<ActionResult> GetPlan(CancellationToken cancellationToken)
+        {
+            var settings = await _planSettingsService.GetSettingsAsync(cancellationToken);
+
+            return Ok(new
+            {
+                planCode = "PREMIUM_30D",
+                planName = "SynapLearn Premium",
+                amount = settings.Amount,
+                currency = "VND",
+                days = settings.Days,
+                dailyTokenLimit = 500000
+            });
         }
 
         [HttpGet("status")]

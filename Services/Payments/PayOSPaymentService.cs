@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Web_Project.Models;
 using Web_Project.Models.Dtos.Payments;
+using Web_Project.Services.Premium;
 
 namespace Web_Project.Services.Payments
 {
@@ -17,6 +18,7 @@ namespace Web_Project.Services.Payments
         private readonly AppDbContext _dbContext;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IPremiumSubscriptionService _premiumSubscriptionService;
+        private readonly IPremiumPlanSettingsService _premiumPlanSettingsService;
         private readonly PayOSPaymentSettings _settings;
         private readonly ILogger<PayOSPaymentService> _logger;
 
@@ -24,12 +26,14 @@ namespace Web_Project.Services.Payments
             AppDbContext dbContext,
             IHttpClientFactory httpClientFactory,
             IPremiumSubscriptionService premiumSubscriptionService,
+            IPremiumPlanSettingsService premiumPlanSettingsService,
             IOptions<PayOSPaymentSettings> settings,
             ILogger<PayOSPaymentService> logger)
         {
             _dbContext = dbContext;
             _httpClientFactory = httpClientFactory;
             _premiumSubscriptionService = premiumSubscriptionService;
+            _premiumPlanSettingsService = premiumPlanSettingsService;
             _settings = settings.Value;
             _logger = logger;
         }
@@ -57,12 +61,52 @@ namespace Web_Project.Services.Payments
             }
 
             var now = DateTime.UtcNow;
-            var amount = Math.Round(Math.Max(1000m, _settings.PremiumAmount), 0, MidpointRounding.AwayFromZero);
-            var amountValue = decimal.ToInt64(amount);
+            var planSettings = await _premiumPlanSettingsService.GetSettingsAsync(cancellationToken);
+            var configuredAmount = Math.Round(Math.Max(0m, planSettings.Amount), 0, MidpointRounding.AwayFromZero);
             var orderCode = GenerateOrderCode(userId, now);
             var description = BuildDescription(orderCode);
             var returnUrl = BuildAbsoluteUrl(httpRequest, _settings.ReturnPath);
             var cancelUrl = BuildAbsoluteUrl(httpRequest, _settings.CancelPath);
+
+            if (configuredAmount <= 0m)
+            {
+                var freeTransaction = new PaymentTransaction
+                {
+                    UserId = userId,
+                    Provider = ProviderName,
+                    OrderId = orderCode.ToString(CultureInfo.InvariantCulture),
+                    RequestId = orderCode.ToString(CultureInfo.InvariantCulture),
+                    PlanCode = normalizedPlan,
+                    Amount = 0m,
+                    Currency = "VND",
+                    Status = PaymentTransactionStatuses.Paid,
+                    ProviderMessage = "Admin configured Premium price as 0 VND.",
+                    CreatedAt = now,
+                    PaidAt = now,
+                    UpdatedAt = now
+                };
+
+                _dbContext.PaymentTransactions.Add(freeTransaction);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await _premiumSubscriptionService.GrantPremiumAsync(
+                    userId,
+                    freeTransaction.PaymentTransactionId,
+                    planSettings.Days,
+                    cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+
+                return new CreatePayOSPaymentResponse
+                {
+                    Success = true,
+                    Message = "Đã kích hoạt Premium 0đ theo cấu hình admin.",
+                    OrderId = freeTransaction.OrderId ?? string.Empty,
+                    Amount = 0m,
+                    PayUrl = "/premium/payment-success.html?payment=success&message=Premium%200d%20da%20duoc%20kich%20hoat"
+                };
+            }
+
+            var amount = Math.Round(Math.Max(1000m, configuredAmount), 0, MidpointRounding.AwayFromZero);
+            var amountValue = decimal.ToInt64(amount);
             var rawSignature = BuildCreateRawSignature(amountValue, cancelUrl, description, orderCode, returnUrl);
             var signature = ComputeHmacSha256(rawSignature, _settings.ChecksumKey);
 
@@ -93,7 +137,7 @@ namespace Web_Project.Services.Payments
                 [
                     new PayOSPaymentItem
                     {
-                        Name = $"SynapLearn Premium {_settings.PremiumDays} ngày",
+                        Name = $"SynapLearn Premium {planSettings.Days} ngày",
                         Quantity = 1,
                         Price = amountValue
                     }
@@ -189,10 +233,11 @@ namespace Web_Project.Services.Payments
             {
                 transaction.Status = PaymentTransactionStatuses.Paid;
                 transaction.PaidAt = now;
+                var planSettings = await _premiumPlanSettingsService.GetSettingsAsync(cancellationToken);
                 await _premiumSubscriptionService.GrantPremiumAsync(
                     transaction.UserId,
                     transaction.PaymentTransactionId,
-                    _settings.PremiumDays,
+                    planSettings.Days,
                     cancellationToken);
             }
             else

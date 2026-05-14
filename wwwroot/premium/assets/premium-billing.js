@@ -5,6 +5,12 @@
     currency: "VND",
     maximumFractionDigits: 0,
   });
+  let activePlan = {
+    amount: 99000,
+    currency: "VND",
+    days: 30,
+    dailyTokenLimit: 500000,
+  };
 
   const setText = (selector, value) => {
     document.querySelectorAll(selector).forEach((node) => {
@@ -18,6 +24,37 @@
       node.dataset.tone = tone;
       node.hidden = false;
     });
+  };
+
+  const renderPlan = (plan) => {
+    activePlan = {
+      ...activePlan,
+      ...(plan || {}),
+    };
+
+    const price = money.format(Number(activePlan.amount || 0));
+    const days = Number(activePlan.days || 30);
+    const limit = Number(activePlan.dailyTokenLimit || 500000);
+
+    setText("[data-premium-price]", price);
+    setText("[data-premium-days]", nf.format(days));
+    setText("[data-premium-plan-label]", `Premium ${nf.format(days)} ngày`);
+    setText("[data-premium-token-limit-plan]", nf.format(limit));
+  };
+
+  const loadPlan = async () => {
+    if (!document.querySelector("[data-premium-price], [data-premium-plan-label]")) {
+      return null;
+    }
+
+    try {
+      const plan = await fetchJson("/api/premium/plan");
+      renderPlan(plan);
+      return plan;
+    } catch {
+      renderPlan(activePlan);
+      return activePlan;
+    }
   };
 
   const redirectToMain = (delayMs = 3500) => {
@@ -102,25 +139,54 @@
     }
   };
 
+  const getSelectedProvider = () => {
+    const checked = document.querySelector('input[name="premiumPaymentProvider"]:checked');
+    const provider = String(checked?.value || "momo").toLowerCase();
+    return provider === "payos" ? "payos" : "momo";
+  };
+
+  const getProviderLabel = (provider) => provider === "payos" ? "PayOS" : "MoMo";
+
+  const syncCheckoutButtonLabels = () => {
+    const provider = getSelectedProvider();
+    const label = getProviderLabel(provider);
+    document.querySelectorAll("[data-premium-checkout]").forEach((button) => {
+      if (!button.classList.contains("is-loading")) {
+        button.textContent = `Thanh toán qua ${label}`;
+      }
+    });
+    setText("[data-premium-selected-provider]", label);
+  };
+
+  const wirePaymentProvider = () => {
+    document.querySelectorAll('input[name="premiumPaymentProvider"]').forEach((input) => {
+      input.addEventListener("change", syncCheckoutButtonLabels);
+    });
+    syncCheckoutButtonLabels();
+  };
+
   const wireCheckout = () => {
     document.querySelectorAll("[data-premium-checkout]").forEach((button) => {
       button.addEventListener("click", async () => {
         button.disabled = true;
         button.classList.add("is-loading");
         const original = button.textContent;
-        button.textContent = "Đang tạo giao dịch...";
+        const provider = getSelectedProvider();
+        const providerLabel = getProviderLabel(provider);
+        const endpoint = provider === "payos" ? "/api/payments/payos/create" : "/api/payments/momo/create";
+        button.textContent = `Đang tạo link ${providerLabel}...`;
 
         try {
-          const checkout = await fetchJson("/api/payments/payos/create", {
+          const checkout = await fetchJson(endpoint, {
             method: "POST",
             body: JSON.stringify({ planCode: "PREMIUM_30D" }),
           });
 
           if (!checkout?.success || !checkout?.payUrl) {
-            throw new Error(checkout?.message || "PayOS chưa tạo được liên kết thanh toán.");
+            throw new Error(checkout?.message || `${providerLabel} chưa tạo được liên kết thanh toán.`);
           }
 
-          setText("[data-premium-price]", money.format(checkout.amount || 0));
+          renderPlan({ amount: checkout.amount ?? activePlan.amount });
           window.location.href = checkout.payUrl;
         } catch (error) {
           button.disabled = false;
@@ -181,7 +247,7 @@
         showMessage("Thanh toán thành công. Cảm ơn bạn đã nâng cấp Premium. Hệ thống sẽ quay lại màn hình chính sau vài giây.", "success");
         redirectToMain();
       } else if (!message) {
-        showMessage("Hệ thống đang xác nhận thanh toán PayOS. Vui lòng đợi vài phút và tải lại trang.", "info");
+        showMessage("Hệ thống đang xác nhận thanh toán. Vui lòng đợi vài phút và tải lại trang.", "info");
       }
     } catch (error) {
       showMessage(error.message || "Chưa thể xác nhận thanh toán.", "danger");
@@ -213,7 +279,9 @@
     }
   };
 
+  loadPlan();
   loadStatus();
+  wirePaymentProvider();
   wireCheckout();
   completePayment();
   failPayment();

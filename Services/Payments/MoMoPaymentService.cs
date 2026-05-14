@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Web_Project.Models;
 using Web_Project.Models.Dtos.Payments;
+using Web_Project.Services.Premium;
 
 namespace Web_Project.Services.Payments
 {
@@ -18,6 +19,7 @@ namespace Web_Project.Services.Payments
         private readonly AppDbContext _dbContext;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IPremiumSubscriptionService _premiumSubscriptionService;
+        private readonly IPremiumPlanSettingsService _premiumPlanSettingsService;
         private readonly MoMoPaymentSettings _settings;
         private readonly ILogger<MoMoPaymentService> _logger;
 
@@ -25,12 +27,14 @@ namespace Web_Project.Services.Payments
             AppDbContext dbContext,
             IHttpClientFactory httpClientFactory,
             IPremiumSubscriptionService premiumSubscriptionService,
+            IPremiumPlanSettingsService premiumPlanSettingsService,
             IOptions<MoMoPaymentSettings> settings,
             ILogger<MoMoPaymentService> logger)
         {
             _dbContext = dbContext;
             _httpClientFactory = httpClientFactory;
             _premiumSubscriptionService = premiumSubscriptionService;
+            _premiumPlanSettingsService = premiumPlanSettingsService;
             _settings = settings.Value;
             _logger = logger;
         }
@@ -58,11 +62,53 @@ namespace Web_Project.Services.Payments
             }
 
             var now = DateTime.UtcNow;
-            var amount = Math.Round(Math.Max(1000m, _settings.PremiumAmount), 0, MidpointRounding.AwayFromZero);
-            var amountText = amount.ToString("0", CultureInfo.InvariantCulture);
+            var planSettings = await _premiumPlanSettingsService.GetSettingsAsync(cancellationToken);
+            var configuredAmount = Math.Round(Math.Max(0m, planSettings.Amount), 0, MidpointRounding.AwayFromZero);
             var orderId = $"SLP{now:yyyyMMddHHmmssfff}{userId}";
             var requestId = $"{orderId}REQ";
-            var orderInfo = $"Thanh toán SynapLearn Premium {_settings.PremiumDays} ngày";
+
+            if (configuredAmount <= 0m)
+            {
+                var freeTransaction = new PaymentTransaction
+                {
+                    UserId = userId,
+                    Provider = ProviderName,
+                    OrderId = orderId,
+                    RequestId = requestId,
+                    PlanCode = normalizedPlan,
+                    PlanName = $"Premium {planSettings.Days} ngay",
+                    Amount = 0m,
+                    Currency = "VND",
+                    Status = PaymentTransactionStatuses.Paid,
+                    ProviderMessage = "Admin configured Premium price as 0 VND.",
+                    CreatedAt = now,
+                    PaidAt = now,
+                    UpdatedAt = now
+                };
+
+                _dbContext.PaymentTransactions.Add(freeTransaction);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await _premiumSubscriptionService.GrantPremiumAsync(
+                    userId,
+                    freeTransaction.PaymentTransactionId,
+                    planSettings.Days,
+                    cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+
+                return new CreateMoMoPaymentResponse
+                {
+                    Success = true,
+                    Message = "Da kich hoat Premium 0d theo cau hinh admin.",
+                    OrderId = orderId,
+                    RequestId = requestId,
+                    Amount = 0m,
+                    PayUrl = "/premium/payment-success.html?payment=success&provider=momo&message=Premium%200d%20da%20duoc%20kich%20hoat"
+                };
+            }
+
+            var amount = Math.Round(Math.Max(1000m, configuredAmount), 0, MidpointRounding.AwayFromZero);
+            var amountText = amount.ToString("0", CultureInfo.InvariantCulture);
+            var orderInfo = $"Thanh toán SynapLearn Premium {planSettings.Days} ngày";
             var redirectUrl = BuildAbsoluteUrl(httpRequest, _settings.RedirectPath);
             var ipnUrl = BuildAbsoluteUrl(httpRequest, _settings.IpnPath);
             var extraData = Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new
@@ -91,7 +137,9 @@ namespace Web_Project.Services.Payments
                 OrderId = orderId,
                 RequestId = requestId,
                 PlanCode = normalizedPlan,
+                PlanName = $"Premium {planSettings.Days} ngay",
                 Amount = amount,
+                Currency = "VND",
                 Status = PaymentTransactionStatuses.Pending,
                 CreatedAt = now,
                 UpdatedAt = now
@@ -219,10 +267,11 @@ namespace Web_Project.Services.Payments
             {
                 transaction.Status = PaymentTransactionStatuses.Paid;
                 transaction.PaidAt = now;
+                var planSettings = await _premiumPlanSettingsService.GetSettingsAsync(cancellationToken);
                 await _premiumSubscriptionService.GrantPremiumAsync(
                     transaction.UserId,
                     transaction.PaymentTransactionId,
-                    _settings.PremiumDays,
+                    planSettings.Days,
                     cancellationToken);
             }
             else

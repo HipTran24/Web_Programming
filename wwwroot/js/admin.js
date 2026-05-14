@@ -9,6 +9,11 @@
   const state = {
     users: { page: 1, pageSize: 12, totalPages: 1 },
     userItems: [],
+    premiumTransactions: { page: 1, pageSize: 12, totalPages: 1 },
+    premiumTransactionItems: [],
+    premiumUsers: { page: 1, pageSize: 12, totalPages: 1 },
+    premiumUserItems: [],
+    premiumOverview: null,
     contents: { page: 1, pageSize: 12, totalPages: 1 },
     contentItems: [],
     aiLogs: { page: 1, pageSize: 15, totalPages: 1 },
@@ -39,6 +44,9 @@
       notifications: "",
       adminAlerts: "",
       users: "",
+      premiumOverview: "",
+      premiumTransactions: "",
+      premiumUsers: "",
       contents: "",
       aiSystem: "",
       aiLogs: "",
@@ -144,6 +152,35 @@
     applyUserFilter: document.getElementById("applyUserFilter"),
     usersTableBody: document.querySelector("#usersTable tbody"),
     usersPager: document.getElementById("usersPager"),
+
+    premiumSettingsForm: document.getElementById("premiumSettingsForm"),
+    premiumAmount: document.getElementById("premiumAmount"),
+    premiumDays: document.getElementById("premiumDays"),
+    premiumSettingsMeta: document.getElementById("premiumSettingsMeta"),
+    premiumSettingsFeedback: document.getElementById("premiumSettingsFeedback"),
+    premiumSettingsSubmit: document.getElementById("premiumSettingsSubmit"),
+    premiumMetricActive: document.getElementById("premiumMetricActive"),
+    premiumMetricExpired: document.getElementById("premiumMetricExpired"),
+    premiumMetricRevenue: document.getElementById("premiumMetricRevenue"),
+    premiumMetricPending: document.getElementById("premiumMetricPending"),
+    premiumTransactionQuery: document.getElementById("premiumTransactionQuery"),
+    premiumTransactionStatus: document.getElementById("premiumTransactionStatus"),
+    applyPremiumTransactionFilter: document.getElementById("applyPremiumTransactionFilter"),
+    premiumTransactionsTableBody: document.querySelector("#premiumTransactionsTable tbody"),
+    premiumTransactionsPager: document.getElementById("premiumTransactionsPager"),
+    premiumUserQuery: document.getElementById("premiumUserQuery"),
+    premiumUserStatus: document.getElementById("premiumUserStatus"),
+    applyPremiumUserFilter: document.getElementById("applyPremiumUserFilter"),
+    premiumUsersTableBody: document.querySelector("#premiumUsersTable tbody"),
+    premiumUsersPager: document.getElementById("premiumUsersPager"),
+    premiumExtendModal: document.getElementById("premiumExtendModal"),
+    premiumExtendForm: document.getElementById("premiumExtendForm"),
+    premiumExtendUserId: document.getElementById("premiumExtendUserId"),
+    premiumExtendUserLabel: document.getElementById("premiumExtendUserLabel"),
+    premiumExtendDays: document.getElementById("premiumExtendDays"),
+    premiumExtendReason: document.getElementById("premiumExtendReason"),
+    premiumExtendFeedback: document.getElementById("premiumExtendFeedback"),
+    premiumExtendSubmit: document.getElementById("premiumExtendSubmit"),
 
     contentQuery: document.getElementById("contentQuery"),
     contentStatus: document.getElementById("contentStatus"),
@@ -320,6 +357,11 @@
   };
 
   const numberFormatter = new Intl.NumberFormat("vi-VN");
+  const currencyFormatter = new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+    maximumFractionDigits: 0,
+  });
   const actionModal = window.bootstrap?.Modal && el.adminActionModal
     ? window.bootstrap.Modal.getOrCreateInstance(el.adminActionModal)
     : null;
@@ -334,6 +376,9 @@
     : null;
   const userEditorModal = window.bootstrap?.Modal && el.userEditorModal
     ? window.bootstrap.Modal.getOrCreateInstance(el.userEditorModal)
+    : null;
+  const premiumExtendModal = window.bootstrap?.Modal && el.premiumExtendModal
+    ? window.bootstrap.Modal.getOrCreateInstance(el.premiumExtendModal)
     : null;
 
   const syncSessionUi = async () => {
@@ -362,6 +407,7 @@
   const toText = (value) => String(value ?? "").trim();
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
   const formatNumber = (value) => numberFormatter.format(Number(value || 0));
+  const formatCurrency = (value) => currencyFormatter.format(Number(value || 0));
   const formatMonthLabel = (date) => new Intl.DateTimeFormat("vi-VN", {
     month: "2-digit",
     year: "2-digit",
@@ -1074,11 +1120,11 @@
       return '<span class="status-pill status-neutral">--</span>';
     }
 
-    if (["approved", "active", "verified", "success"].includes(normalized)) {
+    if (["approved", "active", "verified", "success", "paid"].includes(normalized)) {
       return `<span class="status-pill status-success">${escapeHtml(translateLabel(status))}</span>`;
     }
 
-    if (["rejected", "locked", "error"].includes(normalized)) {
+    if (["rejected", "locked", "error", "failed", "cancelled", "expired"].includes(normalized)) {
       return `<span class="status-pill status-danger">${escapeHtml(translateLabel(status))}</span>`;
     }
 
@@ -1170,6 +1216,66 @@
     </tr>
   `;
 
+  const premiumStatusPill = (premium) => {
+    const status = toText(premium?.status || "none").toLowerCase();
+    const label = toText(premium?.label) || (status === "active" ? "Đang Premium" : status === "expired" ? "Hết hạn" : "Chưa đăng ký");
+    const className = status === "active"
+      ? "status-success"
+      : status === "expired"
+        ? "status-danger"
+        : "status-neutral";
+
+    return `<span class="status-pill ${className}">${escapeHtml(label)}</span>`;
+  };
+
+  const renderPremiumTransactionRow = (item) => {
+    const user = item.user || {};
+    const orderId = item.orderId || item.providerReference || item.requestId || "--";
+    const status = toText(item.status || "Pending").toLowerCase();
+    const canApprove = status === "pending";
+    const approveAction = canApprove
+      ? `<button class="btn-row" data-premium-transaction-action="approve" data-transaction-id="${item.paymentTransactionId}" data-transaction-order="${escapeHtml(orderId)}" data-transaction-user="${escapeHtml(user.fullName || user.username || `User #${user.userId || ""}`)}">Duyệt</button>`
+      : '<span class="row-meta">--</span>';
+    return `
+      <tr>
+        <td>
+          <div><strong>${escapeHtml(user.fullName || user.username || `User #${user.userId || item.paymentTransactionId}`)}</strong></div>
+          <div class="row-meta">@${escapeHtml(user.username || "--")} • ${escapeHtml(user.email || "--")}</div>
+        </td>
+        <td><strong>${escapeHtml(formatCurrency(item.amount))}</strong><div class="row-meta">${escapeHtml(item.currency || "VND")}</div></td>
+        <td>${statusPill(item.status || "Pending")}</td>
+        <td>${formatDateTime(item.paidAt)}<div class="row-meta">Tạo ${formatDateTime(item.createdAt)}</div></td>
+        <td><strong>${escapeHtml(orderId)}</strong><div class="row-meta">${escapeHtml(item.requestId || item.providerReference || "--")}</div></td>
+        <td>${escapeHtml(item.provider || "--")}<div class="row-meta">${escapeHtml(item.providerMessage || "")}</div></td>
+        <td class="text-end"><div class="action-group">${approveAction}</div></td>
+      </tr>
+    `;
+  };
+
+  const renderPremiumUserRow = (item) => {
+    const premium = item.premium || {};
+    const displayName = item.fullName || item.username;
+    const canCancel = premium.status === "active";
+    return `
+      <tr>
+        <td>
+          <div><strong>${escapeHtml(displayName)}</strong></div>
+          <div class="row-meta">@${escapeHtml(item.username)} • ${escapeHtml(item.email)}</div>
+        </td>
+        <td>${statusPill(item.role)}</td>
+        <td>${premiumStatusPill(premium)}<div class="row-meta">${premium.startedAt ? `Bắt đầu ${formatDateTime(premium.startedAt)}` : "Chưa có ngày bắt đầu"}</div></td>
+        <td>${formatDateTime(premium.expiresAt)}</td>
+        <td>${escapeHtml(formatCurrency(item.totalPaid))}<div class="row-meta">${item.lastPaidAt ? `Lần cuối ${formatDateTime(item.lastPaidAt)}` : "Chưa có giao dịch paid"}</div></td>
+        <td class="text-end">
+          <div class="action-group">
+            <button class="btn-row" data-premium-action="extend" data-user-id="${item.userId}" data-user-name="${escapeHtml(displayName)}">Gia hạn</button>
+            <button class="btn-row btn-row-danger" data-premium-action="cancel" data-user-id="${item.userId}" data-user-name="${escapeHtml(displayName)}" ${canCancel ? "" : "disabled"}>Hủy</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  };
+
   const renderUserRow = (item) => {
     const displayName = item.fullName || item.username;
     const editAction = `<button class="btn-row" data-action="edit" data-user-id="${item.userId}">Sửa</button>`;
@@ -1189,6 +1295,7 @@
           ${statusPill(item.isLocked ? "Locked" : "Active")}
           ${item.isEmailVerified ? statusPill("Verified") : statusPill("Unverified")}
         </td>
+        <td>${premiumStatusPill(item.premium)}<div class="row-meta">${formatDateTime(item.premium?.expiresAt)}</div></td>
         <td>${formatNumber(item.contentsCount)}</td>
         <td>${formatNumber(item.quizAttemptsCount)}</td>
         <td>${formatDateTime(item.createdAt)}</td>
@@ -2588,7 +2695,7 @@
     state.userItems = items;
 
     patchTableRows(el.usersTableBody, items, {
-      emptyHtml: '<tr><td colspan="7" class="text-center row-meta py-4">Không có người dùng phù hợp.</td></tr>',
+      emptyHtml: '<tr><td colspan="8" class="text-center row-meta py-4">Không có người dùng phù hợp.</td></tr>',
       getKey: (item) => item.userId,
       renderRow: (item) => renderUserRow(item),
     });
@@ -2604,7 +2711,7 @@
     }
 
     if (!options.silent) {
-      setTableLoading(el.usersTableBody, 7, "Đang tải danh sách người dùng...");
+      setTableLoading(el.usersTableBody, 8, "Đang tải danh sách người dùng...");
     }
 
     const query = new URLSearchParams({
@@ -2625,6 +2732,131 @@
     }
 
     renderUsers(data);
+  };
+
+  const renderPremiumOverview = (data) => {
+    state.premiumOverview = data || null;
+    const settings = data?.settings || {};
+    const metrics = data?.metrics || {};
+
+    setValue(el.premiumAmount, settings.amount ?? 0);
+    setValue(el.premiumDays, settings.days ?? 30);
+    setText(el.premiumSettingsMeta, settings.updatedAt ? `Cập nhật ${formatDateTime(settings.updatedAt)}` : "Theo cấu hình mặc định");
+    setText(el.premiumMetricActive, formatNumber(metrics.activePremiumUsers));
+    setText(el.premiumMetricExpired, formatNumber(metrics.expiredPremiumUsers));
+    setText(el.premiumMetricRevenue, formatCurrency(metrics.totalRevenue));
+    setText(el.premiumMetricPending, formatNumber(metrics.pendingTransactions));
+  };
+
+  const loadPremiumOverview = async (options = {}) => {
+    if (!el.premiumSettingsForm && !el.premiumMetricActive) {
+      return;
+    }
+
+    const data = await apiFetch("/api/admin/premium/overview");
+    if (!data) {
+      return;
+    }
+
+    if (options.silent && !hasRenderChanged("premiumOverview", data)) {
+      return;
+    }
+
+    renderPremiumOverview(data);
+  };
+
+  const renderPremiumTransactions = (data) => {
+    const items = Array.isArray(data?.items) ? data.items : [];
+    state.premiumTransactionItems = items;
+
+    patchTableRows(el.premiumTransactionsTableBody, items, {
+      emptyHtml: '<tr><td colspan="7" class="text-center row-meta py-4">Không có giao dịch Premium phù hợp.</td></tr>',
+      getKey: (item) => item.paymentTransactionId,
+      renderRow: (item) => renderPremiumTransactionRow(item),
+    });
+
+    state.premiumTransactions.page = Number(data?.page || 1);
+    state.premiumTransactions.totalPages = Number(data?.totalPages || 1);
+    renderPager(el.premiumTransactionsPager, state.premiumTransactions, data?.totalItems, "premiumTransactions");
+  };
+
+  const loadPremiumTransactions = async (options = {}) => {
+    if (!el.premiumTransactionsTableBody) {
+      return;
+    }
+
+    if (!options.silent) {
+      setTableLoading(el.premiumTransactionsTableBody, 7, "Đang tải giao dịch Premium...");
+    }
+
+    const query = new URLSearchParams({
+      page: String(state.premiumTransactions.page),
+      pageSize: String(state.premiumTransactions.pageSize),
+      query: toText(el.premiumTransactionQuery?.value),
+      status: toText(el.premiumTransactionStatus?.value || "all"),
+    });
+
+    const data = await apiFetch(`/api/admin/premium/transactions?${query.toString()}`);
+    if (!data) {
+      return;
+    }
+
+    if (options.silent && !hasRenderChanged("premiumTransactions", data)) {
+      return;
+    }
+
+    renderPremiumTransactions(data);
+  };
+
+  const renderPremiumUsers = (data) => {
+    const items = Array.isArray(data?.items) ? data.items : [];
+    state.premiumUserItems = items;
+
+    patchTableRows(el.premiumUsersTableBody, items, {
+      emptyHtml: '<tr><td colspan="6" class="text-center row-meta py-4">Không có user Premium phù hợp.</td></tr>',
+      getKey: (item) => item.userId,
+      renderRow: (item) => renderPremiumUserRow(item),
+    });
+
+    state.premiumUsers.page = Number(data?.page || 1);
+    state.premiumUsers.totalPages = Number(data?.totalPages || 1);
+    renderPager(el.premiumUsersPager, state.premiumUsers, data?.totalItems, "premiumUsers");
+  };
+
+  const loadPremiumUsers = async (options = {}) => {
+    if (!el.premiumUsersTableBody) {
+      return;
+    }
+
+    if (!options.silent) {
+      setTableLoading(el.premiumUsersTableBody, 6, "Đang tải danh sách Premium...");
+    }
+
+    const query = new URLSearchParams({
+      page: String(state.premiumUsers.page),
+      pageSize: String(state.premiumUsers.pageSize),
+      query: toText(el.premiumUserQuery?.value),
+      status: toText(el.premiumUserStatus?.value || "all"),
+    });
+
+    const data = await apiFetch(`/api/admin/premium/users?${query.toString()}`);
+    if (!data) {
+      return;
+    }
+
+    if (options.silent && !hasRenderChanged("premiumUsers", data)) {
+      return;
+    }
+
+    renderPremiumUsers(data);
+  };
+
+  const loadPremiumPage = async (options = {}) => {
+    await Promise.all([
+      loadPremiumOverview(options),
+      loadPremiumTransactions(options),
+      loadPremiumUsers(options),
+    ]);
   };
 
   const renderContents = (data) => {
@@ -3030,6 +3262,11 @@
       return;
     }
 
+    if (pageType === "premium") {
+      await loadPremiumPage(options);
+      return;
+    }
+
     if (pageType === "content") {
       await loadContents(options);
       return;
@@ -3182,6 +3419,86 @@
     }
   };
 
+  const handlePremiumSettingsSubmit = async (event) => {
+    event.preventDefault();
+    setInlineFeedback(el.premiumSettingsFeedback, "", "");
+    setButtonBusy(el.premiumSettingsSubmit, true, "Đang lưu...");
+
+    try {
+      const payload = await apiFetch("/api/admin/premium/settings", {
+        method: "PUT",
+        body: JSON.stringify({
+          amount: Number(el.premiumAmount?.value || 0),
+          days: Number(el.premiumDays?.value || 30),
+        }),
+      });
+
+      if (!payload) {
+        return;
+      }
+
+      renderPremiumOverview({ ...(state.premiumOverview || {}), settings: payload.settings });
+      setInlineFeedback(el.premiumSettingsFeedback, payload.message || "Đã cập nhật cấu hình Premium.", "success");
+      showToast(payload.message || "Đã cập nhật cấu hình Premium.");
+      await loadPremiumOverview({ silent: true });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Không thể cập nhật cấu hình Premium.";
+      setInlineFeedback(el.premiumSettingsFeedback, message, "error");
+      showToast(message, "error");
+    } finally {
+      setButtonBusy(el.premiumSettingsSubmit, false);
+    }
+  };
+
+  const openPremiumExtendModal = (item) => {
+    if (!item) {
+      return;
+    }
+
+    setValue(el.premiumExtendUserId, item.userId);
+    setValue(el.premiumExtendDays, state.premiumOverview?.settings?.days || 30);
+    setValue(el.premiumExtendReason, "");
+    setText(el.premiumExtendUserLabel, `Gia hạn Premium cho ${item.fullName || item.username} (${item.email}).`);
+    setInlineFeedback(el.premiumExtendFeedback, "", "");
+    premiumExtendModal?.show();
+    window.setTimeout(() => el.premiumExtendDays?.focus(), 180);
+  };
+
+  const handlePremiumExtendSubmit = async (event) => {
+    event.preventDefault();
+    const userId = Number(el.premiumExtendUserId?.value || 0);
+    if (!userId) {
+      return;
+    }
+
+    setInlineFeedback(el.premiumExtendFeedback, "", "");
+    setButtonBusy(el.premiumExtendSubmit, true, "Đang gia hạn...");
+
+    try {
+      const payload = await apiFetch(`/api/admin/premium/users/${userId}/extend`, {
+        method: "POST",
+        body: JSON.stringify({
+          days: Number(el.premiumExtendDays?.value || 30),
+          reason: toText(el.premiumExtendReason?.value),
+        }),
+      });
+
+      if (!payload) {
+        return;
+      }
+
+      premiumExtendModal?.hide();
+      showToast(payload.message || "Đã gia hạn Premium.");
+      await Promise.all([loadPremiumUsers(), loadPremiumOverview(), loadUsers({ silent: true })]);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Không thể gia hạn Premium.";
+      setInlineFeedback(el.premiumExtendFeedback, message, "error");
+      showToast(message, "error");
+    } finally {
+      setButtonBusy(el.premiumExtendSubmit, false);
+    }
+  };
+
   const handleAdminActionSubmit = async (event) => {
     event.preventDefault();
     const context = state.actionContext;
@@ -3218,6 +3535,23 @@
           }),
         });
         await Promise.all([loadContents(), loadOverview()]);
+      } else if (context.kind === "cancel-premium") {
+        await apiFetch(`/api/admin/premium/users/${context.targetId}/cancel`, {
+          method: "POST",
+          body: JSON.stringify({ reason }),
+        });
+        await Promise.all([loadPremiumUsers(), loadPremiumOverview(), loadUsers({ silent: true })]);
+      } else if (context.kind === "approve-premium-transaction") {
+        await apiFetch(`/api/admin/premium/transactions/${context.targetId}/approve`, {
+          method: "POST",
+          body: JSON.stringify({ reason }),
+        });
+        await Promise.all([
+          loadPremiumTransactions(),
+          loadPremiumUsers(),
+          loadPremiumOverview(),
+          loadUsers({ silent: true }),
+        ]);
       }
 
       showToast("Đã lưu thay đổi.");
@@ -3548,6 +3882,61 @@
         return;
       }
 
+      const premiumActionButton = target.closest("[data-premium-action][data-user-id]");
+      if (premiumActionButton) {
+        event.preventDefault();
+        if (premiumActionButton.hasAttribute("disabled")) {
+          return;
+        }
+
+        const userId = Number(premiumActionButton.getAttribute("data-user-id"));
+        const userName = premiumActionButton.getAttribute("data-user-name") || "người dùng";
+        const action = premiumActionButton.getAttribute("data-premium-action") || "";
+        const item = state.premiumUserItems.find((entry) => Number(entry?.userId || 0) === userId);
+
+        if (action === "extend") {
+          openPremiumExtendModal(item);
+          return;
+        }
+
+        if (action === "cancel") {
+          openActionModal({
+            kind: "cancel-premium",
+            targetId: userId,
+            eyebrow: "Premium thủ công",
+            title: "Hủy Premium",
+            description: `Hủy Premium của ${userName}. User sẽ mất quyền Premium ngay sau khi xác nhận.`,
+            reasonLabel: "Lý do hủy",
+            reasonPlaceholder: "Nhập lý do hủy Premium thủ công",
+            submitText: "Hủy Premium",
+          });
+        }
+        return;
+      }
+
+      const premiumTransactionActionButton = target.closest("[data-premium-transaction-action][data-transaction-id]");
+      if (premiumTransactionActionButton) {
+        event.preventDefault();
+        const transactionId = Number(premiumTransactionActionButton.getAttribute("data-transaction-id"));
+        const orderId = premiumTransactionActionButton.getAttribute("data-transaction-order") || `#${transactionId}`;
+        const userName = premiumTransactionActionButton.getAttribute("data-transaction-user") || "người dùng";
+        const action = premiumTransactionActionButton.getAttribute("data-premium-transaction-action") || "";
+
+        if (action === "approve") {
+          openActionModal({
+            kind: "approve-premium-transaction",
+            targetId: transactionId,
+            eyebrow: "Duyệt thanh toán",
+            title: "Duyệt giao dịch Premium",
+            description: `Duyệt giao dịch ${orderId} cho ${userName}. Hệ thống sẽ chuyển giao dịch sang Paid và kích hoạt/gia hạn Premium.`,
+            reasonLabel: "Ghi chú duyệt",
+            reasonPlaceholder: "Nhập ghi chú duyệt thủ công",
+            submitText: "Duyệt giao dịch",
+          });
+        }
+        return;
+      }
+
       const contentActionButton = target.closest("[data-action][data-content-id]");
       if (contentActionButton) {
         event.preventDefault();
@@ -3620,6 +4009,24 @@
         markAdminInteraction(5000);
         state.users.page = 1;
         await loadUsers();
+        return;
+      }
+
+      const applyPremiumTransactionFilterButton = target.closest("#applyPremiumTransactionFilter");
+      if (applyPremiumTransactionFilterButton) {
+        event.preventDefault();
+        markAdminInteraction(5000);
+        state.premiumTransactions.page = 1;
+        await loadPremiumTransactions();
+        return;
+      }
+
+      const applyPremiumUserFilterButton = target.closest("#applyPremiumUserFilter");
+      if (applyPremiumUserFilterButton) {
+        event.preventDefault();
+        markAdminInteraction(5000);
+        state.premiumUsers.page = 1;
+        await loadPremiumUsers();
         return;
       }
 
@@ -3718,6 +4125,18 @@
         return;
       }
 
+      if (pagerKey === "premiumTransactions") {
+        state.premiumTransactions.page = clamp(state.premiumTransactions.page + (pageAction === "next" ? 1 : -1), 1, state.premiumTransactions.totalPages);
+        await loadPremiumTransactions();
+        return;
+      }
+
+      if (pagerKey === "premiumUsers") {
+        state.premiumUsers.page = clamp(state.premiumUsers.page + (pageAction === "next" ? 1 : -1), 1, state.premiumUsers.totalPages);
+        await loadPremiumUsers();
+        return;
+      }
+
       if (pagerKey === "contents") {
         state.contents.page = clamp(state.contents.page + (pageAction === "next" ? 1 : -1), 1, state.contents.totalPages);
         await loadContents();
@@ -3774,6 +4193,8 @@
     el.adminNotificationTargetScope?.addEventListener("change", syncNotificationScopeUi);
     syncNotificationScopeUi();
     el.aiSystemForm?.addEventListener("submit", handleAiSystemSubmit);
+    el.premiumSettingsForm?.addEventListener("submit", handlePremiumSettingsSubmit);
+    el.premiumExtendForm?.addEventListener("submit", handlePremiumExtendSubmit);
     el.adminActionForm?.addEventListener("submit", handleAdminActionSubmit);
     el.userEditorForm?.addEventListener("submit", handleUserEditorSubmit);
     el.adminProfileForm?.addEventListener("submit", handleAdminProfileSubmit);
@@ -3783,6 +4204,7 @@
       el.userEditorModal,
       el.adminCreateModal,
       el.adminPasswordModal,
+      el.premiumExtendModal,
       el.overviewWindowModal,
     ].forEach((modalNode) => {
       modalNode?.addEventListener("hidden.bs.modal", cleanupTransientAdminUi);
@@ -3809,6 +4231,11 @@
     el.adminPasswordModal?.addEventListener("hidden.bs.modal", () => {
       el.adminPasswordForm?.reset();
       setInlineFeedback(el.adminPasswordFeedback, "", "");
+    });
+
+    el.premiumExtendModal?.addEventListener("hidden.bs.modal", () => {
+      el.premiumExtendForm?.reset();
+      setInlineFeedback(el.premiumExtendFeedback, "", "");
     });
 
     el.errorsOnly?.addEventListener("change", async () => {

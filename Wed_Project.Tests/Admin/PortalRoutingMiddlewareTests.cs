@@ -12,6 +12,7 @@ public sealed class PortalRoutingMiddlewareTests
     [InlineData("/admin", "admin-dashboard")]
     [InlineData("/admin/dashboard", "admin-dashboard")]
     [InlineData("/admin/users", "admin-users")]
+    [InlineData("/admin/premium", "admin-premium")]
     [InlineData("/admin/content", "admin-content")]
     [InlineData("/admin/reports", "admin-reports")]
     [InlineData("/admin/settings", "admin-settings")]
@@ -139,6 +140,7 @@ public sealed class PortalRoutingMiddlewareTests
             Directory.CreateDirectory(Path.Combine(_rootPath, "PrivatePages", "user"));
             File.WriteAllText(Path.Combine(_rootPath, "PrivatePages", "admin", "index.html"), "<html>admin-dashboard</html>");
             File.WriteAllText(Path.Combine(_rootPath, "PrivatePages", "admin", "users.html"), "<html>admin-users</html>");
+            File.WriteAllText(Path.Combine(_rootPath, "PrivatePages", "admin", "premium.html"), "<html>admin-premium</html>");
             File.WriteAllText(Path.Combine(_rootPath, "PrivatePages", "admin", "content.html"), "<html>admin-content</html>");
             File.WriteAllText(Path.Combine(_rootPath, "PrivatePages", "admin", "reports.html"), "<html>admin-reports</html>");
             File.WriteAllText(Path.Combine(_rootPath, "PrivatePages", "admin", "settings.html"), "<html>admin-settings</html>");

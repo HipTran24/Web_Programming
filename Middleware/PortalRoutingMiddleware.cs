@@ -333,6 +333,8 @@ namespace Web_Project.Middleware
                    || value.Equals("/admin/dashboard/", StringComparison.OrdinalIgnoreCase)
                    || value.Equals("/admin/users", StringComparison.OrdinalIgnoreCase)
                    || value.Equals("/admin/users/", StringComparison.OrdinalIgnoreCase)
+                   || value.Equals("/admin/premium", StringComparison.OrdinalIgnoreCase)
+                   || value.Equals("/admin/premium/", StringComparison.OrdinalIgnoreCase)
                    || value.Equals("/admin/content", StringComparison.OrdinalIgnoreCase)
                    || value.Equals("/admin/content/", StringComparison.OrdinalIgnoreCase)
                    || value.Equals("/admin/reports", StringComparison.OrdinalIgnoreCase)
@@ -353,6 +355,7 @@ namespace Web_Project.Middleware
             return value.ToLowerInvariant() switch
             {
                 "/admin/users" => "users.html",
+                "/admin/premium" => "premium.html",
                 "/admin/content" => "content.html",
                 "/admin/reports" => "reports.html",
                 "/admin/ai-system" => "ai-system.html",

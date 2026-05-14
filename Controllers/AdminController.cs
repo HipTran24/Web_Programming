@@ -14,6 +14,7 @@ using Web_Project.Security;
 using Web_Project.Services.AI;
 using Web_Project.Services.Content;
 using Web_Project.Services.Notifications;
+using Web_Project.Services.Premium;
 
 namespace Web_Project.Controllers
 {
@@ -28,17 +29,20 @@ namespace Web_Project.Controllers
         private readonly IAiRuntimeSettingsService _aiRuntimeSettingsService;
         private readonly ISummaryProcessingService _summaryProcessingService;
         private readonly ISystemNotificationService? _systemNotificationService;
+        private readonly IPremiumPlanSettingsService? _premiumPlanSettingsService;
 
         public AdminController(
             AppDbContext dbContext,
             IAiRuntimeSettingsService aiRuntimeSettingsService,
             ISummaryProcessingService summaryProcessingService,
-            ISystemNotificationService? systemNotificationService = null)
+            ISystemNotificationService? systemNotificationService = null,
+            IPremiumPlanSettingsService? premiumPlanSettingsService = null)
         {
             _dbContext = dbContext;
             _aiRuntimeSettingsService = aiRuntimeSettingsService;
             _summaryProcessingService = summaryProcessingService;
             _systemNotificationService = systemNotificationService;
+            _premiumPlanSettingsService = premiumPlanSettingsService;
         }
 
         [HttpGet("overview")]
@@ -708,7 +712,20 @@ namespace Web_Project.Controllers
                     role = x.Role.RoleName,
                     x.IsLocked,
                     x.IsEmailVerified,
+                    x.IsPremium,
+                    x.SubscriptionTier,
+                    x.PremiumStartedAt,
+                    x.PremiumExpiresAt,
                     x.CreatedAt,
+                    hasPremiumHistory = x.UserSubscriptions.Any(),
+                    latestSubscriptionExpiresAt = x.UserSubscriptions
+                        .OrderByDescending(s => s.ExpiresAt)
+                        .Select(s => (DateTime?)s.ExpiresAt)
+                        .FirstOrDefault(),
+                    latestSubscriptionIsActive = x.UserSubscriptions
+                        .OrderByDescending(s => s.ExpiresAt)
+                        .Select(s => (bool?)s.IsActive)
+                        .FirstOrDefault(),
                     contentsCount = x.Contents.Count,
                     quizAttemptsCount = x.QuizAttempts.Count,
                     lastQuizAt = x.QuizAttempts
@@ -722,6 +739,203 @@ namespace Web_Project.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
+            var now = DateTime.UtcNow;
+
+            return Ok(new
+            {
+                page = safePage,
+                pageSize = safePageSize,
+                totalItems,
+                totalPages = Math.Max(1, (int)Math.Ceiling(totalItems / (double)safePageSize)),
+                items = items.Select(x => new
+                {
+                    x.UserId,
+                    x.Username,
+                    x.FullName,
+                    x.Email,
+                    x.role,
+                    x.IsLocked,
+                    x.IsEmailVerified,
+                    x.CreatedAt,
+                    x.contentsCount,
+                    x.quizAttemptsCount,
+                    x.lastQuizAt,
+                    x.lastContentAt,
+                    premium = BuildPremiumState(
+                        x.IsPremium,
+                        x.SubscriptionTier,
+                        x.PremiumStartedAt,
+                        x.PremiumExpiresAt,
+                        x.hasPremiumHistory,
+                        x.latestSubscriptionExpiresAt,
+                        x.latestSubscriptionIsActive == true,
+                        now)
+                })
+            });
+        }
+
+        [HttpGet("premium/overview")]
+        public async Task<IActionResult> GetPremiumOverview(CancellationToken cancellationToken)
+        {
+            if (!IsCurrentUserAdmin())
+            {
+                return Forbid();
+            }
+
+            var planSettings = await ResolvePremiumPlanSettingsService().GetSettingsAsync(cancellationToken);
+            var now = DateTime.UtcNow;
+            var paidStatuses = new[] { PaymentTransactionStatuses.Paid, PaymentTransactionStatuses.Success };
+            var failedStatuses = new[] { PaymentTransactionStatuses.Failed, PaymentTransactionStatuses.Cancelled };
+
+            var activePremiumUsers = await _dbContext.Users.CountAsync(
+                x => (x.IsPremium || x.SubscriptionTier == "Premium") &&
+                     (!x.PremiumExpiresAt.HasValue || x.PremiumExpiresAt > now),
+                cancellationToken);
+            var expiredPremiumUsers = await _dbContext.Users.CountAsync(
+                x => (x.IsPremium || x.SubscriptionTier == "Premium" || x.PremiumExpiresAt.HasValue) &&
+                     x.PremiumExpiresAt.HasValue &&
+                     x.PremiumExpiresAt <= now,
+                cancellationToken);
+            var pendingTransactions = await _dbContext.PaymentTransactions.CountAsync(
+                x => x.Status == PaymentTransactionStatuses.Pending,
+                cancellationToken);
+            var paidTransactions = await _dbContext.PaymentTransactions.CountAsync(
+                x => paidStatuses.Contains(x.Status),
+                cancellationToken);
+            var failedTransactions = await _dbContext.PaymentTransactions.CountAsync(
+                x => failedStatuses.Contains(x.Status),
+                cancellationToken);
+            var totalRevenue = await _dbContext.PaymentTransactions
+                .Where(x => paidStatuses.Contains(x.Status))
+                .SumAsync(x => (decimal?)x.Amount, cancellationToken) ?? 0m;
+
+            return Ok(new
+            {
+                settings = planSettings,
+                metrics = new
+                {
+                    activePremiumUsers,
+                    expiredPremiumUsers,
+                    pendingTransactions,
+                    paidTransactions,
+                    failedTransactions,
+                    totalRevenue
+                },
+                generatedAt = now
+            });
+        }
+
+        [HttpPut("premium/settings")]
+        public async Task<IActionResult> UpdatePremiumSettings(
+            [FromBody] AdminPremiumSettingsRequest request,
+            CancellationToken cancellationToken)
+        {
+            var currentAdminId = TryGetCurrentUserId();
+            if (!currentAdminId.HasValue)
+            {
+                return Unauthorized();
+            }
+
+            if (request.Amount < 0m)
+            {
+                return BadRequest(new { message = "Giá Premium không được âm." });
+            }
+
+            if (request.Days < 1 || request.Days > 3650)
+            {
+                return BadRequest(new { message = "Số ngày Premium phải nằm trong khoảng 1 đến 3650." });
+            }
+
+            var settings = await ResolvePremiumPlanSettingsService().UpdateSettingsAsync(
+                request.Amount,
+                request.Days,
+                currentAdminId.Value,
+                cancellationToken);
+
+            await AddAuditLogAsync(
+                currentAdminId.Value,
+                "UpdatePremiumSettings",
+                "Premium",
+                "settings",
+                JsonSerializer.Serialize(new { settings.Amount, settings.Days }),
+                cancellationToken);
+
+            return Ok(new
+            {
+                message = "Đã cập nhật giá và thời hạn Premium.",
+                settings
+            });
+        }
+
+        [HttpGet("premium/transactions")]
+        public async Task<IActionResult> GetPremiumTransactions(
+            [FromQuery] string? query,
+            [FromQuery] string? status,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 15,
+            CancellationToken cancellationToken = default)
+        {
+            if (!IsCurrentUserAdmin())
+            {
+                return Forbid();
+            }
+
+            var safePage = Math.Max(1, page);
+            var safePageSize = Math.Clamp(pageSize, 5, 100);
+            var loweredQuery = (query ?? string.Empty).Trim().ToLowerInvariant();
+            var normalizedStatus = (status ?? "all").Trim().ToLowerInvariant();
+
+            var transactionsQuery = _dbContext.PaymentTransactions
+                .AsNoTracking()
+                .Include(x => x.User)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(loweredQuery))
+            {
+                transactionsQuery = transactionsQuery.Where(x =>
+                    (x.User.Username ?? string.Empty).ToLower().Contains(loweredQuery) ||
+                    (x.User.Email ?? string.Empty).ToLower().Contains(loweredQuery) ||
+                    (x.OrderId ?? string.Empty).ToLower().Contains(loweredQuery) ||
+                    (x.ProviderReference ?? string.Empty).ToLower().Contains(loweredQuery));
+            }
+
+            if (!string.IsNullOrWhiteSpace(normalizedStatus) && normalizedStatus != "all")
+            {
+                transactionsQuery = transactionsQuery.Where(x => (x.Status ?? string.Empty).ToLower() == normalizedStatus);
+            }
+
+            var totalItems = await transactionsQuery.CountAsync(cancellationToken);
+            var items = await transactionsQuery
+                .OrderByDescending(x => x.CreatedAt)
+                .Skip((safePage - 1) * safePageSize)
+                .Take(safePageSize)
+                .Select(x => new
+                {
+                    x.PaymentTransactionId,
+                    x.Provider,
+                    x.OrderId,
+                    x.RequestId,
+                    x.PlanCode,
+                    x.PlanName,
+                    x.Amount,
+                    x.Currency,
+                    x.Status,
+                    x.ProviderReference,
+                    x.ProviderTransactionId,
+                    x.ProviderMessage,
+                    x.CreatedAt,
+                    x.PaidAt,
+                    x.FailedAt,
+                    user = new
+                    {
+                        x.User.UserId,
+                        x.User.Username,
+                        x.User.FullName,
+                        x.User.Email
+                    }
+                })
+                .ToListAsync(cancellationToken);
+
             return Ok(new
             {
                 page = safePage,
@@ -729,6 +943,337 @@ namespace Web_Project.Controllers
                 totalItems,
                 totalPages = Math.Max(1, (int)Math.Ceiling(totalItems / (double)safePageSize)),
                 items
+            });
+        }
+
+        [HttpGet("premium/users")]
+        public async Task<IActionResult> GetPremiumUsers(
+            [FromQuery] string? query,
+            [FromQuery] string? status,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 15,
+            CancellationToken cancellationToken = default)
+        {
+            if (!IsCurrentUserAdmin())
+            {
+                return Forbid();
+            }
+
+            var safePage = Math.Max(1, page);
+            var safePageSize = Math.Clamp(pageSize, 5, 100);
+            var loweredQuery = (query ?? string.Empty).Trim().ToLowerInvariant();
+            var normalizedStatus = (status ?? "all").Trim().ToLowerInvariant();
+            var now = DateTime.UtcNow;
+
+            var usersQuery = _dbContext.Users
+                .AsNoTracking()
+                .Include(x => x.Role)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(loweredQuery))
+            {
+                usersQuery = usersQuery.Where(x =>
+                    (x.Username ?? string.Empty).ToLower().Contains(loweredQuery) ||
+                    (x.FullName ?? string.Empty).ToLower().Contains(loweredQuery) ||
+                    (x.Email ?? string.Empty).ToLower().Contains(loweredQuery));
+            }
+
+            var rows = await usersQuery
+                .OrderByDescending(x => x.PremiumExpiresAt ?? x.CreatedAt)
+                .Select(x => new
+                {
+                    x.UserId,
+                    x.Username,
+                    x.FullName,
+                    x.Email,
+                    role = x.Role.RoleName,
+                    x.IsPremium,
+                    x.SubscriptionTier,
+                    x.PremiumStartedAt,
+                    x.PremiumExpiresAt,
+                    x.CreatedAt,
+                    lastPaidAt = x.PaymentTransactions
+                        .Where(t => t.Status == PaymentTransactionStatuses.Paid || t.Status == PaymentTransactionStatuses.Success)
+                        .OrderByDescending(t => t.PaidAt ?? t.CreatedAt)
+                        .Select(t => (DateTime?)(t.PaidAt ?? t.CreatedAt))
+                        .FirstOrDefault(),
+                    totalPaid = x.PaymentTransactions
+                        .Where(t => t.Status == PaymentTransactionStatuses.Paid || t.Status == PaymentTransactionStatuses.Success)
+                        .Sum(t => (decimal?)t.Amount) ?? 0m,
+                    hasPremiumHistory = x.UserSubscriptions.Any(),
+                    latestSubscriptionExpiresAt = x.UserSubscriptions
+                        .OrderByDescending(s => s.ExpiresAt)
+                        .Select(s => (DateTime?)s.ExpiresAt)
+                        .FirstOrDefault(),
+                    latestSubscriptionIsActive = x.UserSubscriptions
+                        .OrderByDescending(s => s.ExpiresAt)
+                        .Select(s => (bool?)s.IsActive)
+                        .FirstOrDefault()
+                })
+                .ToListAsync(cancellationToken);
+
+            var premiumRows = rows
+                .Select(x => new
+                {
+                    x.UserId,
+                    x.Username,
+                    x.FullName,
+                    x.Email,
+                    x.role,
+                    x.CreatedAt,
+                    x.lastPaidAt,
+                    x.totalPaid,
+                    premium = BuildPremiumState(
+                        x.IsPremium,
+                        x.SubscriptionTier,
+                        x.PremiumStartedAt,
+                        x.PremiumExpiresAt,
+                        x.hasPremiumHistory,
+                        x.latestSubscriptionExpiresAt,
+                        x.latestSubscriptionIsActive == true,
+                        now)
+                })
+                .Where(x => normalizedStatus == "all" || x.premium.Status == normalizedStatus)
+                .ToList();
+
+            var totalItems = premiumRows.Count;
+            var items = premiumRows
+                .Skip((safePage - 1) * safePageSize)
+                .Take(safePageSize)
+                .ToList();
+
+            return Ok(new
+            {
+                page = safePage,
+                pageSize = safePageSize,
+                totalItems,
+                totalPages = Math.Max(1, (int)Math.Ceiling(totalItems / (double)safePageSize)),
+                items
+            });
+        }
+
+        [HttpPost("premium/transactions/{transactionId:int}/approve")]
+        public async Task<IActionResult> ApprovePremiumTransaction(
+            int transactionId,
+            [FromBody] AdminPremiumTransactionActionRequest? request,
+            CancellationToken cancellationToken)
+        {
+            var currentAdminId = TryGetCurrentUserId();
+            if (!currentAdminId.HasValue)
+            {
+                return Unauthorized();
+            }
+
+            var transaction = await _dbContext.PaymentTransactions
+                .Include(x => x.User)
+                .FirstOrDefaultAsync(x => x.PaymentTransactionId == transactionId, cancellationToken);
+
+            if (transaction is null)
+            {
+                return NotFound(new { message = "Không tìm thấy giao dịch Premium." });
+            }
+
+            if (transaction.Status == PaymentTransactionStatuses.Paid ||
+                transaction.Status == PaymentTransactionStatuses.Success)
+            {
+                return Ok(new
+                {
+                    message = "Giao dịch đã được duyệt trước đó.",
+                    transaction = BuildPremiumTransactionResponse(transaction)
+                });
+            }
+
+            if (!string.Equals(transaction.Status, PaymentTransactionStatuses.Pending, StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest(new { message = "Chỉ có thể duyệt thủ công giao dịch đang chờ duyệt." });
+            }
+
+            var now = DateTime.UtcNow;
+            var planSettings = await ResolvePremiumPlanSettingsService().GetSettingsAsync(cancellationToken);
+            transaction.Status = PaymentTransactionStatuses.Paid;
+            transaction.PaidAt = now;
+            transaction.FailedAt = null;
+            transaction.ProviderResultCode = 0;
+            transaction.ProviderMessage = TrimTo(
+                string.IsNullOrWhiteSpace(request?.Reason)
+                    ? "Admin duyệt thủ công."
+                    : $"Admin duyệt thủ công: {request.Reason.Trim()}",
+                512);
+            transaction.UpdatedAt = now;
+
+            await GrantPremiumForTransactionAsync(
+                transaction.UserId,
+                transaction.PaymentTransactionId,
+                planSettings.Days,
+                now,
+                cancellationToken);
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            await AddAuditLogAsync(
+                currentAdminId.Value,
+                "ApprovePremiumTransaction",
+                "PaymentTransaction",
+                transactionId.ToString(),
+                JsonSerializer.Serialize(new
+                {
+                    transaction.UserId,
+                    transaction.OrderId,
+                    transaction.Amount,
+                    transaction.Provider,
+                    days = planSettings.Days,
+                    reason = request?.Reason ?? string.Empty
+                }),
+                cancellationToken);
+
+            return Ok(new
+            {
+                message = "Đã duyệt giao dịch và kích hoạt Premium.",
+                transaction = BuildPremiumTransactionResponse(transaction)
+            });
+        }
+
+        [HttpPost("premium/users/{userId:int}/extend")]
+        public async Task<IActionResult> ExtendPremiumManually(
+            int userId,
+            [FromBody] AdminPremiumExtendRequest request,
+            CancellationToken cancellationToken)
+        {
+            var currentAdminId = TryGetCurrentUserId();
+            if (!currentAdminId.HasValue)
+            {
+                return Unauthorized();
+            }
+
+            var safeDays = Math.Clamp(request.Days, 1, 3650);
+            var user = await _dbContext.Users
+                .FirstOrDefaultAsync(x => x.UserId == userId, cancellationToken);
+
+            if (user is null)
+            {
+                return NotFound(new { message = "Không tìm thấy người dùng." });
+            }
+
+            var now = DateTime.UtcNow;
+            var baseDate = user.PremiumExpiresAt.HasValue && user.PremiumExpiresAt.Value > now
+                ? user.PremiumExpiresAt.Value
+                : now;
+            var expiresAt = baseDate.AddDays(safeDays);
+            var subscription = await _dbContext.UserSubscriptions
+                .Where(x => x.UserId == userId && x.PlanCode == "PREMIUM" && x.IsActive)
+                .OrderByDescending(x => x.ExpiresAt)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (subscription is null)
+            {
+                _dbContext.UserSubscriptions.Add(new UserSubscription
+                {
+                    UserId = userId,
+                    PlanCode = "PREMIUM",
+                    StartsAt = now,
+                    ExpiresAt = expiresAt,
+                    IsActive = true,
+                    CreatedAt = now,
+                    UpdatedAt = now
+                });
+            }
+            else
+            {
+                subscription.ExpiresAt = expiresAt;
+                subscription.IsActive = true;
+                subscription.UpdatedAt = now;
+            }
+
+            user.IsPremium = true;
+            user.SubscriptionTier = "Premium";
+            user.PremiumStartedAt ??= now;
+            user.PremiumExpiresAt = expiresAt;
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            await AddAuditLogAsync(
+                currentAdminId.Value,
+                "ExtendPremium",
+                "User",
+                userId.ToString(),
+                JsonSerializer.Serialize(new { days = safeDays, expiresAt, reason = request.Reason ?? string.Empty }),
+                cancellationToken);
+
+            return Ok(new
+            {
+                message = $"Đã gia hạn Premium thêm {safeDays} ngày.",
+                userId,
+                premium = BuildPremiumState(
+                    user.IsPremium,
+                    user.SubscriptionTier,
+                    user.PremiumStartedAt,
+                    user.PremiumExpiresAt,
+                    hasPremiumHistory: true,
+                    latestSubscriptionExpiresAt: expiresAt,
+                    latestSubscriptionIsActive: true,
+                    now: DateTime.UtcNow)
+            });
+        }
+
+        [HttpPost("premium/users/{userId:int}/cancel")]
+        public async Task<IActionResult> CancelPremiumManually(
+            int userId,
+            [FromBody] AdminPremiumCancelRequest? request,
+            CancellationToken cancellationToken)
+        {
+            var currentAdminId = TryGetCurrentUserId();
+            if (!currentAdminId.HasValue)
+            {
+                return Unauthorized();
+            }
+
+            var user = await _dbContext.Users
+                .FirstOrDefaultAsync(x => x.UserId == userId, cancellationToken);
+
+            if (user is null)
+            {
+                return NotFound(new { message = "Không tìm thấy người dùng." });
+            }
+
+            var now = DateTime.UtcNow;
+            var subscriptions = await _dbContext.UserSubscriptions
+                .Where(x => x.UserId == userId && x.IsActive)
+                .ToListAsync(cancellationToken);
+
+            foreach (var subscription in subscriptions)
+            {
+                subscription.IsActive = false;
+                if (subscription.ExpiresAt > now)
+                {
+                    subscription.ExpiresAt = now;
+                }
+                subscription.UpdatedAt = now;
+            }
+
+            user.IsPremium = false;
+            user.SubscriptionTier = "Normal";
+            user.PremiumExpiresAt = now;
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            await AddAuditLogAsync(
+                currentAdminId.Value,
+                "CancelPremium",
+                "User",
+                userId.ToString(),
+                JsonSerializer.Serialize(new { reason = request?.Reason ?? string.Empty }),
+                cancellationToken);
+
+            return Ok(new
+            {
+                message = "Đã hủy Premium thủ công.",
+                userId,
+                premium = BuildPremiumState(
+                    user.IsPremium,
+                    user.SubscriptionTier,
+                    user.PremiumStartedAt,
+                    user.PremiumExpiresAt,
+                    hasPremiumHistory: true,
+                    latestSubscriptionExpiresAt: now,
+                    latestSubscriptionIsActive: false,
+                    now: DateTime.UtcNow)
             });
         }
 
@@ -1637,6 +2182,152 @@ namespace Web_Project.Controllers
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
+        private IPremiumPlanSettingsService ResolvePremiumPlanSettingsService()
+        {
+            return _premiumPlanSettingsService
+                ?? throw new InvalidOperationException("Premium plan settings service is not registered.");
+        }
+
+        private async Task GrantPremiumForTransactionAsync(
+            int userId,
+            int paymentTransactionId,
+            int days,
+            DateTime now,
+            CancellationToken cancellationToken)
+        {
+            var user = await _dbContext.Users
+                .FirstOrDefaultAsync(x => x.UserId == userId, cancellationToken);
+
+            if (user is null)
+            {
+                return;
+            }
+
+            var safeDays = Math.Max(1, days);
+            var baseDate = user.PremiumExpiresAt.HasValue && user.PremiumExpiresAt.Value > now
+                ? user.PremiumExpiresAt.Value
+                : now;
+            var expiresAt = baseDate.AddDays(safeDays);
+            var subscription = await _dbContext.UserSubscriptions
+                .Where(x => x.UserId == userId && x.PlanCode == "PREMIUM" && x.IsActive)
+                .OrderByDescending(x => x.ExpiresAt)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (subscription is null)
+            {
+                _dbContext.UserSubscriptions.Add(new UserSubscription
+                {
+                    UserId = userId,
+                    PlanCode = "PREMIUM",
+                    StartsAt = now,
+                    ExpiresAt = expiresAt,
+                    IsActive = true,
+                    PaymentTransactionId = paymentTransactionId,
+                    CreatedAt = now,
+                    UpdatedAt = now
+                });
+            }
+            else
+            {
+                subscription.ExpiresAt = expiresAt;
+                subscription.IsActive = true;
+                subscription.PaymentTransactionId = paymentTransactionId;
+                subscription.UpdatedAt = now;
+            }
+
+            user.IsPremium = true;
+            user.SubscriptionTier = "Premium";
+            user.PremiumStartedAt ??= now;
+            user.PremiumExpiresAt = expiresAt;
+        }
+
+        private static object BuildPremiumTransactionResponse(PaymentTransaction transaction)
+        {
+            return new
+            {
+                transaction.PaymentTransactionId,
+                transaction.Provider,
+                transaction.OrderId,
+                transaction.RequestId,
+                transaction.PlanCode,
+                transaction.PlanName,
+                transaction.Amount,
+                transaction.Currency,
+                transaction.Status,
+                transaction.ProviderReference,
+                transaction.ProviderTransactionId,
+                transaction.ProviderMessage,
+                transaction.CreatedAt,
+                transaction.PaidAt,
+                transaction.FailedAt,
+                user = transaction.User is null
+                    ? null
+                    : new
+                    {
+                        transaction.User.UserId,
+                        transaction.User.Username,
+                        transaction.User.FullName,
+                        transaction.User.Email
+                    }
+            };
+        }
+
+        private static AdminPremiumState BuildPremiumState(
+            bool isPremium,
+            string subscriptionTier,
+            DateTime? premiumStartedAt,
+            DateTime? premiumExpiresAt,
+            bool hasPremiumHistory,
+            DateTime? latestSubscriptionExpiresAt,
+            bool latestSubscriptionIsActive,
+            DateTime now)
+        {
+            var tierIsPremium = string.Equals(subscriptionTier, "Premium", StringComparison.OrdinalIgnoreCase);
+            var subscriptionIsActive = latestSubscriptionIsActive &&
+                latestSubscriptionExpiresAt.HasValue &&
+                latestSubscriptionExpiresAt.Value > now;
+            var effectiveExpiresAt = premiumExpiresAt ?? latestSubscriptionExpiresAt;
+            var hasPremiumMarker = isPremium || tierIsPremium || subscriptionIsActive;
+            var isActive = hasPremiumMarker &&
+                (!effectiveExpiresAt.HasValue || effectiveExpiresAt.Value > now);
+            var hasHistory = hasPremiumHistory ||
+                premiumStartedAt.HasValue ||
+                premiumExpiresAt.HasValue ||
+                latestSubscriptionExpiresAt.HasValue ||
+                isPremium ||
+                tierIsPremium;
+
+            if (isActive)
+            {
+                return new AdminPremiumState
+                {
+                    Status = "active",
+                    Label = "Đang Premium",
+                    StartedAt = premiumStartedAt,
+                    ExpiresAt = effectiveExpiresAt
+                };
+            }
+
+            if (hasHistory)
+            {
+                return new AdminPremiumState
+                {
+                    Status = "expired",
+                    Label = "Hết hạn",
+                    StartedAt = premiumStartedAt,
+                    ExpiresAt = effectiveExpiresAt
+                };
+            }
+
+            return new AdminPremiumState
+            {
+                Status = "none",
+                Label = "Chưa đăng ký",
+                StartedAt = premiumStartedAt,
+                ExpiresAt = effectiveExpiresAt
+            };
+        }
+
         private async Task<int> EnsureRoleIdAsync(string roleName, CancellationToken cancellationToken)
         {
             var normalizedRoleName = TrimTo((roleName ?? string.Empty).Trim(), 64);
@@ -2333,9 +3024,39 @@ namespace Web_Project.Controllers
             public DateTime? LastAdminActionAt { get; set; }
         }
 
+        private sealed class AdminPremiumState
+        {
+            public string Status { get; set; } = "none";
+            public string Label { get; set; } = "Chưa đăng ký";
+            public DateTime? StartedAt { get; set; }
+            public DateTime? ExpiresAt { get; set; }
+        }
+
         public sealed class AdminUserLockRequest
         {
             public bool IsLocked { get; set; }
+            public string? Reason { get; set; }
+        }
+
+        public sealed class AdminPremiumSettingsRequest
+        {
+            public decimal Amount { get; set; }
+            public int Days { get; set; } = 30;
+        }
+
+        public sealed class AdminPremiumExtendRequest
+        {
+            public int Days { get; set; } = 30;
+            public string? Reason { get; set; }
+        }
+
+        public sealed class AdminPremiumCancelRequest
+        {
+            public string? Reason { get; set; }
+        }
+
+        public sealed class AdminPremiumTransactionActionRequest
+        {
             public string? Reason { get; set; }
         }
 

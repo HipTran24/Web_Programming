@@ -61,6 +61,7 @@ builder.Services.Configure<AiRoutingSettings>(builder.Configuration.GetSection("
 builder.Services.Configure<GoogleAuthSettings>(builder.Configuration.GetSection(GoogleAuthSettings.SectionName));
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SectionName));
 builder.Services.Configure<PayOSPaymentSettings>(builder.Configuration.GetSection(PayOSPaymentSettings.SectionName));
+builder.Services.Configure<MoMoPaymentSettings>(builder.Configuration.GetSection(MoMoPaymentSettings.SectionName));
 
 var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>() ?? new JwtSettings();
 if (string.IsNullOrWhiteSpace(jwtSettings.SecretKey))
@@ -141,8 +142,10 @@ builder.Services.AddScoped<IQuizGenerationService, QuizGenerationService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserTokenQuotaService, UserTokenQuotaService>();
 builder.Services.AddScoped<IPremiumPaymentService, PremiumPaymentService>();
+builder.Services.AddScoped<IPremiumPlanSettingsService, PremiumPlanSettingsService>();
 builder.Services.AddScoped<IPremiumSubscriptionService, PremiumSubscriptionService>();
 builder.Services.AddScoped<IPayOSPaymentService, PayOSPaymentService>();
+builder.Services.AddScoped<IMoMoPaymentService, MoMoPaymentService>();
 
 var app = builder.Build();
 
