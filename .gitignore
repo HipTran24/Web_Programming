@@ -8,6 +8,7 @@ obj/
 .dotnet-home/
 *.user
 *.suo
+*.lscache
 Thumbs.db
 premium-run*.log
 restore-diag.log
