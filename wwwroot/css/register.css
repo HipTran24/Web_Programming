@@ -139,11 +139,13 @@
   appearance: none;
   -webkit-appearance: none;
   min-height: 50px;
+  height: 50px;
   border-radius: 16px;
   border: 1px solid var(--register-border);
   background: linear-gradient(155deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
   color: var(--register-text);
-  padding: 19px 46px 7px 42px;
+  padding: 0 46px 0 42px;
+  line-height: 50px;
   font-size: 0.93rem;
   letter-spacing: 0.01em;
   box-shadow:
@@ -206,7 +208,8 @@
   font-size: 0.88rem;
   color: var(--register-text-muted);
   pointer-events: none;
-  transition: transform 0.2s ease, color 0.2s ease, font-size 0.2s ease, top 0.2s ease;
+  transition: transform 0.2s ease, color 0.2s ease, font-size 0.2s ease, top 0.2s ease, opacity 0.2s ease;
+  opacity: 1;
 }
 
 .page-register .floating-input:focus + .floating-label,
@@ -217,6 +220,7 @@
   font-size: 0.68rem;
   color: rgba(182, 202, 255, 0.95);
   letter-spacing: 0.04em;
+  opacity: 0;
 }
 
 .page-register .field-control:focus-within .field-icon {
@@ -230,7 +234,7 @@
 .page-register .password-toggle-btn {
   position: absolute;
   right: 10px;
-  top: 25px;
+  top: 50%;
   transform: translateY(-50%);
   min-width: 34px;
   min-height: 34px;
@@ -260,13 +264,19 @@
 }
 
 .page-register .register-field-note {
-  margin-top: 5px;
-  color: var(--register-text-muted);
+  position: relative;
+  z-index: 1;
+  min-height: 16px;
+  margin-top: 8px;
+  color: rgba(218, 227, 255, 0.78);
   font-size: 0.74rem;
+  line-height: 1.35;
   padding-left: 2px;
 }
 
 .page-register .invalid-feedback {
+  position: relative;
+  z-index: 1;
   display: block;
   min-height: 16px;
   margin-top: 4px;
@@ -399,12 +409,14 @@
   }
 
   .page-register .floating-input {
+    height: 48px;
     min-height: 48px;
     border-radius: 14px;
+    line-height: 48px;
   }
 
   .page-register .password-toggle-btn {
-    top: 24px;
+    top: 50%;
   }
 
   .page-register .register-submit-btn {

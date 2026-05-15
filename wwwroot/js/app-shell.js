@@ -927,8 +927,8 @@
           </div>
         </div>`
       : `<div class="app-shell-action-group app-shell-action-group--guest">
-          <a class="app-shell-btn ghost" href="/home/login.html">Đăng nhập</a>
-          <a class="app-shell-btn primary" href="/home/register.html">Đăng ký</a>
+          <a class="app-shell-btn ghost" href="/home/login.html" data-no-ajax="true">Đăng nhập</a>
+          <a class="app-shell-btn primary" href="/home/register.html" data-no-ajax="true">Đăng ký</a>
         </div>`;
 
     return `

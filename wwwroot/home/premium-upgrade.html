@@ -17,37 +17,25 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
-    <link href="../css/style.css" rel="stylesheet" />
+    <link href="../css/style.css?v=20260515-noloader" rel="stylesheet" />
     <link href="../css/app-shell.css" rel="stylesheet" />
     <link href="../css/premium-upgrade.css" rel="stylesheet" />
   </head>
   <body class="premium-upgrade-page">
-    <div id="page-loader" class="logo-loader">
-      <div class="logo-loader-box">
-        <div class="ai-orbit orbit-1"></div>
-        <div class="ai-orbit orbit-2"></div>
-        <div class="ai-logo-core">
-          <span>AI</span>
-        </div>
-        <h4>SynapLearn</h4>
-        <p>Dang kiem tra goi Premium</p>
-      </div>
-    </div>
-
     <div class="page-content">
       <main class="premium-upgrade-shell container py-5">
         <section class="premium-upgrade-hero glass">
           <div class="premium-upgrade-copy">
             <span class="premium-eyebrow">SynapLearn Premium</span>
-            <h1>Nang cap Premium bang PayOS</h1>
+            <h1>Nâng cấp Premium bằng MoMo</h1>
             <p>
-              Goi demo don gian cho do an: thanh toan PayOS, he thong nhan webhook hop le,
-              sau do mo khoa khu vuc Premium trong 30 ngay.
+              Gói demo đơn giản cho đồ án: thanh toán MoMo, hệ thống nhận callback hợp lệ,
+              sau đó mở khóa khu vực Premium trong 30 ngày.
             </p>
             <div id="premiumPaymentNotice" class="premium-notice d-none" role="alert"></div>
             <div class="premium-actions">
-              <button id="payosPayButton" class="premium-pay-button" type="button">
-                Thanh toan bang PayOS
+              <button id="momoPayButton" class="premium-pay-button" type="button">
+                Thanh toán bằng MoMo
               </button>
               <a id="openPremiumButton" class="premium-outline-button d-none" href="/premium/dashboard.html">
                 Vao Premium
@@ -58,31 +46,31 @@
           <aside class="premium-plan-card">
             <div class="premium-plan-tag">PREMIUM_30D</div>
             <div class="premium-plan-price">10.000 VND</div>
-            <div class="premium-plan-meta">Hieu luc 30 ngay sau khi webhook PayOS thanh cong.</div>
+            <div class="premium-plan-meta">Hiệu lực 30 ngày sau khi MoMo xác nhận thành công.</div>
             <ul class="premium-feature-list">
-              <li>Mo khoa cac trang /premium/*</li>
-              <li>Luu giao dich PayOS vao database</li>
-              <li>Cap Premium chi khi chu ky webhook hop le</li>
+              <li>Mở khóa các trang /premium/*</li>
+              <li>Lưu giao dịch MoMo vào database</li>
+              <li>Cấp Premium khi giao dịch được xác nhận</li>
             </ul>
-            <div id="premiumStatusText" class="premium-status-text">Dang tai trang thai...</div>
+            <div id="premiumStatusText" class="premium-status-text">Đang tải trạng thái...</div>
           </aside>
         </section>
 
         <section class="premium-flow-grid">
           <article class="glass premium-flow-card">
             <span>1</span>
-            <h2>Tao giao dich</h2>
-            <p>Backend tao order pending va ky request bang HMAC SHA256.</p>
+            <h2>Tạo giao dịch</h2>
+            <p>Backend tạo order pending và ký request bằng HMAC SHA256.</p>
           </article>
           <article class="glass premium-flow-card">
             <span>2</span>
-            <h2>Mo PayOS</h2>
-            <p>Trinh duyet chuyen sang checkoutUrl cua PayOS de thanh toan.</p>
+            <h2>Mở checkout MoMo</h2>
+            <p>Trình duyệt chuyển sang payUrl của MoMo để thanh toán.</p>
           </article>
           <article class="glass premium-flow-card">
             <span>3</span>
-            <h2>Nhan webhook</h2>
-            <p>Server verify signature, doi giao dich thanh Paid va kich hoat Premium.</p>
+            <h2>Nhận callback</h2>
+            <p>Server xác thực chữ ký, đổi giao dịch thành Paid và kích hoạt Premium.</p>
           </article>
         </section>
       </main>
@@ -90,8 +78,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../js/auth.js"></script>
-    <script src="../assets/js/main.js"></script>
-    <script src="../js/app-shell.js"></script>
-    <script src="../js/premium-upgrade.js"></script>
+    <script src="../assets/js/main.js?v=20260515-smoothnav"></script>
+    <script src="../js/app-shell.js?v=20260515-smoothnav"></script>
+    <script src="../js/premium-upgrade.js?v=20260515-momo-only"></script>
   </body>
 </html>

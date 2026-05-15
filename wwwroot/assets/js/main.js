@@ -145,6 +145,29 @@ function isShelllessBody(body) {
   );
 }
 
+function normalizeNavigationPath(pathname) {
+  const normalized = String(pathname || "/").toLowerCase().replace(/\/+$/, "");
+  return normalized || "/";
+}
+
+function isAuthNavigationPath(pathname) {
+  const path = normalizeNavigationPath(pathname);
+  return path === "/home/login.html" ||
+    path === "/home/register.html" ||
+    path === "/home/otp.html";
+}
+
+function isAuthNavigationUrl(url) {
+  try {
+    const target = url instanceof URL
+      ? url
+      : new URL(url, window.location.href);
+    return target.origin === window.location.origin && isAuthNavigationPath(target.pathname);
+  } catch {
+    return false;
+  }
+}
+
 function removeShellArtifactsForShelllessPages() {
   document.body.removeAttribute("data-shell-page");
   document.getElementById("app-shell-navbar")?.remove();
@@ -183,6 +206,10 @@ function canPrefetchUrl(url) {
   }
 
   const path = String(url.pathname || "").toLowerCase();
+  if (isAuthNavigationPath(path)) {
+    return false;
+  }
+
   return path === "/" ||
     path === "/home" ||
     path === "/home/" ||
@@ -382,16 +409,17 @@ setTimeout(revealPageContent, 300);
   const MANAGED_HEAD_ATTR = "data-ajax-managed-head";
   const RUNTIME_SCRIPT_ATTR = "data-ajax-runtime-script";
   const HEAD_SELECTOR = 'link[rel="stylesheet"], link[rel="preconnect"], link[rel="icon"], style';
-  const SHARED_SCRIPT_URLS = new Set([
-    toAbsoluteUrl("https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"),
-    toAbsoluteUrl("/js/auth.js"),
-    toAbsoluteUrl("/assets/js/main.js"),
-    toAbsoluteUrl("/js/app-shell.js"),
+  const SHARED_SCRIPT_KEYS = new Set([
+    getSharedScriptKey("https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"),
+    getSharedScriptKey("/js/auth.js"),
+    getSharedScriptKey("/assets/js/main.js"),
+    getSharedScriptKey("/js/app-shell.js"),
   ]);
   const loadedSharedScripts = new Set();
   const pageResponseCache = new Map();
   let activeNavigationController = null;
   let isNavigating = false;
+  let suppressNextUnloadOverlay = false;
 
   function waitForNextPaint() {
     return new Promise((resolve) => {
@@ -406,6 +434,19 @@ setTimeout(revealPageContent, 300);
       return new URL(value, baseUrl || window.location.href).href;
     } catch {
       return String(value || "");
+    }
+  }
+
+  function getSharedScriptKey(value, baseUrl) {
+    try {
+      const url = new URL(value, baseUrl || window.location.href);
+      if (url.origin === window.location.origin) {
+        return url.pathname.toLowerCase();
+      }
+
+      return `${url.origin}${url.pathname}`.toLowerCase();
+    } catch {
+      return String(value || "").split("?")[0].toLowerCase();
     }
   }
 
@@ -479,9 +520,9 @@ setTimeout(revealPageContent, 300);
     });
 
     document.querySelectorAll("script[src]").forEach((script) => {
-      const absoluteSrc = toAbsoluteUrl(script.getAttribute("src"));
-      if (SHARED_SCRIPT_URLS.has(absoluteSrc)) {
-        loadedSharedScripts.add(absoluteSrc);
+      const sharedKey = getSharedScriptKey(script.getAttribute("src"));
+      if (SHARED_SCRIPT_KEYS.has(sharedKey)) {
+        loadedSharedScripts.add(sharedKey);
       }
     });
   }
@@ -493,6 +534,10 @@ setTimeout(revealPageContent, 300);
 
     const path = String(url.pathname || "").toLowerCase();
     if (!path || path.startsWith("/api/")) {
+      return false;
+    }
+
+    if (isAuthNavigationPath(path)) {
       return false;
     }
 
@@ -527,6 +572,10 @@ setTimeout(revealPageContent, 300);
     }
 
     if (anchor.dataset.noAjax === "true") {
+      return false;
+    }
+
+    if (document.body.classList.contains("page-login") || document.body.classList.contains("page-register")) {
       return false;
     }
 
@@ -621,13 +670,6 @@ setTimeout(revealPageContent, 300);
       desiredNodes.map((node) => buildHeadSignature(node, nextUrl))
     );
 
-    currentNodes.forEach((node) => {
-      const signature = buildHeadSignature(node);
-      if (!desiredSignatures.has(signature)) {
-        node.remove();
-      }
-    });
-
     const currentSignatures = new Set(
       Array.from(document.head.querySelectorAll(`[${MANAGED_HEAD_ATTR}="true"]`)).map((node) =>
         buildHeadSignature(node)
@@ -646,6 +688,19 @@ setTimeout(revealPageContent, 300);
       await waitForStylesheet(currentNode);
       currentSignatures.add(signature);
     }
+
+    return () => {
+      currentNodes.forEach((node) => {
+        if (!node.isConnected) {
+          return;
+        }
+
+        const signature = buildHeadSignature(node);
+        if (!desiredSignatures.has(signature)) {
+          node.remove();
+        }
+      });
+    };
   }
 
   function syncBodyAttributes(nextBody) {
@@ -668,7 +723,9 @@ setTimeout(revealPageContent, 300);
   }
 
   function hardNavigate(url) {
-    showAjaxNavigationOverlay();
+    if (!isAuthNavigationUrl(url)) {
+      showAjaxNavigationOverlay();
+    }
     window.location.assign(url);
   }
 
@@ -761,8 +818,9 @@ setTimeout(revealPageContent, 300);
 
   async function executeExternalScript(sourceNode, nextUrl, forceReload) {
     const absoluteSrc = toAbsoluteUrl(sourceNode.getAttribute("src"), nextUrl);
-    const isShared = SHARED_SCRIPT_URLS.has(absoluteSrc);
-    if (isShared && loadedSharedScripts.has(absoluteSrc) && !forceReload) {
+    const sharedKey = getSharedScriptKey(absoluteSrc);
+    const isShared = SHARED_SCRIPT_KEYS.has(sharedKey);
+    if (isShared && loadedSharedScripts.has(sharedKey) && !forceReload) {
       return;
     }
 
@@ -787,7 +845,7 @@ setTimeout(revealPageContent, 300);
     });
 
     if (isShared) {
-      loadedSharedScripts.add(absoluteSrc);
+      loadedSharedScripts.add(sharedKey);
     }
   }
 
@@ -808,7 +866,7 @@ setTimeout(revealPageContent, 300);
     for (const sourceNode of scripts) {
       if (sourceNode.src) {
         const absoluteSrc = toAbsoluteUrl(sourceNode.getAttribute("src"), nextUrl);
-        const isShared = SHARED_SCRIPT_URLS.has(absoluteSrc);
+        const isShared = SHARED_SCRIPT_KEYS.has(getSharedScriptKey(absoluteSrc));
         await executeExternalScript(sourceNode, nextUrl, !isShared);
         continue;
       }
@@ -829,6 +887,18 @@ setTimeout(revealPageContent, 300);
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }
 
+  function markShellLinkPending(anchor) {
+    const linksRoot = anchor?.closest?.("#app-shell-navbar .app-shell-links");
+    if (!linksRoot) {
+      return;
+    }
+
+    linksRoot.querySelectorAll("a.active").forEach((link) => {
+      link.classList.remove("active");
+    });
+    anchor.classList.add("active");
+  }
+
   async function finalizeNavigation(nextDocument, nextUrl, options) {
     ensureAjaxNavigationOverlay();
 
@@ -838,7 +908,7 @@ setTimeout(revealPageContent, 300);
       },
     }));
 
-    await syncHeadAssets(nextDocument, nextUrl);
+    const cleanupHeadAssets = await syncHeadAssets(nextDocument, nextUrl);
     ensureSiteFavicon();
     cleanupTransientUi();
 
@@ -847,6 +917,8 @@ setTimeout(revealPageContent, 300);
       hardNavigate(nextUrl.toString());
       return false;
     }
+
+    cleanupHeadAssets?.();
 
     syncBodyAttributes(nextDocument.body);
     if (isShelllessBody(nextDocument.body)) {
@@ -986,11 +1058,23 @@ setTimeout(revealPageContent, 300);
         ? event.target.closest("a[href]")
         : null;
 
+      if (anchor) {
+        try {
+          const targetUrl = new URL(anchor.href, window.location.href);
+          if (isAuthNavigationUrl(targetUrl)) {
+            suppressNextUnloadOverlay = true;
+          }
+        } catch {
+          suppressNextUnloadOverlay = false;
+        }
+      }
+
       if (!shouldHandleLinkClick(anchor, event)) {
         return;
       }
 
       event.preventDefault();
+      markShellLinkPending(anchor);
       void navigate(anchor.href);
     }, true);
 
@@ -1006,7 +1090,9 @@ setTimeout(revealPageContent, 300);
     });
 
     window.addEventListener("beforeunload", function () {
-      showAjaxNavigationOverlay();
+      if (!suppressNextUnloadOverlay && !isAuthNavigationUrl(window.location.href)) {
+        showAjaxNavigationOverlay();
+      }
     });
   }
 

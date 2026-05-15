@@ -88,16 +88,10 @@ a {
 }
 
 #page-loader.logo-loader {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background:
-    radial-gradient(circle at center, rgba(93, 159, 255, 0.14), transparent 24%),
-    linear-gradient(180deg, #08131b 0%, #0b1821 100%);
-  transition: opacity 0.12s linear, visibility 0.12s linear;
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 #page-loader.hide {

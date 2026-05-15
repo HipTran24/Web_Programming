@@ -1,5 +1,5 @@
 (function () {
-  const payButton = document.getElementById("payosPayButton");
+  const payButton = document.getElementById("momoPayButton");
   const openPremiumButton = document.getElementById("openPremiumButton");
   const notice = document.getElementById("premiumPaymentNotice");
   const statusText = document.getElementById("premiumStatusText");
@@ -38,32 +38,32 @@
     });
 
     if (!response.ok) {
-      throw new Error("Khong the tai trang thai Premium.");
+      throw new Error("Không thể tải trạng thái Premium.");
     }
 
     const data = await response.json();
     if (data?.isPremium) {
-      statusText.textContent = `Premium dang hoat dong den ${formatDate(data.expiresAt) || "ngay het han"}.`;
+      statusText.textContent = `Premium đang hoạt động đến ${formatDate(data.expiresAt) || "ngày hết hạn"}.`;
       openPremiumButton?.classList.remove("d-none");
       if (payButton) {
         payButton.classList.add("d-none");
         payButton.disabled = true;
       }
-      showNotice("Tai khoan da co Premium, khong can thanh toan.", "success");
+      showNotice("Tài khoản đã có Premium, không cần thanh toán.", "success");
       window.location.replace("/premium/account.html");
       return;
     }
 
-    statusText.textContent = "Tai khoan chua co Premium. Thanh toan de mo khoa.";
+    statusText.textContent = "Tài khoản chưa có Premium. Thanh toán để mở khóa.";
   };
 
   const createPayment = async () => {
     if (!payButton) return;
     payButton.disabled = true;
-    payButton.textContent = "Dang tao link PayOS...";
+    payButton.textContent = "Đang tạo link MoMo...";
 
     try {
-      const response = await fetch("/api/payments/payos/create", {
+      const response = await fetch("/api/payments/momo/create", {
         method: "POST",
         headers: {
           Accept: "application/json",
@@ -75,14 +75,14 @@
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok || !data?.success || !data?.payUrl) {
-        throw new Error(data?.message || "PayOS chua tao duoc link thanh toan.");
+        throw new Error(data?.message || "MoMo chưa tạo được link thanh toán.");
       }
 
       window.location.href = data.payUrl;
     } catch (error) {
-      showNotice(error.message || "Co loi khi tao thanh toan PayOS.", "error");
+      showNotice(error.message || "Có lỗi khi tạo thanh toán MoMo.", "error");
       payButton.disabled = false;
-      payButton.textContent = "Thanh toan bang PayOS";
+      payButton.textContent = "Thanh toán bằng MoMo";
     }
   };
 
@@ -90,9 +90,9 @@
     const params = new URLSearchParams(window.location.search);
     const payment = params.get("payment");
     if (payment === "success") {
-      showNotice(params.get("message") || "PayOS da redirect ve thanh cong. He thong se mo Premium sau khi webhook duoc xac nhan.", "success");
+      showNotice(params.get("message") || "MoMo đã redirect về thành công. Hệ thống sẽ mở Premium sau khi giao dịch được xác nhận.", "success");
     } else if (payment === "failed") {
-      showNotice(params.get("message") || "Giao dich PayOS chua thanh cong.", "error");
+      showNotice(params.get("message") || "Giao dịch MoMo chưa thành công.", "error");
     }
   };
 
@@ -104,7 +104,7 @@
       return loadStatus();
     })
     .catch((error) => {
-      statusText.textContent = "Khong the kiem tra Premium.";
-      showNotice(error.message || "Co loi khi tai trang thai Premium.", "error");
+      statusText.textContent = "Không thể kiểm tra Premium.";
+      showNotice(error.message || "Có lỗi khi tải trạng thái Premium.", "error");
     });
 })();

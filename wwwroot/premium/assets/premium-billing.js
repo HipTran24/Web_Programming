@@ -111,6 +111,8 @@
           : "Chưa có",
     );
 
+    document.body.classList.toggle("is-premium-active", Boolean(status.isPremium));
+
     document.querySelectorAll("[data-premium-meter-fill]").forEach((node) => {
       node.style.width = `${percent}%`;
     });
@@ -139,13 +141,9 @@
     }
   };
 
-  const getSelectedProvider = () => {
-    const checked = document.querySelector('input[name="premiumPaymentProvider"]:checked');
-    const provider = String(checked?.value || "momo").toLowerCase();
-    return provider === "payos" ? "payos" : "momo";
-  };
+  const getSelectedProvider = () => "momo";
 
-  const getProviderLabel = (provider) => provider === "payos" ? "PayOS" : "MoMo";
+  const getProviderLabel = () => "MoMo";
 
   const syncCheckoutButtonLabels = () => {
     const provider = getSelectedProvider();
@@ -173,7 +171,7 @@
         const original = button.textContent;
         const provider = getSelectedProvider();
         const providerLabel = getProviderLabel(provider);
-        const endpoint = provider === "payos" ? "/api/payments/payos/create" : "/api/payments/momo/create";
+        const endpoint = "/api/payments/momo/create";
         button.textContent = `Đang tạo link ${providerLabel}...`;
 
         try {

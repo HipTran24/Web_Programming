@@ -305,6 +305,14 @@
       node.textContent = tierLabel;
     });
 
+    document.body.classList.toggle("is-premium-active", Boolean(data.isPremium));
+    document.querySelectorAll("[data-normal-only]").forEach((node) => {
+      node.hidden = Boolean(data.isPremium);
+    });
+    document.querySelectorAll("[data-premium-only]").forEach((node) => {
+      node.hidden = !data.isPremium;
+    });
+
     if (data.isPremium) {
       document.querySelectorAll('[data-page-link="upgrade"]').forEach((link) => {
         const parent = link.closest("li");
@@ -419,24 +427,24 @@
 
     setText("[data-dashboard-eyebrow]", "Premium Dashboard");
     setText("[data-dashboard-title]", `Chào ${data.greetingName || "bạn"}, sẵn sàng học?`);
-    setText("[data-dashboard-subtitle]", data.suggestions?.[0] || "Cap nhat hoat dong hoc tap gan nhat.");
+    setText("[data-dashboard-subtitle]", data.suggestions?.[0] || "Cập nhật hoạt động học tập gần nhất.");
     setText("[data-dashboard-chip=goal]", `Mục tiêu tuần: ${data.kpis?.weeklyGoalPercent ?? 0}%`);
-    setText("[data-dashboard-chip=sessions]", `Quiz da lam: ${data.kpis?.completedQuizzes ?? 0}`);
-    setText("[data-dashboard-chip=weak]", `Chu de yeu: ${data.weakTopics?.length ?? 0}`);
+    setText("[data-dashboard-chip=sessions]", `Quiz đã làm: ${data.kpis?.completedQuizzes ?? 0}`);
+    setText("[data-dashboard-chip=weak]", `Chủ đề yếu: ${data.weakTopics?.length ?? 0}`);
 
     setText("[data-dashboard-metric=streak]", data.streakDays ?? "0");
-    setText("[data-dashboard-metric-meta=streak]", `Tuan nay +${data.streakDelta ?? 0} ngay`);
+    setText("[data-dashboard-metric-meta=streak]", `Tuần này +${data.streakDelta ?? 0} ngày`);
     setText("[data-dashboard-metric=goal]", `${data.kpis?.weeklyGoalPercent ?? 0}%`);
     setText("[data-dashboard-metric-meta=goal]", "Tiến độ mục tiêu tuần" );
     setText("[data-dashboard-metric=contents]", data.kpis?.totalContents ?? 0);
-    setText("[data-dashboard-metric-meta=contents]", `${data.kpis?.totalContentsLast7Days ?? 0} noi dung moi / 7 ngay`);
+    setText("[data-dashboard-metric-meta=contents]", `${data.kpis?.totalContentsLast7Days ?? 0} noi dung moi / 7 ngày`);
     setText("[data-dashboard-metric=score]", data.kpis?.averageScoreRecent ?? 0);
-    setText("[data-dashboard-metric-meta=score]", "Trung binh 20 bai gan nhat" );
+    setText("[data-dashboard-metric-meta=score]", "Trung bình 20 bài gần nhất" );
 
     setText("[data-dashboard-coach=goal]", `${data.kpis?.weeklyGoalPercent ?? 0}%`);
     setText("[data-dashboard-coach-meta=goal]", "Tiến độ mục tiêu" );
     setText("[data-dashboard-coach=score]", data.kpis?.averageScoreRecent ?? 0);
-    setText("[data-dashboard-coach-meta=score]", "Diem trung binh gan day" );
+    setText("[data-dashboard-coach-meta=score]", "Điểm trung bình gần đây" );
     setText("[data-dashboard-coach-callout]", data.suggestions?.[1] || data.suggestions?.[0] || "--");
 
     const priorityList = document.querySelector("[data-dashboard-priority-list]");
@@ -454,7 +462,7 @@
             </div>
             <div class="premium-queue-actions">
               <span class="premium-inline-kpi">${escapeHtml(item.result)}</span>
-              <a class="premium-link" href="${item.actionUrl || "#"}">${escapeHtml(item.actionText || "Mo")}</a>
+              <a class="premium-link" href="${item.actionUrl || "#"}">${escapeHtml(item.actionText || "Mở")}</a>
             </div>
           </div>
         `).join("");
@@ -528,15 +536,15 @@
 
     setText("[data-analytics-eyebrow]", "Premium Analytics" );
     setText("[data-analytics-title]", "Tổng hợp hiệu suất học tập" );
-    setText("[data-analytics-subtitle]", data.suggestions?.[0] || "Cap nhat du lieu gan nhat." );
+    setText("[data-analytics-subtitle]", data.suggestions?.[0] || "Cập nhật dữ liệu gần nhất." );
     setText("[data-analytics-chip=window]", "7 ngày gần nhất" );
-    setText("[data-analytics-chip=attempts]", `Quiz 7 ngay: ${data.kpis?.attemptsLast7Days ?? 0}` );
-    setText("[data-analytics-chip=wrong]", `Cau sai: ${data.kpis?.wrongAnswersCount ?? 0}` );
+    setText("[data-analytics-chip=attempts]", `Quiz 7 ngày: ${data.kpis?.attemptsLast7Days ?? 0}` );
+    setText("[data-analytics-chip=wrong]", `Câu sai: ${data.kpis?.wrongAnswersCount ?? 0}` );
 
     setText("[data-analytics-metric=average]", `${data.kpis?.averageScorePercent ?? 0}%`);
-    setText("[data-analytics-metric-meta=average]", `Chenh lech ${data.kpis?.averageScoreDeltaPercent ?? 0}%`);
+    setText("[data-analytics-metric-meta=average]", `Chênh lệch ${data.kpis?.averageScoreDeltaPercent ?? 0}%`);
     setText("[data-analytics-metric=active]", data.kpis?.activeDaysCurrentWeek ?? 0);
-    setText("[data-analytics-metric-meta=active]", `Tuan truoc: ${data.kpis?.activeDaysPreviousWeek ?? 0}`);
+    setText("[data-analytics-metric-meta=active]", `Tuần trước: ${data.kpis?.activeDaysPreviousWeek ?? 0}`);
     setText("[data-analytics-metric=attempts]", data.kpis?.totalAttempts ?? 0);
     setText("[data-analytics-metric-meta=attempts]", "Tổng quiz đã làm" );
     setText("[data-analytics-metric=wrong]", data.kpis?.wrongAnswersCount ?? 0);
@@ -633,25 +641,25 @@
     const quizLatest = await fetchJson("/api/quiz/latest");
     const quiz = quizLatest.ok ? quizLatest.data : null;
 
-    const fileName = String(content.fileName || "Noi dung hoc tap").trim();
-    const subject = String(content.ai_DetectedSubject || content.aiDetectedSubject || "Noi dung").trim();
+    const fileName = String(content.fileName || "Nội dung học tập").trim();
+    const subject = String(content.ai_DetectedSubject || content.aiDetectedSubject || "Nội dung").trim();
     const keyPoints = splitKeyPoints(content.aiProcess?.keyPoints || content.aiProcess?.KeyPoints || "");
     const summaryItems = buildSummaryItems(content.aiProcess?.summary || content.aiProcess?.Summary || "");
 
     setText("[data-workspace-title]", `Workspace cho ${fileName}`);
     setText("[data-workspace-subtitle]", content.aiProcess?.summary || content.aiProcess?.Summary || "Chưa có tóm tắt." );
-    setText("[data-workspace-topic]", `Tai lieu: ${fileName}`);
-    setText("[data-workspace-difficulty]", `Do kho: ${formatDifficulty(quiz?.difficulty)}`);
-    setText("[data-workspace-goal]", `Chu de: ${subject}`);
+    setText("[data-workspace-topic]", `Tài liệu: ${fileName}`);
+    setText("[data-workspace-difficulty]", `Độ khó: ${formatDifficulty(quiz?.difficulty)}`);
+    setText("[data-workspace-goal]", `Chủ đề: ${subject}`);
 
     setText("[data-workspace-metric=keypoints]", keyPoints.length || 0);
     setText("[data-workspace-metric-meta=keypoints]", "Số key points" );
     setText("[data-workspace-metric=quiz]", quiz?.totalQuestions ?? 0);
     setText("[data-workspace-metric-meta=quiz]", "Tổng số câu quiz gần nhất" );
     setText("[data-workspace-metric=created]", formatDate(content.createdAt));
-    setText("[data-workspace-metric-meta=created]", "Ngay tao noi dung" );
+    setText("[data-workspace-metric-meta=created]", "Ngày tạo nội dung" );
     setText("[data-workspace-metric=type]", content.sourceType || content.fileType || "--");
-    setText("[data-workspace-metric-meta=type]", "Loai noi dung" );
+    setText("[data-workspace-metric-meta=type]", "Loại nội dung" );
 
     setLink("[data-workspace-content-link]", `content-detail.html?contentId=${content.contentId}`);
     if (quiz?.quizId) {
@@ -694,7 +702,7 @@
       }
     }
 
-    setText("[data-workspace-callout]", "Hoan thanh mot buoc va chuyen sang quiz khi san sang." );
+    setText("[data-workspace-callout]", "Hoàn thành một bước và chuyển sang quiz khi sẵn sàng." );
 
     const quizList = document.querySelector("[data-workspace-quiz-list]");
     if (quizList) {
@@ -703,8 +711,8 @@
       } else {
         quizList.innerHTML = `
           <li>
-            <strong>${quiz.totalQuestions} cau trac nghiem</strong>
-            <span class="premium-line-meta">Do kho ${formatDifficulty(quiz.difficulty)}</span>
+            <strong>${quiz.totalQuestions} câu trắc nghiệm</strong>
+            <span class="premium-line-meta">Độ khó ${formatDifficulty(quiz.difficulty)}</span>
           </li>
         `;
       }
@@ -1068,9 +1076,9 @@
         content?.ai_DetectedSubject ||
         content?.ai_detectedSubject ||
         content?.fileName ||
-        "Noi dung",
+        "Nội dung",
       ).trim();
-      const fileName = String(content?.fileName || content?.FileName || "Noi dung hoc tap").trim();
+      const fileName = String(content?.fileName || content?.FileName || "Nội dung học tập").trim();
       const summary = String(
         content?.aiProcess?.summary ||
         content?.aiProcess?.Summary ||
@@ -1081,13 +1089,13 @@
 
       const imageUrl = (/\.(png|jpg|jpeg|gif|webp)$/i).test(sourceUrl) ? sourceUrl : "";
 
-      setText("[data-quiz-plan]", `Quiz #${quiz.quizId} • ${quiz.totalQuestions} cau • ${formatDifficulty(quiz.difficulty)}`);
+      setText("[data-quiz-plan]", `Quiz #${quiz.quizId} • ${quiz.totalQuestions} câu • ${formatDifficulty(quiz.difficulty)}`);
       setText("[data-quiz-eyebrow]", `Premium Quiz • ${subject}`);
       setText("[data-quiz-title]", `Quiz tu ${fileName}`);
-      setText("[data-quiz-subtitle]", summary || "Bo de duoc tao tu noi dung cua ban.");
+      setText("[data-quiz-subtitle]", summary || "Bộ đề được tạo từ nội dung của bạn.");
 
-      setText("[data-quiz-topic]", `Chuyen de: ${subject}`);
-      setText("[data-quiz-difficulty]", `Do kho: ${formatDifficulty(quiz.difficulty)}`);
+      setText("[data-quiz-topic]", `Chuyên đề: ${subject}`);
+      setText("[data-quiz-difficulty]", `Độ khó: ${formatDifficulty(quiz.difficulty)}`);
       setText("[data-quiz-count]", `Tổng câu: ${quiz.totalQuestions}`);
 
       setText("[data-quiz-metric=total]", quiz.totalQuestions);
@@ -1097,7 +1105,7 @@
 
       setText("[data-content-name]", fileName);
       setText("[data-content-subject]", subject);
-      setText("[data-content-quiz-count]", content?.quizCount ? `${content.quizCount} bo` : "0 bo");
+      setText("[data-content-quiz-count]", content?.quizCount ? `${content.quizCount} bộ` : "0 bộ");
 
       const summaryBox = document.querySelector("[data-quiz-summary-box]");
       if (summaryBox) {
@@ -1109,8 +1117,8 @@
         }
       }
 
-      setText("[data-quiz-caption]", `Noi dung: ${fileName}`);
-      setText("[data-quiz-footer]", `Quiz #${quiz.quizId} tao luc ${formatDate(quiz.createdAt)} tu ${fileName}.`);
+      setText("[data-quiz-caption]", `Nội dung: ${fileName}`);
+      setText("[data-quiz-footer]", `Quiz #${quiz.quizId} tạo lúc ${formatDate(quiz.createdAt)} tu ${fileName}.`);
 
       setImage("[data-quiz-image]", imageUrl, fileName);
 
@@ -1120,7 +1128,7 @@
       renderQuestions(quiz.questions || []);
       setQuizStatus("");
     } catch {
-      setQuizStatus("Co loi khi dong bo du lieu quiz.", "danger");
+      setQuizStatus("Có lỗi khi đồng bộ dữ liệu quiz.", "danger");
     }
   };
 
@@ -1410,7 +1418,7 @@
     void renderPlanPage();
   } else if (currentPage === "result") {
     void renderResultPage();
-  } else if (pageId === "quiz") {
+  } else if (currentPage === "quiz") {
       renderQuizPage();
   }
 })();

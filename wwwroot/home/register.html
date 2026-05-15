@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="vi">
   <head>
     <meta charset="utf-8" />
@@ -29,12 +29,20 @@
       html.auth-shellless nav.navbar,
       html.auth-shellless #navbar,
       html.auth-shellless #appSidebar,
-      html.auth-shellless .app-sidebar {
+      html.auth-shellless .app-sidebar,
+      html.auth-shellless #page-loader.logo-loader,
+      html.auth-shellless .logo-loader {
         display: none !important;
       }
 
       html.auth-shellless body {
         padding-top: 0 !important;
+      }
+
+      html.auth-shellless .page-content {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
       }
 
       html.auth-shellless [data-shell-page] .page-content,
@@ -49,22 +57,10 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
-    <link href="../css/style.css" rel="stylesheet" />
+    <link href="../css/style.css?v=20260515-noloader" rel="stylesheet" />
     <link href="../css/register.css" rel="stylesheet" />
 </head>
   <body class="page-register">
-    <div id="page-loader" class="logo-loader">
-  <div class="logo-loader-box">
-    <div class="ai-orbit orbit-1"></div>
-    <div class="ai-orbit orbit-2"></div>
-    <div class="ai-logo-core">
-      <span>AI</span>
-    </div>
-    <h4>SynapLearn</h4>
-    <p>Hệ thống học tập thông minh đang khởi động</p>
-  </div>
-</div>
-
 <div class="page-content">
 <main class="auth-page auth-page--register">
       <div class="container register-shell">
@@ -240,7 +236,7 @@
                 </button>
                 <div class="text-muted-2 small mt-3 register-footer-note">
                   Đã có tài khoản?
-                  <a href="../home/login.html" class="text-white">Đăng nhập</a>
+                  <a href="../home/login.html" class="text-white" data-no-ajax="true">Đăng nhập</a>
                 </div>
               </div>
             </form>
@@ -252,8 +248,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <script src="../js/auth.js"></script>
-  <script src="../assets/js/main.js"></script>
+  <script src="../assets/js/main.js?v=20260515-smoothnav"></script>
     <script src="../js/register.js"></script>
-    <script src="../js/app-shell.js"></script>
+    <script src="../js/app-shell.js?v=20260515-smoothnav"></script>
 </body>
 </html>

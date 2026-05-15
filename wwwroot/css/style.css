@@ -1143,19 +1143,10 @@ footer.footer {
   pointer-events: none;
 }
 #page-loader.logo-loader {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background:
-    radial-gradient(
-      circle at center,
-      rgba(13, 110, 253, 0.16),
-      transparent 28%
-    ),
-    #0b1220;
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 .logo-loader-box {
   position: relative;
@@ -1235,13 +1226,11 @@ footer.footer {
     opacity 0.16s ease,
     transform 0.16s ease;
 }
-html.js .page-content {
-  opacity: 0;
-  transform: translateY(6px);
-}
+html.js .page-content,
 html.js .page-content.show {
   opacity: 1;
   transform: none;
+  transition: none;
 }
 
 html.is-ajax-navigating .page-content,

@@ -1,128 +1,135 @@
 <!doctype html>
 <html lang="vi">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Nâng Cấp Tài Khoản Premium - SynapLearn</title>
-    <link rel="icon" type="image/svg+xml" href="../images/favicon.svg" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
-    <link href="../css/style.css" rel="stylesheet" />
-    <link href="./assets/premium-experience.css?v=20260514-2" rel="stylesheet" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nâng cấp tài khoản Premium - SynapLearn</title>
+  <link rel="icon" type="image/svg+xml" href="../images/favicon.svg" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
+  <link href="../css/style.css?v=20260515-noloader" rel="stylesheet" />
+  <link href="./assets/premium-experience.css?v=20260515-premium-ui" rel="stylesheet" />
 </head>
-<body class="premium-page" data-page="upgrade">
-    <div class="container-fluid">
-        <div class="row">
-            <main class="col-12 ms-sm-auto px-md-4">
-                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3">
-                    <a href="/home/index.html" class="btn btn-outline-secondary btn-sm">
-                        <i class="bi bi-arrow-left"></i> Quay lại Trang chủ
-                    </a>
-                </div>
+<body class="premium-page premium-upgrade-bright" data-page="upgrade">
+  <main class="premium-upgrade-shell">
+    <div class="premium-message" data-premium-status style="display:none"></div>
 
-                <div class="pricing-header p-3 pb-md-4 mx-auto text-center">
-                    <h1 class="display-4 fw-normal">Mở Khóa Toàn Bộ Tiềm Năng Học Tập</h1>
-                    <p class="fs-5 text-muted">
-                        Nâng cấp lên SynapLearn Premium để nhận được giới hạn token cao hơn, các tính năng phân tích sâu và trải nghiệm học tập không giới hạn.
-                    </p>
-                </div>
+    <header class="premium-upgrade-topline">
+      <a href="/home/index.html" class="premium-upgrade-back">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i>
+        <span>Quay lại Trang chủ</span>
+      </a>
+      <div class="premium-upgrade-brand">
+        <span class="premium-upgrade-brand-mark"><img src="../images/favicon.svg" alt="" /></span>
+        <span>SynapLearn Premium</span>
+      </div>
+      <span class="premium-upgrade-status" data-premium-tier>Đang kiểm tra gói</span>
+    </header>
 
-                <div class="row row-cols-1 row-cols-md-2 mb-3 text-center justify-content-center">
-                    <div class="col">
-                        <div class="card mb-4 rounded-3 shadow-sm">
-                            <div class="card-header py-3">
-                                <h4 class="my-0 fw-normal">Miễn Phí</h4>
-                            </div>
-                            <div class="card-body">
-                                <h1 class="card-title pricing-card-title">0đ<small class="text-muted fw-light">/tháng</small></h1>
-                                <ul class="list-unstyled mt-3 mb-4">
-                                    <li><i class="bi bi-check-circle-fill text-success"></i> 200,000 token mỗi ngày</li>
-                                    <li><i class="bi bi-check-circle-fill text-success"></i> Tóm tắt văn bản cơ bản</li>
-                                    <li><i class="bi bi-check-circle-fill text-success"></i> Tạo câu hỏi trắc nghiệm</li>
-                                    <li><i class="bi bi-x-circle text-danger"></i> Phân tích học tập chi tiết</li>
-                                    <li><i class="bi bi-x-circle text-danger"></i> Tạo kế hoạch học tập</li>
-                                    <li><i class="bi bi-x-circle text-danger"></i> Hỗ trợ ưu tiên</li>
-                                </ul>
-                                <button type="button" class="w-100 btn btn-lg btn-outline-primary" disabled>Gói hiện tại</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="card mb-4 rounded-3 shadow-sm border-primary">
-                            <div class="card-header py-3 text-white bg-primary border-primary">
-                                <h4 class="my-0 fw-normal">Premium</h4>
-                            </div>
-                            <div class="card-body">
-                                <h1 class="card-title pricing-card-title"><span data-premium-price>99.000đ</span><small class="text-muted fw-light">/ <span data-premium-days>30</span> ngày</small></h1>
-                                <ul class="list-unstyled mt-3 mb-4">
-                                    <li><i class="bi bi-check-circle-fill text-success"></i> <strong>500,000</strong> token mỗi ngày</li>
-                                    <li><i class="bi bi-check-circle-fill text-success"></i> Tóm tắt và phân tích sâu</li>
-                                    <li><i class="bi bi-check-circle-fill text-success"></i> Tạo câu hỏi và ôn tập nâng cao</li>
-                                    <li><i class="bi bi-check-circle-fill text-success"></i> Phân tích học tập chi tiết</li>
-                                    <li><i class="bi bi-check-circle-fill text-success"></i> Tạo kế hoạch học tập thông minh</li>
-                                    <li><i class="bi bi-check-circle-fill text-success"></i> Hỗ trợ ưu tiên</li>
-                                </ul>
-                                <a href="checkout.html" class="w-100 btn btn-lg btn-primary">Nâng cấp ngay</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <h2 class="display-6 text-center mb-4">So sánh chi tiết các tính năng</h2>
-
-                <div class="table-responsive">
-                    <table class="table text-center premium-comparison-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 34%;"></th>
-                                <th style="width: 22%;">Miễn Phí</th>
-                                <th style="width: 22%;">Premium</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <th scope="row" class="text-start">Giới hạn token AI hàng ngày</th>
-                                <td>200,000</td>
-                                <td>500,000</td>
-                            </tr>
-                            <tr>
-                                <th scope="row" class="text-start">Tóm tắt tài liệu</th>
-                                <td><i class="bi bi-check-lg"></i></td>
-                                <td><i class="bi bi-check-lg"></i></td>
-                            </tr>
-                             <tr>
-                                <th scope="row" class="text-start">Tạo câu hỏi trắc nghiệm (Quiz)</th>
-                                <td><i class="bi bi-check-lg"></i></td>
-                                <td><i class="bi bi-check-lg"></i></td>
-                            </tr>
-                            <tr>
-                                <th scope="row" class="text-start">Phân tích học tập (Analytics)</th>
-                                <td>Cơ bản</td>
-                                <td>Chi tiết & chuyên sâu</td>
-                            </tr>
-                            <tr>
-                                <th scope="row" class="text-start">Kế hoạch học tập (Learning Plan)</th>
-                                <td><i class="bi bi-x-lg text-danger"></i></td>
-                                <td><i class="bi bi-check-lg"></i></td>
-                            </tr>
-                            <tr>
-                                <th scope="row" class="text-start">Không gian làm việc (Workspace)</th>
-                                <td><i class="bi bi-check-lg"></i></td>
-                                <td>Nâng cao</td>
-                            </tr>
-                            <tr>
-                                <th scope="row" class="text-start">Hỗ trợ khách hàng</th>
-                                <td>Tiêu chuẩn</td>
-                                <td>Ưu tiên</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </main>
+    <section class="premium-upgrade-hero">
+      <div class="premium-upgrade-hero-copy">
+        <span class="premium-upgrade-kicker">Premium 30 ngày</span>
+        <h1>Mở khóa toàn bộ tiềm năng học tập.</h1>
+        <p>
+          Nâng cấp lên SynapLearn Premium để có giới hạn token cao hơn, phân tích học tập sâu hơn,
+          dashboard riêng và kế hoạch học thông minh cho từng nội dung.
+        </p>
+        <div class="premium-upgrade-actions" data-normal-only>
+          <a href="checkout.html" class="premium-upgrade-primary">Nâng cấp qua MoMo</a>
+          <a href="#premiumComparison" class="premium-upgrade-secondary">So sánh quyền lợi</a>
         </div>
-    </div>
+        <div class="premium-upgrade-owned" data-premium-only hidden>
+          <strong>Bạn đang dùng Premium.</strong>
+          <span>Tính năng nâng cấp đã được ẩn. Tiếp tục vào dashboard để theo dõi token và kế hoạch học.</span>
+          <a href="account.html">Xem tài khoản</a>
+        </div>
+        <div class="premium-upgrade-highlights">
+          <span><i class="bi bi-stars"></i> 500,000 token/ngày</span>
+          <span><i class="bi bi-graph-up-arrow"></i> Analytics nâng cao</span>
+          <span><i class="bi bi-calendar2-check"></i> Learning plan thông minh</span>
+        </div>
+      </div>
+      <aside class="premium-upgrade-hero-panel">
+        <div class="premium-upgrade-plan-name">SynapLearn Premium</div>
+        <div class="premium-upgrade-price"><span data-premium-price>99.000đ</span><small>/ <span data-premium-days>30</span> ngày</small></div>
+        <div class="premium-upgrade-meter">
+          <span>Token mỗi ngày</span>
+          <strong data-premium-token-limit-plan>500,000</strong>
+        </div>
+        <ul>
+          <li><i class="bi bi-check-circle-fill"></i> Tóm tắt và phân tích sâu</li>
+          <li><i class="bi bi-check-circle-fill"></i> Quiz và ôn tập nâng cao</li>
+          <li><i class="bi bi-check-circle-fill"></i> Ưu tiên gợi ý học hôm nay</li>
+        </ul>
+      </aside>
+    </section>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="./assets/premium-billing.js?v=20260514-2"></script>
+    <section class="premium-upgrade-plans" aria-label="Gói học tập">
+      <article class="premium-upgrade-plan is-free">
+        <div class="premium-upgrade-plan-head">
+          <h2>Miễn phí</h2>
+          <span>Đang dùng</span>
+        </div>
+        <div class="premium-upgrade-plan-price">0đ <small>/ tháng</small></div>
+        <ul>
+          <li><i class="bi bi-check-circle-fill"></i> 200,000 token mỗi ngày</li>
+          <li><i class="bi bi-check-circle-fill"></i> Tóm tắt văn bản cơ bản</li>
+          <li><i class="bi bi-check-circle-fill"></i> Tạo câu hỏi trắc nghiệm</li>
+          <li class="is-muted"><i class="bi bi-x-circle"></i> Chưa có analytics chuyên sâu</li>
+          <li class="is-muted"><i class="bi bi-x-circle"></i> Chưa có learning plan nâng cao</li>
+        </ul>
+      </article>
+
+      <article class="premium-upgrade-plan is-premium">
+        <div class="premium-upgrade-plan-head">
+          <h2>Premium</h2>
+          <span>Khuyên dùng</span>
+        </div>
+        <div class="premium-upgrade-plan-price"><span data-premium-price>99.000đ</span> <small>/ <span data-premium-days>30</span> ngày</small></div>
+        <ul>
+          <li><i class="bi bi-check-circle-fill"></i> <strong>500,000</strong> token mỗi ngày</li>
+          <li><i class="bi bi-check-circle-fill"></i> Phân tích học tập chi tiết</li>
+          <li><i class="bi bi-check-circle-fill"></i> Tạo kế hoạch học thông minh</li>
+          <li><i class="bi bi-check-circle-fill"></i> Dashboard, workspace và review nâng cao</li>
+          <li><i class="bi bi-check-circle-fill"></i> Hỗ trợ ưu tiên</li>
+        </ul>
+        <a href="checkout.html" class="premium-upgrade-plan-cta" data-normal-only>Nâng cấp ngay</a>
+        <a href="account.html" class="premium-upgrade-plan-cta" data-premium-only hidden>Đang dùng Premium</a>
+      </article>
+    </section>
+
+    <section id="premiumComparison" class="premium-upgrade-comparison">
+      <div class="premium-upgrade-section-head">
+        <span>So sánh chi tiết</span>
+        <h2>Premium giúp quá trình học rõ hơn, nhanh hơn và có định hướng hơn.</h2>
+      </div>
+      <div class="premium-upgrade-table-wrap">
+        <table class="premium-upgrade-table">
+          <thead>
+            <tr>
+              <th>Tính năng</th>
+              <th>Miễn phí</th>
+              <th>Premium</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><th>Giới hạn token AI hằng ngày</th><td>200,000</td><td>500,000</td></tr>
+            <tr><th>Tóm tắt tài liệu</th><td>Cơ bản</td><td>Sâu và có ngữ cảnh</td></tr>
+            <tr><th>Quiz và ôn tập</th><td>Có</td><td>Nâng cao theo lịch sử học</td></tr>
+            <tr><th>Analytics học tập</th><td>Cơ bản</td><td>Chi tiết và hành động được</td></tr>
+            <tr><th>Kế hoạch học</th><td>Chưa có</td><td>Tự động gợi ý theo tuần</td></tr>
+            <tr><th>Workspace học sâu</th><td>Giới hạn</td><td>Đầy đủ dashboard Premium</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="premium-message" data-premium-message hidden></div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../js/auth.js?v=20260511-1"></script>
+  <script src="./assets/premium-experience.js?v=20260515-premium-ui"></script>
+  <script src="./assets/premium-billing.js?v=20260515-premium-ui"></script>
 </body>
 </html>

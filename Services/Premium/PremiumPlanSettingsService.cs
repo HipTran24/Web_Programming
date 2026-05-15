@@ -10,16 +10,13 @@ namespace Web_Project.Services.Premium
         private const string AmountKey = "premium.plan.amount.vnd";
         private const string DaysKey = "premium.plan.days";
         private readonly AppDbContext _dbContext;
-        private readonly PayOSPaymentSettings _payOSSettings;
         private readonly MoMoPaymentSettings _moMoSettings;
 
         public PremiumPlanSettingsService(
             AppDbContext dbContext,
-            IOptions<PayOSPaymentSettings> payOSSettings,
             IOptions<MoMoPaymentSettings> moMoSettings)
         {
             _dbContext = dbContext;
-            _payOSSettings = payOSSettings.Value;
             _moMoSettings = moMoSettings.Value;
         }
 
@@ -107,11 +104,6 @@ namespace Web_Project.Services.Premium
 
         private decimal GetFallbackAmount()
         {
-            if (_payOSSettings.PremiumAmount > 0m)
-            {
-                return _payOSSettings.PremiumAmount;
-            }
-
             if (_moMoSettings.PremiumAmount > 0m)
             {
                 return _moMoSettings.PremiumAmount;
@@ -122,11 +114,6 @@ namespace Web_Project.Services.Premium
 
         private int GetFallbackDays()
         {
-            if (_payOSSettings.PremiumDays > 0)
-            {
-                return _payOSSettings.PremiumDays;
-            }
-
             if (_moMoSettings.PremiumDays > 0)
             {
                 return _moMoSettings.PremiumDays;
