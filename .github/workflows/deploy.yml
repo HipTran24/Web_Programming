@@ -6,9 +6,11 @@ on:
       - main
   workflow_dispatch:
 
+
 env:
   DEPLOY_PACKAGE: deploy-package.tgz
   PROJECT_NAME: Web_Project 
+
 
 jobs:
   build-and-deploy:
