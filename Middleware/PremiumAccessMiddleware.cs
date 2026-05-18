@@ -12,7 +12,10 @@ namespace Web_Project.Middleware
             _next = next;
         }
 
-        public async Task InvokeAsync(HttpContext context, IPremiumSubscriptionService premiumSubscriptionService)
+        public async Task InvokeAsync(
+            HttpContext context,
+            IPremiumSubscriptionService premiumSubscriptionService,
+            IPayOSPaymentService payOSPaymentService)
         {
             var path = context.Request.Path;
             if (!path.StartsWithSegments("/premium", StringComparison.OrdinalIgnoreCase))
@@ -50,8 +53,15 @@ namespace Web_Project.Middleware
             var status = await premiumSubscriptionService.GetStatusAsync(userId, context.RequestAborted);
             if (!status.IsPremium)
             {
+                var syncResult = await payOSPaymentService.SyncLatestPendingPaymentAsync(userId, context.RequestAborted);
+                if (syncResult.Paid)
+                {
+                    await _next(context);
+                    return;
+                }
+
                 var returnUrl = Uri.EscapeDataString($"{context.Request.Path}{context.Request.QueryString}");
-                context.Response.Redirect($"/home/premium-upgrade.html?returnUrl={returnUrl}");
+                context.Response.Redirect($"/premium/checkout.html?returnUrl={returnUrl}");
                 return;
             }
 

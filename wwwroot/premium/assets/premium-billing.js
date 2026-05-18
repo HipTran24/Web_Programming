@@ -141,9 +141,9 @@
     }
   };
 
-  const getSelectedProvider = () => "momo";
+  const getSelectedProvider = () => "payos";
 
-  const getProviderLabel = () => "MoMo";
+  const getProviderLabel = () => "PayOS";
 
   const syncCheckoutButtonLabels = () => {
     const provider = getSelectedProvider();
@@ -171,7 +171,7 @@
         const original = button.textContent;
         const provider = getSelectedProvider();
         const providerLabel = getProviderLabel(provider);
-        const endpoint = "/api/payments/momo/create";
+        const endpoint = "/api/payments/payos/create";
         button.textContent = `Đang tạo link ${providerLabel}...`;
 
         try {

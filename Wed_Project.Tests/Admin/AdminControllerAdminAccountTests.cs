@@ -120,6 +120,38 @@ public sealed class AdminControllerAdminAccountTests
         Assert.False(await dbContext.Users.AnyAsync(x => x.UserId == 8));
     }
 
+    [Fact]
+    public async Task UpdateUser_PreservesPremiumState_WhenEditingAccountFields()
+    {
+        await using var dbContext = CreateDbContext();
+        await SeedRolesAndActorAsync(dbContext);
+        await SeedPremiumUserAsync(dbContext);
+        var controller = CreateController(dbContext, userId: 7, role: "Admin");
+
+        var result = await controller.UpdateUser(
+            9,
+            new AdminController.AdminUpdateUserRequest
+            {
+                Username = "premium.user",
+                FullName = "Premium User Updated",
+                Email = "premium.updated@example.com",
+                Role = "User",
+                IsLocked = true,
+                IsEmailVerified = true
+            },
+            CancellationToken.None);
+
+        Assert.IsType<OkObjectResult>(result);
+
+        var user = await dbContext.Users.SingleAsync(x => x.UserId == 9);
+        Assert.True(user.IsPremium);
+        Assert.Equal("Premium", user.SubscriptionTier);
+        Assert.NotNull(user.PremiumStartedAt);
+        Assert.NotNull(user.PremiumExpiresAt);
+        Assert.True(user.IsLocked);
+        Assert.Equal("premium.updated@example.com", user.Email);
+    }
+
     private static async Task SeedRolesAndActorAsync(AppDbContext dbContext)
     {
         var adminRole = new Role
@@ -165,6 +197,30 @@ public sealed class AdminControllerAdminAccountTests
             IsEmailVerified = true,
             IsLocked = false,
             CreatedAt = new DateTime(2030, 1, 2, 0, 0, 0, DateTimeKind.Utc)
+        });
+
+        await dbContext.SaveChangesAsync();
+    }
+
+    private static async Task SeedPremiumUserAsync(AppDbContext dbContext)
+    {
+        var startedAt = new DateTime(2030, 1, 3, 0, 0, 0, DateTimeKind.Utc);
+        var expiresAt = startedAt.AddDays(30);
+        dbContext.Users.Add(new User
+        {
+            UserId = 9,
+            Username = "premium.user",
+            FullName = "Premium User",
+            Email = "premium@example.com",
+            PasswordHash = PasswordHashUtility.HashPassword("StrongPass9"),
+            RoleId = 2,
+            IsEmailVerified = true,
+            IsLocked = false,
+            IsPremium = true,
+            SubscriptionTier = "Premium",
+            PremiumStartedAt = startedAt,
+            PremiumExpiresAt = expiresAt,
+            CreatedAt = startedAt
         });
 
         await dbContext.SaveChangesAsync();

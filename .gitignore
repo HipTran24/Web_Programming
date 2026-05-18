@@ -6,11 +6,14 @@ obj/
 .dotnet-cli-home/
 .dotnet/
 .dotnet-home/
+appsettings.Development.json
+*.pem
 *.user
 *.suo
 *.lscache
 Thumbs.db
 premium-run*.log
+payos-server*.log
 restore-diag.log
 
 .fake

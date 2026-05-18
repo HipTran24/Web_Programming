@@ -7,6 +7,9 @@ namespace Web_Project.Security
 {
     public sealed class JwtSigningMaterial
     {
+        private const string DevelopmentPrivateKeyRelativePath = ".dotnet/jwt-dev/private-key.pem";
+        private const string DevelopmentPublicKeyRelativePath = ".dotnet/jwt-dev/public-key.pem";
+
         public SecurityKey SigningKey { get; }
 
         public SecurityKey ValidationKey { get; }
@@ -70,15 +73,15 @@ namespace Web_Project.Security
 
         private static JwtSigningMaterial CreateAsymmetric(JwtSettings settings, string contentRootPath)
         {
+            var privateKeyPath = ResolvePath(settings.PrivateKeyPemPath, contentRootPath);
+            var publicKeyPath = ResolvePath(settings.PublicKeyPemPath, contentRootPath);
             var privateKeyPem = ResolvePem(
                 settings.PrivateKeyPem,
-                settings.PrivateKeyPemPath,
-                contentRootPath);
+                privateKeyPath);
 
             var publicKeyPem = ResolvePem(
                 settings.PublicKeyPem,
-                settings.PublicKeyPemPath,
-                contentRootPath);
+                publicKeyPath);
 
             if (string.IsNullOrWhiteSpace(privateKeyPem))
             {
@@ -88,16 +91,14 @@ namespace Web_Project.Security
                         "Jwt asymmetric mode is enabled but private key is missing. Set Jwt:PrivateKeyPem or Jwt:PrivateKeyPemPath.");
                 }
 
-                var generated = RSA.Create(Math.Max(2048, settings.GeneratedKeySize));
-                var signingKey = new RsaSecurityKey(generated.ExportParameters(true));
-                var validationKey = new RsaSecurityKey(generated.ExportParameters(false));
-
-                return new JwtSigningMaterial(
-                    signingKey,
-                    validationKey,
-                    SecurityAlgorithms.RsaSha256,
-                    isAsymmetric: true,
-                    isEphemeral: true);
+                return CreatePersistentDevelopmentAsymmetricKey(
+                    settings,
+                    string.IsNullOrWhiteSpace(privateKeyPath)
+                        ? Path.Combine(contentRootPath, DevelopmentPrivateKeyRelativePath)
+                        : privateKeyPath,
+                    string.IsNullOrWhiteSpace(publicKeyPath)
+                        ? Path.Combine(contentRootPath, DevelopmentPublicKeyRelativePath)
+                        : publicKeyPath);
             }
 
             using var privateRsa = RSA.Create();
@@ -129,28 +130,66 @@ namespace Web_Project.Security
                 isEphemeral: false);
         }
 
-        private static string ResolvePem(string inlinePem, string pemPath, string contentRootPath)
+        private static JwtSigningMaterial CreatePersistentDevelopmentAsymmetricKey(
+            JwtSettings settings,
+            string privateKeyPath,
+            string publicKeyPath)
+        {
+            var keySize = Math.Max(2048, settings.GeneratedKeySize);
+            Directory.CreateDirectory(Path.GetDirectoryName(privateKeyPath) ?? ".");
+            Directory.CreateDirectory(Path.GetDirectoryName(publicKeyPath) ?? ".");
+
+            using var generated = RSA.Create(keySize);
+            var privateKeyPem = generated.ExportRSAPrivateKeyPem();
+            var publicKeyPem = generated.ExportSubjectPublicKeyInfoPem();
+
+            File.WriteAllText(privateKeyPath, privateKeyPem);
+            File.WriteAllText(publicKeyPath, publicKeyPem);
+
+            var signingRsa = RSA.Create();
+            signingRsa.ImportFromPem(privateKeyPem);
+
+            var validationRsa = RSA.Create();
+            validationRsa.ImportFromPem(publicKeyPem);
+
+            return new JwtSigningMaterial(
+                new RsaSecurityKey(signingRsa),
+                new RsaSecurityKey(validationRsa),
+                SecurityAlgorithms.RsaSha256,
+                isAsymmetric: true,
+                isEphemeral: false);
+        }
+
+        private static string ResolvePem(string inlinePem, string resolvedPemPath)
         {
             if (!string.IsNullOrWhiteSpace(inlinePem))
             {
                 return inlinePem.Trim();
             }
 
+            if (string.IsNullOrWhiteSpace(resolvedPemPath))
+            {
+                return string.Empty;
+            }
+
+            if (!File.Exists(resolvedPemPath))
+            {
+                return string.Empty;
+            }
+
+            return File.ReadAllText(resolvedPemPath).Trim();
+        }
+
+        private static string ResolvePath(string pemPath, string contentRootPath)
+        {
             if (string.IsNullOrWhiteSpace(pemPath))
             {
                 return string.Empty;
             }
 
-            var normalizedPath = Path.IsPathRooted(pemPath)
+            return Path.IsPathRooted(pemPath)
                 ? pemPath
                 : Path.Combine(contentRootPath, pemPath);
-
-            if (!File.Exists(normalizedPath))
-            {
-                return string.Empty;
-            }
-
-            return File.ReadAllText(normalizedPath).Trim();
         }
     }
 }

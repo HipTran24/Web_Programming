@@ -71,7 +71,9 @@ namespace Web_Project.Middleware
 
             if (path.Equals("/home/premium-upgrade.html", StringComparison.OrdinalIgnoreCase))
             {
-                await HandlePremiumUpgradePageAsync(context);
+                var requestedReturnUrl = context.Request.Query["returnUrl"].ToString();
+                var target = string.IsNullOrWhiteSpace(requestedReturnUrl) ? "/premium/checkout.html" : $"/premium/checkout.html?returnUrl={Uri.EscapeDataString(requestedReturnUrl)}";
+                context.Response.Redirect(target);
                 return;
             }
 

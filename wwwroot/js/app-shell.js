@@ -27,6 +27,13 @@
     { section: "about", href: "/home/about.html", label: "Giới thiệu" },
   ];
 
+  const NAV_LINKS_PREMIUM_CONTEXT = [
+    { section: "dashboard", href: "/premium/dashboard.html", label: "Trang chủ" },
+    { section: "workspace", href: "/premium/study-workspace.html", label: "Upload" },
+    { section: "guide", href: "/home/guide.html", label: "Hướng dẫn" },
+    { section: "about", href: "/home/about.html", label: "Giới thiệu" },
+  ];
+
   const NAV_LINKS_ADMIN = [
     { section: "admin", href: "/admin", label: "Bảng điều khiển Admin" },
     { section: "admin-users", href: "/admin#users", label: "Người dùng" },
@@ -51,7 +58,7 @@
         { section: "upload", href: "/home/upload.html", label: "Upload" },
         { section: "learning-plan", href: "/home/learning-plan.html", label: "Lộ trình" },
         { section: "analytics", href: "/home/analytics.html", label: "Phân tích" },
-        { section: "premium", href: "/home/premium-upgrade.html", label: "Premium" },
+        { section: "premium", href: "/premium/checkout.html", label: "Premium" },
       ],
     },
     {
@@ -72,6 +79,33 @@
         { section: "admin-ai-system", href: "/admin#aiSystem", label: "AI System" },
         { section: "admin-ai", href: "/admin#aiLogs", label: "AI Logs" },
         { section: "admin-audit", href: "/admin#audit", label: "Audit Logs" },
+      ],
+    },
+  ];
+
+  const PREMIUM_SIDEBAR_GROUPS = [
+    {
+      title: "Premium",
+      links: [
+        { section: "dashboard", href: "/premium/dashboard.html", label: "Dashboard" },
+        { section: "workspace", href: "/premium/study-workspace.html", label: "Không gian học" },
+        { section: "library", href: "/premium/content-library.html", label: "Thư viện" },
+        { section: "detail", href: "/premium/content-detail.html", label: "Chi tiết" },
+      ],
+    },
+    {
+      title: "Luyện tập",
+      links: [
+        { section: "quiz", href: "/premium/quiz-experience.html", label: "Bài kiểm tra" },
+        { section: "result", href: "/premium/quiz-result.html", label: "Ôn tập" },
+        { section: "analytics", href: "/premium/analytics.html", label: "Phân tích" },
+        { section: "plan", href: "/premium/learning-plan.html", label: "Kế hoạch học" },
+      ],
+    },
+    {
+      title: "Tài khoản",
+      links: [
+        { section: "account", href: "/premium/account.html", label: "Gói Premium" },
       ],
     },
   ];
@@ -270,7 +304,7 @@
       "/home/quiz.html": ["quiz", "cau hoi", "kiem tra", "trac nghiem"],
       "/home/analytics.html": ["phan tich", "analytics", "thong ke"],
       "/home/learning-plan.html": ["lo trinh", "ke hoach hoc", "learning plan"],
-      "/home/premium-upgrade.html": ["premium", "momo", "thanh toan", "nang cap"],
+      "/premium/checkout.html": ["premium", "payos", "thanh toan", "nang cap"],
       "/home/profile.html": ["ho so", "tai khoan", "trang ca nhan", "bao mat"],
       "/admin": ["admin", "quan tri"],
     };
@@ -600,6 +634,14 @@
   function getActiveSection(pathname) {
     const p = (pathname || "").toLowerCase();
     if (!p || p === "/" || p.includes("/index")) return "home";
+    if (p.includes("/premium/study-workspace")) return "workspace";
+    if (p.includes("/premium/content-library")) return "library";
+    if (p.includes("/premium/content-detail")) return "detail";
+    if (p.includes("/premium/quiz-experience")) return "quiz";
+    if (p.includes("/premium/quiz-result")) return "result";
+    if (p.includes("/premium/analytics")) return "analytics";
+    if (p.includes("/premium/learning-plan")) return "plan";
+    if (p.includes("/premium/account")) return "account";
     if (p.includes("/guide")) return "guide";
     if (p.includes("/about")) return "about";
     if (p.includes("/dashboard")) return "dashboard";
@@ -780,10 +822,20 @@
     }
   }
 
+  function isPremiumContext(user) {
+    return Boolean(user?.isPremium) && window.location.pathname.toLowerCase().startsWith("/premium/");
+  }
+
   function renderNav(section, user) {
     const isAdminShell = section === "admin" || document.body.classList.contains("page-admin");
     const isPremium = Boolean(user?.isPremium);
-    const navLinks = (isAdminShell ? NAV_LINKS_ADMIN : NAV_LINKS).map((link) => {
+    const premiumContext = isPremiumContext(user);
+    const baseLinks = isAdminShell
+      ? NAV_LINKS_ADMIN
+      : premiumContext
+        ? NAV_LINKS_PREMIUM_CONTEXT
+        : NAV_LINKS;
+    const navLinks = baseLinks.map((link) => {
       if (link.section !== "premium") {
         return link;
       }
@@ -802,6 +854,9 @@
     const normalizedRole = String(user?.role || "").trim().toLowerCase();
     const hasPrivateShell = Boolean(user) && normalizedRole !== "guest";
     const hideSearch = !hasPrivateShell;
+    const brandHref = premiumContext ? "/premium/dashboard.html" : "/home/index.html";
+    const progressHref = premiumContext ? "/premium/analytics.html" : "/home/analytics.html";
+    const planHref = premiumContext ? "/premium/learning-plan.html" : "/home/learning-plan.html";
     const menuToggleMarkup = hasPrivateShell
       ? `<button
           type="button"
@@ -861,8 +916,8 @@
             </div>
             <button type="button" class="app-shell-profile-item" id="appShellProfileOpen" role="menuitem">Hồ sơ người dùng</button>
             <button type="button" class="app-shell-profile-item app-shell-profile-item--notify" id="appShellNotificationButton" role="menuitem" aria-expanded="false"><span class="app-shell-profile-item-label" id="appShellNotificationButtonLabel">Thông báo hệ thống</span><span class="app-shell-item-dot" id="appShellNotificationMenuDot" hidden></span></button>
-            <a class="app-shell-profile-item" href="/home/analytics.html" role="menuitem">Tiến độ</a>
-            <a class="app-shell-profile-item" href="/home/learning-plan.html" role="menuitem">Lộ trình học</a>
+            <a class="app-shell-profile-item" href="${progressHref}" role="menuitem">Tiến độ</a>
+            <a class="app-shell-profile-item" href="${planHref}" role="menuitem">Lộ trình học</a>
             <button type="button" class="app-shell-profile-item logout" id="appShellLogout" role="menuitem">Đăng xuất</button>
           </div>
           <div class="app-shell-notify-flyout" id="appShellNotificationFlyout" aria-hidden="true">
@@ -936,7 +991,7 @@
         <div class="app-shell-inner">
           <div class="app-shell-start">
             ${menuToggleMarkup}
-            <a class="app-shell-brand" href="/home/index.html" aria-label="SynapLearn">
+            <a class="app-shell-brand" href="${brandHref}" aria-label="SynapLearn">
               <span class="app-shell-logo-slot" aria-hidden="true">
                 <svg viewBox="0 0 24 24" role="presentation" focusable="false">
                   <defs>
@@ -965,8 +1020,9 @@
 
   function renderSidebar(user, activeSection) {
     const isPremium = Boolean(user?.isPremium);
+    const groups = isPremiumContext(user) ? PREMIUM_SIDEBAR_GROUPS : SIDEBAR_GROUPS;
 
-    return SIDEBAR_GROUPS.map((group) => {
+    return groups.map((group) => {
       const linksMarkup = (group.links || []).map((link) => {
         const isActive = link.section === activeSection;
         const resolvedLink = { ...link };
@@ -988,11 +1044,12 @@
     }).join("");
   }
 
-  function getShellStateKey(pageAccessKind, hasPrivateShell, normalizedRole, user) {
+  function getShellStateKey(pageAccessKind, hasPrivateShell, normalizedRole, user, premiumContext) {
     return JSON.stringify({
       pageAccessKind: String(pageAccessKind || ""),
       hasPrivateShell: Boolean(hasPrivateShell),
       normalizedRole: String(normalizedRole || ""),
+      premiumContext: Boolean(premiumContext),
       displayName: String(user?.name || ""),
       fullName: String(user?.fullName || ""),
       avatarUrl: String(user?.avatarUrl || ""),
@@ -1096,6 +1153,7 @@
     user = await hydrateUserRealName(user);
     const normalizedRole = String(user?.role || "").trim().toLowerCase();
     const hasPrivateShell = Boolean(user) && normalizedRole !== "guest";
+    const premiumContext = isPremiumContext(user);
     if (pageAccess.kind === "protected" && !hasPrivateShell) {
       document.body.removeAttribute("data-shell-page");
       removeShellArtifacts();
@@ -1104,7 +1162,7 @@
     }
 
     document.body.setAttribute("data-shell-page", "true");
-    const nextShellStateKey = getShellStateKey(pageAccess.kind, hasPrivateShell, normalizedRole, user);
+    const nextShellStateKey = getShellStateKey(pageAccess.kind, hasPrivateShell, normalizedRole, user, premiumContext);
     const canReuseMountedShell = activeShellStateKey === nextShellStateKey && Boolean(document.getElementById(NAV_ID));
     if (canReuseMountedShell) {
       closeTransientShellUi();

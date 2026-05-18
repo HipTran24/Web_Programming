@@ -14,6 +14,7 @@
     premiumUsers: { page: 1, pageSize: 12, totalPages: 1 },
     premiumUserItems: [],
     premiumOverview: null,
+    premiumSettingsEditable: false,
     contents: { page: 1, pageSize: 12, totalPages: 1 },
     contentItems: [],
     aiLogs: { page: 1, pageSize: 15, totalPages: 1 },
@@ -35,6 +36,7 @@
     },
     adminProfile: null,
     activeTab: "users",
+    userEditorEditable: false,
     autoRefreshTimer: 0,
     actionContext: null,
     interactionLockUntil: 0,
@@ -158,6 +160,7 @@
     premiumDays: document.getElementById("premiumDays"),
     premiumSettingsMeta: document.getElementById("premiumSettingsMeta"),
     premiumSettingsFeedback: document.getElementById("premiumSettingsFeedback"),
+    premiumSettingsEdit: document.getElementById("premiumSettingsEdit"),
     premiumSettingsSubmit: document.getElementById("premiumSettingsSubmit"),
     premiumMetricActive: document.getElementById("premiumMetricActive"),
     premiumMetricExpired: document.getElementById("premiumMetricExpired"),
@@ -493,6 +496,9 @@
     verified: "Đã xác thực",
     unverified: "Chưa xác thực",
     success: "Thành công",
+    paid: "Đã thanh toán",
+    failed: "Thất bại",
+    cancelled: "Đã hủy",
     rejected: "Từ chối",
     locked: "Đã khóa",
     error: "Lỗi",
@@ -1135,6 +1141,114 @@
     return `<span class="status-pill status-neutral">${escapeHtml(translateLabel(status, status))}</span>`;
   };
 
+  const hasProviderSuccessMessage = (message) => {
+    const normalized = normalizeDisplayKey(message);
+    return normalized.includes("thanhcong") || normalized.includes("success");
+  };
+
+  const buildPremiumPaymentState = (item) => {
+    const status = toText(item?.status || "Pending").toLowerCase();
+    const provider = toText(item?.provider || "provider");
+    const providerMessage = toText(item?.providerMessage);
+    const providerCode = item?.providerResultCode;
+    const providerCodeText = providerCode === null || providerCode === undefined || providerCode === ""
+      ? ""
+      : `Mã ${provider}: ${providerCode}`;
+    const hasProviderSuccess = Number(providerCode) === 0 || hasProviderSuccessMessage(providerMessage);
+
+    if (status === "paid" || status === "success") {
+      const isManual = normalizeDisplayKey(providerMessage).includes("admin");
+      const isFree = Number(item?.amount || 0) <= 0;
+      return {
+        label: "Đã thanh toán",
+        tone: "success",
+        detail: isFree
+          ? "Premium đã kích hoạt miễn phí theo cấu hình."
+          : isManual
+            ? "Admin đã xác nhận tiền và kích hoạt Premium."
+            : "PayOS đã xác thực thanh toán thành công, Premium đã kích hoạt.",
+        providerDetail: providerMessage || "Thanh toán thành công.",
+      };
+    }
+
+    if (status === "failed") {
+      const detail = providerMessage
+        ? `${provider} báo lỗi: ${providerMessage}`
+        : `${provider} lỗi hoặc không kết nối được.`;
+      return {
+        label: "Lỗi",
+        tone: "danger",
+        detail: providerCodeText ? `${detail} (${providerCodeText})` : detail,
+        providerDetail: providerCodeText ? `${providerMessage || "Lỗi thanh toán."} • ${providerCodeText}` : (providerMessage || "Lỗi thanh toán."),
+      };
+    }
+
+    if (status === "cancelled") {
+      return {
+        label: "Đã hủy",
+        tone: "danger",
+        detail: providerMessage || "User đã hủy hoặc chưa hoàn tất giao dịch.",
+        providerDetail: providerCodeText ? `${providerMessage || "Đã hủy."} • ${providerCodeText}` : (providerMessage || "Đã hủy."),
+      };
+    }
+
+    if (status === "pending") {
+      const detail = hasProviderSuccess || item?.hasPaymentLink
+        ? `Đã tạo link ${provider}, đang chờ webhook xác thực tiền vào tài khoản.`
+        : `Đang chờ user thanh toán hoặc ${provider} trả kết quả.`;
+      return {
+        label: "Chờ duyệt",
+        tone: "warning",
+        detail,
+        providerDetail: providerCodeText
+          ? `${providerMessage || "Đã tạo giao dịch."} • ${providerCodeText}`
+          : (providerMessage || "Chưa có phản hồi từ cổng thanh toán."),
+      };
+    }
+
+    return {
+      label: paymentStatusLabel(status),
+      tone: "neutral",
+      detail: providerMessage || "Trạng thái chưa xác định.",
+      providerDetail: providerCodeText ? `${providerMessage || "--"} • ${providerCodeText}` : providerMessage,
+    };
+  };
+
+  const paymentStatusLabel = (status) => {
+    const normalized = toText(status).toLowerCase();
+    if (normalized === "pending") {
+      return "Chờ duyệt";
+    }
+    if (normalized === "paid" || normalized === "success") {
+      return "Đã thanh toán";
+    }
+    if (normalized === "failed") {
+      return "Lỗi";
+    }
+    if (normalized === "cancelled") {
+      return "Đã hủy";
+    }
+    return translateLabel(status, status || "--");
+  };
+
+  const paymentStatusPill = (paymentStateOrStatus) => {
+    const state = typeof paymentStateOrStatus === "object"
+      ? paymentStateOrStatus
+      : {
+          label: paymentStatusLabel(paymentStateOrStatus),
+          tone: toText(paymentStateOrStatus).toLowerCase(),
+        };
+    const normalizedTone = toText(state.tone || state.label).toLowerCase();
+    const className = normalizedTone === "success" || normalizedTone === "paid"
+      ? "status-success"
+      : normalizedTone === "danger" || normalizedTone === "failed" || normalizedTone === "cancelled"
+        ? "status-danger"
+        : normalizedTone === "warning" || normalizedTone === "pending"
+          ? "status-warning"
+          : "status-neutral";
+    return `<span class="status-pill ${className}">${escapeHtml(state.label || "--")}</span>`;
+  };
+
   const setTableLoading = (tbody, colspan, message) => {
     if (!tbody) {
       return;
@@ -1230,10 +1344,10 @@
 
   const renderPremiumTransactionRow = (item) => {
     const user = item.user || {};
-    const orderId = item.orderId || item.providerReference || item.requestId || "--";
-    const status = toText(item.status || "Pending").toLowerCase();
-    const canApprove = status === "pending";
-    const approveAction = canApprove
+    const paymentState = buildPremiumPaymentState(item);
+    const orderId = item.orderId || item.providerReference || item.requestId || `#${item.paymentTransactionId}`;
+    const canHandleError = toText(item.status).toLowerCase() === "failed";
+    const actionHtml = canHandleError
       ? `<button class="btn-row" data-premium-transaction-action="approve" data-transaction-id="${item.paymentTransactionId}" data-transaction-order="${escapeHtml(orderId)}" data-transaction-user="${escapeHtml(user.fullName || user.username || `User #${user.userId || ""}`)}">Duyệt</button>`
       : '<span class="row-meta">--</span>';
     return `
@@ -1243,11 +1357,10 @@
           <div class="row-meta">@${escapeHtml(user.username || "--")} • ${escapeHtml(user.email || "--")}</div>
         </td>
         <td><strong>${escapeHtml(formatCurrency(item.amount))}</strong><div class="row-meta">${escapeHtml(item.currency || "VND")}</div></td>
-        <td>${statusPill(item.status || "Pending")}</td>
-        <td>${formatDateTime(item.paidAt)}<div class="row-meta">Tạo ${formatDateTime(item.createdAt)}</div></td>
-        <td><strong>${escapeHtml(orderId)}</strong><div class="row-meta">${escapeHtml(item.requestId || item.providerReference || "--")}</div></td>
-        <td>${escapeHtml(item.provider || "--")}<div class="row-meta">${escapeHtml(item.providerMessage || "")}</div></td>
-        <td class="text-end"><div class="action-group">${approveAction}</div></td>
+        <td>${paymentStatusPill(paymentState)}<div class="row-meta">${escapeHtml(paymentState.detail)}</div></td>
+        <td>${escapeHtml(item.provider || "--")}<div class="row-meta">${escapeHtml(item.providerResultCode === null || item.providerResultCode === undefined || item.providerResultCode === "" ? "--" : `Mã ${item.provider || "provider"}: ${item.providerResultCode}`)}</div></td>
+        <td><div class="row-meta">${escapeHtml(paymentState.providerDetail || "--")}</div></td>
+        <td class="text-end">${actionHtml}</td>
       </tr>
     `;
   };
@@ -1263,7 +1376,7 @@
           <div class="row-meta">@${escapeHtml(item.username)} • ${escapeHtml(item.email)}</div>
         </td>
         <td>${statusPill(item.role)}</td>
-        <td>${premiumStatusPill(premium)}<div class="row-meta">${premium.startedAt ? `Bắt đầu ${formatDateTime(premium.startedAt)}` : "Chưa có ngày bắt đầu"}</div></td>
+        <td>${premiumStatusPill(premium)}</td>
         <td>${formatDateTime(premium.expiresAt)}</td>
         <td>${escapeHtml(formatCurrency(item.totalPaid))}<div class="row-meta">${item.lastPaidAt ? `Lần cuối ${formatDateTime(item.lastPaidAt)}` : "Chưa có giao dịch paid"}</div></td>
         <td class="text-end">
@@ -1279,7 +1392,6 @@
   const renderUserRow = (item) => {
     const displayName = item.fullName || item.username;
     const editAction = `<button class="btn-row" data-action="edit" data-user-id="${item.userId}">Sửa</button>`;
-    const deleteAction = `<button class="btn-row btn-row-danger" data-action="delete" data-user-id="${item.userId}" data-user-name="${escapeHtml(displayName)}">Xóa</button>`;
     const lockAction = item.isLocked
       ? `<button class="btn-row" data-action="unlock" data-user-id="${item.userId}" data-user-name="${escapeHtml(displayName)}">Mở khóa</button>`
       : `<button class="btn-row btn-row-danger" data-action="lock" data-user-id="${item.userId}" data-user-name="${escapeHtml(displayName)}">Khóa</button>`;
@@ -1295,11 +1407,10 @@
           ${statusPill(item.isLocked ? "Locked" : "Active")}
           ${item.isEmailVerified ? statusPill("Verified") : statusPill("Unverified")}
         </td>
-        <td>${premiumStatusPill(item.premium)}<div class="row-meta">${formatDateTime(item.premium?.expiresAt)}</div></td>
+        <td>${premiumStatusPill(item.premium)}</td>
         <td>${formatNumber(item.contentsCount)}</td>
         <td>${formatNumber(item.quizAttemptsCount)}</td>
-        <td>${formatDateTime(item.createdAt)}</td>
-        <td class="text-end"><div class="action-group">${editAction}${lockAction}${deleteAction}</div></td>
+        <td class="text-end"><div class="action-group">${editAction}${lockAction}</div></td>
       </tr>
     `;
   };
@@ -2289,6 +2400,31 @@
     actionModal.show();
   };
 
+  const setUserEditorEditable = (editable) => {
+    state.userEditorEditable = Boolean(editable);
+    const controls = [
+      el.userEditorUsername,
+      el.userEditorFullName,
+      el.userEditorEmail,
+      el.userEditorRole,
+      el.userEditorLocked,
+      el.userEditorVerified,
+      el.userEditorPassword,
+      el.userEditorConfirmPassword,
+    ];
+
+    controls.forEach((control) => {
+      if (control) {
+        control.disabled = !state.userEditorEditable;
+      }
+    });
+
+    if (el.userEditorSubmit) {
+      el.userEditorSubmit.textContent = state.userEditorEditable ? "Lưu" : "Sửa";
+      el.userEditorSubmit.dataset.originalLabel = el.userEditorSubmit.textContent;
+    }
+  };
+
   const openUserEditor = (item) => {
     if (!userEditorModal || !item) {
       return;
@@ -2308,6 +2444,7 @@
     el.userEditorLocked.checked = Boolean(item.isLocked);
     el.userEditorVerified.checked = Boolean(item.isEmailVerified);
     setInlineFeedback(el.userEditorFeedback, "", "");
+    setUserEditorEditable(false);
     userEditorModal.show();
   };
 
@@ -2326,6 +2463,7 @@
     el.userEditorLocked.checked = false;
     el.userEditorPasswordFields?.classList.remove("d-none");
     setInlineFeedback(el.userEditorFeedback, "", "");
+    setUserEditorEditable(true);
     userEditorModal.show();
   };
 
@@ -2695,7 +2833,7 @@
     state.userItems = items;
 
     patchTableRows(el.usersTableBody, items, {
-      emptyHtml: '<tr><td colspan="8" class="text-center row-meta py-4">Không có người dùng phù hợp.</td></tr>',
+      emptyHtml: '<tr><td colspan="7" class="text-center row-meta py-4">Không có người dùng phù hợp.</td></tr>',
       getKey: (item) => item.userId,
       renderRow: (item) => renderUserRow(item),
     });
@@ -2711,7 +2849,7 @@
     }
 
     if (!options.silent) {
-      setTableLoading(el.usersTableBody, 8, "Đang tải danh sách người dùng...");
+      setTableLoading(el.usersTableBody, 7, "Đang tải danh sách người dùng...");
     }
 
     const query = new URLSearchParams({
@@ -2734,6 +2872,26 @@
     renderUsers(data);
   };
 
+  const setPremiumSettingsEditable = (editable) => {
+    state.premiumSettingsEditable = Boolean(editable);
+    [el.premiumAmount, el.premiumDays].forEach((control) => {
+      if (control) {
+        control.disabled = !state.premiumSettingsEditable;
+      }
+    });
+
+    if (el.premiumSettingsEdit) {
+      el.premiumSettingsEdit.disabled = state.premiumSettingsEditable;
+      el.premiumSettingsEdit.dataset.originalLabel = el.premiumSettingsEdit.textContent || "Chỉnh sửa";
+    }
+
+    if (el.premiumSettingsSubmit) {
+      el.premiumSettingsSubmit.disabled = !state.premiumSettingsEditable;
+      el.premiumSettingsSubmit.textContent = "Lưu";
+      el.premiumSettingsSubmit.dataset.originalLabel = "Lưu";
+    }
+  };
+
   const renderPremiumOverview = (data) => {
     state.premiumOverview = data || null;
     const settings = data?.settings || {};
@@ -2741,6 +2899,7 @@
 
     setValue(el.premiumAmount, settings.amount ?? 0);
     setValue(el.premiumDays, settings.days ?? 30);
+    setPremiumSettingsEditable(state.premiumSettingsEditable);
     setText(el.premiumSettingsMeta, settings.updatedAt ? `Cập nhật ${formatDateTime(settings.updatedAt)}` : "Theo cấu hình mặc định");
     setText(el.premiumMetricActive, formatNumber(metrics.activePremiumUsers));
     setText(el.premiumMetricExpired, formatNumber(metrics.expiredPremiumUsers));
@@ -2770,7 +2929,7 @@
     state.premiumTransactionItems = items;
 
     patchTableRows(el.premiumTransactionsTableBody, items, {
-      emptyHtml: '<tr><td colspan="7" class="text-center row-meta py-4">Không có giao dịch Premium phù hợp.</td></tr>',
+      emptyHtml: '<tr><td colspan="6" class="text-center row-meta py-4">Không có giao dịch Premium phù hợp.</td></tr>',
       getKey: (item) => item.paymentTransactionId,
       renderRow: (item) => renderPremiumTransactionRow(item),
     });
@@ -2786,7 +2945,7 @@
     }
 
     if (!options.silent) {
-      setTableLoading(el.premiumTransactionsTableBody, 7, "Đang tải giao dịch Premium...");
+      setTableLoading(el.premiumTransactionsTableBody, 6, "Đang tải giao dịch Premium...");
     }
 
     const query = new URLSearchParams({
@@ -3421,6 +3580,10 @@
 
   const handlePremiumSettingsSubmit = async (event) => {
     event.preventDefault();
+    if (!state.premiumSettingsEditable) {
+      return;
+    }
+
     setInlineFeedback(el.premiumSettingsFeedback, "", "");
     setButtonBusy(el.premiumSettingsSubmit, true, "Đang lưu...");
 
@@ -3438,6 +3601,7 @@
       }
 
       renderPremiumOverview({ ...(state.premiumOverview || {}), settings: payload.settings });
+      setPremiumSettingsEditable(false);
       setInlineFeedback(el.premiumSettingsFeedback, payload.message || "Đã cập nhật cấu hình Premium.", "success");
       showToast(payload.message || "Đã cập nhật cấu hình Premium.");
       await loadPremiumOverview({ silent: true });
@@ -3447,7 +3611,14 @@
       showToast(message, "error");
     } finally {
       setButtonBusy(el.premiumSettingsSubmit, false);
+      setPremiumSettingsEditable(state.premiumSettingsEditable);
     }
+  };
+
+  const handlePremiumSettingsEdit = () => {
+    setPremiumSettingsEditable(true);
+    setInlineFeedback(el.premiumSettingsFeedback, "Đã mở khóa cấu hình. Kiểm tra giá/thời hạn rồi bấm Lưu.", "info");
+    el.premiumAmount?.focus();
   };
 
   const openPremiumExtendModal = (item) => {
@@ -3567,11 +3738,18 @@
 
   const handleUserEditorSubmit = async (event) => {
     event.preventDefault();
+    const mode = toText(el.userEditorMode?.value || "edit");
+    if (mode === "edit" && !state.userEditorEditable) {
+      setUserEditorEditable(true);
+      setInlineFeedback(el.userEditorFeedback, "Đã mở khóa form. Kiểm tra thông tin rồi bấm Lưu.", "info");
+      el.userEditorFullName?.focus();
+      return;
+    }
+
     setInlineFeedback(el.userEditorFeedback, "", "");
     setButtonBusy(el.userEditorSubmit, true, "Đang lưu...");
 
     try {
-      const mode = toText(el.userEditorMode?.value || "edit");
       const payload = {
         username: toText(el.userEditorUsername.value),
         fullName: toText(el.userEditorFullName.value),
@@ -3926,12 +4104,12 @@
           openActionModal({
             kind: "approve-premium-transaction",
             targetId: transactionId,
-            eyebrow: "Duyệt thanh toán",
-            title: "Duyệt giao dịch Premium",
-            description: `Duyệt giao dịch ${orderId} cho ${userName}. Hệ thống sẽ chuyển giao dịch sang Paid và kích hoạt/gia hạn Premium.`,
-            reasonLabel: "Ghi chú duyệt",
-            reasonPlaceholder: "Nhập ghi chú duyệt thủ công",
-            submitText: "Duyệt giao dịch",
+            eyebrow: "Đối soát PayOS",
+            title: "Duyệt giao dịch lỗi",
+            description: `Chỉ duyệt ${orderId} cho ${userName} khi đã kiểm tra tiền thật sự vào tài khoản PayOS/ngân hàng. Giao dịch chờ duyệt vẫn phải đợi webhook hợp lệ.`,
+            reasonLabel: "Ghi chú đối soát",
+            reasonPlaceholder: "Nhập mã giao dịch/sao kê hoặc lý do xác nhận thủ công",
+            submitText: "Duyệt",
           });
         }
         return;
@@ -4194,6 +4372,7 @@
     syncNotificationScopeUi();
     el.aiSystemForm?.addEventListener("submit", handleAiSystemSubmit);
     el.premiumSettingsForm?.addEventListener("submit", handlePremiumSettingsSubmit);
+    el.premiumSettingsEdit?.addEventListener("click", handlePremiumSettingsEdit);
     el.premiumExtendForm?.addEventListener("submit", handlePremiumExtendSubmit);
     el.adminActionForm?.addEventListener("submit", handleAdminActionSubmit);
     el.userEditorForm?.addEventListener("submit", handleUserEditorSubmit);

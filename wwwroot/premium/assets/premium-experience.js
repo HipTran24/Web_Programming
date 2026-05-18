@@ -1,4 +1,53 @@
 (() => {
+  const ensureStylesheet = (href) => {
+    const absoluteHref = new URL(href, window.location.origin).href;
+    const exists = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+      .some((link) => link.href === absoluteHref);
+    if (exists) {
+      return;
+    }
+
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = href;
+    document.head.appendChild(link);
+  };
+
+  const loadScriptOnce = (src, isLoaded) => new Promise((resolve, reject) => {
+    if (isLoaded()) {
+      resolve();
+      return;
+    }
+
+    const absoluteSrc = new URL(src, window.location.origin).href;
+    const existing = Array.from(document.scripts).find((script) => script.src === absoluteSrc);
+    if (existing) {
+      existing.addEventListener("load", () => resolve(), { once: true });
+      existing.addEventListener("error", () => reject(new Error(`Không tải được ${src}`)), { once: true });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = src;
+    script.defer = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error(`Không tải được ${src}`));
+    document.body.appendChild(script);
+  });
+
+  const mountStandardShell = async () => {
+    ensureStylesheet("/css/app-shell.css");
+    try {
+      await loadScriptOnce("/js/auth.js?v=20260511-1", () => Boolean(window.AuthClient));
+      await loadScriptOnce("/js/app-shell.js?v=20260515-smoothnav", () => Boolean(window.AppShell?.mount));
+      await window.AppShell?.mount?.();
+    } catch {
+      // Premium content remains usable if the shared shell cannot be mounted.
+    }
+  };
+
+  void mountStandardShell();
+
   const PREMIUM_SIDEBAR_ID = "premium-sidebar";
   const PREMIUM_SIDEBAR_BACKDROP_ID = "premium-sidebar-backdrop";
   const PREMIUM_SIDEBAR_GROUPS = [
@@ -1329,7 +1378,6 @@
   applyBootstrapSkin();
 
   const currentPage = document.body.dataset.page || "";
-  mountPremiumSidebar(currentPage);
   void hydratePremiumTier();
 
   document.querySelectorAll("[data-page-link]").forEach((link) => {

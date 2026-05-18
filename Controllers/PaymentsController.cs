@@ -10,16 +10,16 @@ namespace Web_Project.Controllers
     [Route("api/payments")]
     public class PaymentsController : ControllerBase
     {
-        private readonly IMoMoPaymentService _moMoPaymentService;
+        private readonly IPayOSPaymentService _payOSPaymentService;
         private readonly IPremiumSubscriptionService _premiumSubscriptionService;
         private readonly ILogger<PaymentsController> _logger;
 
         public PaymentsController(
-            IMoMoPaymentService moMoPaymentService,
+            IPayOSPaymentService payOSPaymentService,
             IPremiumSubscriptionService premiumSubscriptionService,
             ILogger<PaymentsController> logger)
         {
-            _moMoPaymentService = moMoPaymentService;
+            _payOSPaymentService = payOSPaymentService;
             _premiumSubscriptionService = premiumSubscriptionService;
             _logger = logger;
         }
@@ -43,9 +43,9 @@ namespace Web_Project.Controllers
         }
 
         [Authorize(Policy = "UserOnly")]
-        [HttpPost("momo/create")]
-        public async Task<ActionResult<CreateMoMoPaymentResponse>> CreateMoMoPayment(
-            [FromBody] CreateMoMoPaymentRequest request,
+        [HttpPost("payos/create")]
+        public async Task<ActionResult<CreatePayOSPaymentResponse>> CreatePayOSPayment(
+            [FromBody] CreatePayOSPaymentRequest request,
             CancellationToken cancellationToken)
         {
             if (!TryGetUserId(out var userId))
@@ -53,9 +53,9 @@ namespace Web_Project.Controllers
                 return Unauthorized();
             }
 
-            var result = await _moMoPaymentService.CreatePaymentAsync(
+            var result = await _payOSPaymentService.CreatePaymentAsync(
                 userId,
-                request ?? new CreateMoMoPaymentRequest(),
+                request ?? new CreatePayOSPaymentRequest(),
                 Request,
                 cancellationToken);
 
@@ -68,46 +68,56 @@ namespace Web_Project.Controllers
         }
 
         [AllowAnonymous]
-        [HttpGet("momo/return")]
-        public async Task<IActionResult> MoMoReturn(
-            [FromQuery] MoMoPaymentResult payload,
+        [HttpGet("payos/return")]
+        public async Task<IActionResult> PayOSReturn(
+            [FromQuery] string? orderCode,
+            [FromQuery] string? id,
+            [FromQuery] string? status,
+            [FromQuery] bool? cancel,
             CancellationToken cancellationToken)
         {
-            if (payload.ResultCode == 0 && !string.IsNullOrWhiteSpace(payload.Signature))
+            if (cancel == true)
             {
-                var handleResult = await _moMoPaymentService.HandleSignedReturnAsync(payload, cancellationToken);
-                if (!handleResult.Accepted)
-                {
-                    _logger.LogWarning("MoMo signed return was not applied: {Message}", handleResult.Message);
-                }
+                return Redirect("/premium/checkout.html?payment=cancelled");
             }
 
-            var isSuccess = payload.ResultCode == 0;
-            var query = new QueryString()
-                .Add("payment", isSuccess ? "success" : "failed")
-                .Add("provider", "momo")
-                .Add("orderId", payload.OrderId ?? string.Empty)
-                .Add("requestId", payload.RequestId ?? string.Empty)
-                .Add("message", payload.Message ?? string.Empty);
+            var result = await _payOSPaymentService.HandleReturnAsync(orderCode, id, cancellationToken);
+            if (result.Paid)
+            {
+                return Redirect("/premium/dashboard.html?payment=success");
+            }
 
-            return Redirect(isSuccess
-                ? $"/premium/payment-success.html{query}"
-                : $"/premium/payment-failed.html{query}");
+            _logger.LogWarning(
+                "PayOS return was not applied. OrderCode={OrderCode}; PaymentLinkId={PaymentLinkId}; Status={Status}; Message={Message}",
+                orderCode,
+                id,
+                status,
+                result.Message);
+            return Redirect("/premium/checkout.html?payment=pending");
         }
 
         [AllowAnonymous]
-        [HttpPost("momo/ipn")]
-        public async Task<IActionResult> MoMoIpn(
-            [FromBody] MoMoPaymentResult payload,
+        [HttpGet("payos/cancel")]
+        public IActionResult PayOSCancel(
+            [FromQuery] string? orderCode,
+            [FromQuery] string? id)
+        {
+            return Redirect("/premium/checkout.html?payment=cancelled");
+        }
+
+        [AllowAnonymous]
+        [HttpPost("payos/webhook")]
+        public async Task<IActionResult> PayOSWebhook(
+            [FromBody] PayOSWebhookPayload payload,
             CancellationToken cancellationToken)
         {
-            var result = await _moMoPaymentService.HandleIpnAsync(payload, cancellationToken);
+            var result = await _payOSPaymentService.HandleWebhookAsync(payload, cancellationToken);
             if (!result.Accepted)
             {
-                _logger.LogWarning("MoMo IPN rejected: {Message}", result.Message);
+                _logger.LogWarning("PayOS webhook rejected: {Message}", result.Message);
             }
 
-            return NoContent();
+            return Ok(new { success = true });
         }
 
         private bool TryGetUserId(out int userId)

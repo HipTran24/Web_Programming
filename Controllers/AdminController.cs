@@ -923,6 +923,8 @@ namespace Web_Project.Controllers
                     x.ProviderReference,
                     x.ProviderTransactionId,
                     x.ProviderMessage,
+                    x.ProviderResultCode,
+                    HasPaymentLink = x.PayUrl != null && x.PayUrl != string.Empty,
                     x.CreatedAt,
                     x.PaidAt,
                     x.FailedAt,
@@ -1083,9 +1085,9 @@ namespace Web_Project.Controllers
                 });
             }
 
-            if (!string.Equals(transaction.Status, PaymentTransactionStatuses.Pending, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(transaction.Status, PaymentTransactionStatuses.Failed, StringComparison.OrdinalIgnoreCase))
             {
-                return BadRequest(new { message = "Chỉ có thể duyệt thủ công giao dịch đang chờ duyệt." });
+                return BadRequest(new { message = "Chỉ xử lý thủ công giao dịch lỗi. Giao dịch chờ thanh toán cần đợi PayOS webhook." });
             }
 
             var now = DateTime.UtcNow;
@@ -1096,8 +1098,8 @@ namespace Web_Project.Controllers
             transaction.ProviderResultCode = 0;
             transaction.ProviderMessage = TrimTo(
                 string.IsNullOrWhiteSpace(request?.Reason)
-                    ? "Admin duyệt thủ công."
-                    : $"Admin duyệt thủ công: {request.Reason.Trim()}",
+                    ? "Admin xử lý giao dịch lỗi sau khi đối soát."
+                    : $"Admin xử lý giao dịch lỗi: {request.Reason.Trim()}",
                 512);
             transaction.UpdatedAt = now;
 
@@ -1127,7 +1129,7 @@ namespace Web_Project.Controllers
 
             return Ok(new
             {
-                message = "Đã duyệt giao dịch và kích hoạt Premium.",
+                message = "Đã xử lý giao dịch lỗi và kích hoạt Premium.",
                 transaction = BuildPremiumTransactionResponse(transaction)
             });
         }
@@ -1301,7 +1303,6 @@ namespace Web_Project.Controllers
 
             var roleName = NormalizeRoleName(request.Role);
             var roleId = await EnsureRoleIdAsync(roleName, cancellationToken);
-            var isPremium = string.Equals(roleName, "Premium", StringComparison.OrdinalIgnoreCase);
 
             var user = new User
             {
@@ -1314,8 +1315,8 @@ namespace Web_Project.Controllers
                 IsLocked = request.IsLocked,
                 IsEmailVerified = request.IsEmailVerified,
                 CreatedAt = DateTime.UtcNow,
-                IsPremium = isPremium,
-                SubscriptionTier = isPremium ? "Premium" : "Normal"
+                IsPremium = false,
+                SubscriptionTier = "Normal"
             };
 
             _dbContext.Users.Add(user);
@@ -1416,7 +1417,6 @@ namespace Web_Project.Controllers
 
             var roleName = NormalizeRoleName(request.Role);
             var wasLocked = user.IsLocked;
-            var isPremium = string.Equals(roleName, "Premium", StringComparison.OrdinalIgnoreCase);
 
             user.Username = request.Username.Trim();
             user.FullName = request.FullName.Trim();
@@ -1424,8 +1424,6 @@ namespace Web_Project.Controllers
             user.RoleId = await EnsureRoleIdAsync(roleName, cancellationToken);
             user.IsLocked = request.IsLocked;
             user.IsEmailVerified = request.IsEmailVerified;
-            user.IsPremium = isPremium;
-            user.SubscriptionTier = isPremium ? "Premium" : "Normal";
 
             try
             {
@@ -2257,6 +2255,8 @@ namespace Web_Project.Controllers
                 transaction.ProviderReference,
                 transaction.ProviderTransactionId,
                 transaction.ProviderMessage,
+                transaction.ProviderResultCode,
+                HasPaymentLink = !string.IsNullOrWhiteSpace(transaction.PayUrl),
                 transaction.CreatedAt,
                 transaction.PaidAt,
                 transaction.FailedAt,
@@ -2480,7 +2480,6 @@ namespace Web_Project.Controllers
             {
                 "admin" => "Admin",
                 "administrator" => "Admin",
-                "premium" => "Premium",
                 _ => "User"
             };
         }

@@ -84,11 +84,11 @@ namespace Web_Project.Services.Premium
                 throw new InvalidOperationException("Không tìm thấy giao dịch thanh toán.");
             }
 
-            if (!string.Equals(transaction.Status, PaymentTransactionStatuses.Success, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(transaction.Status, PaymentTransactionStatuses.Paid, StringComparison.OrdinalIgnoreCase))
             {
                 var now = DateTime.UtcNow;
                 var planSettings = await _premiumPlanSettingsService.GetSettingsAsync(cancellationToken);
-                transaction.Status = PaymentTransactionStatuses.Success;
+                transaction.Status = PaymentTransactionStatuses.Paid;
                 transaction.PaidAt = now;
                 transaction.UpdatedAt = now;
                 transaction.User.IsPremium = true;
@@ -121,7 +121,8 @@ namespace Web_Project.Services.Premium
                 throw new InvalidOperationException("Không tìm thấy giao dịch thanh toán.");
             }
 
-            if (!string.Equals(transaction.Status, PaymentTransactionStatuses.Success, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(transaction.Status, PaymentTransactionStatuses.Paid, StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(transaction.Status, PaymentTransactionStatuses.Success, StringComparison.OrdinalIgnoreCase))
             {
                 transaction.Status = normalizedStatus;
                 transaction.FailedAt = DateTime.UtcNow;

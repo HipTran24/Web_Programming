@@ -10,14 +10,14 @@ namespace Web_Project.Services.Premium
         private const string AmountKey = "premium.plan.amount.vnd";
         private const string DaysKey = "premium.plan.days";
         private readonly AppDbContext _dbContext;
-        private readonly MoMoPaymentSettings _moMoSettings;
+        private readonly PayOSPaymentSettings _payOSSettings;
 
         public PremiumPlanSettingsService(
             AppDbContext dbContext,
-            IOptions<MoMoPaymentSettings> moMoSettings)
+            IOptions<PayOSPaymentSettings> payOSSettings)
         {
             _dbContext = dbContext;
-            _moMoSettings = moMoSettings.Value;
+            _payOSSettings = payOSSettings.Value;
         }
 
         public async Task<PremiumPlanSettings> GetSettingsAsync(CancellationToken cancellationToken)
@@ -104,9 +104,9 @@ namespace Web_Project.Services.Premium
 
         private decimal GetFallbackAmount()
         {
-            if (_moMoSettings.PremiumAmount > 0m)
+            if (_payOSSettings.PremiumAmount > 0m)
             {
-                return _moMoSettings.PremiumAmount;
+                return _payOSSettings.PremiumAmount;
             }
 
             return 99000m;
@@ -114,9 +114,9 @@ namespace Web_Project.Services.Premium
 
         private int GetFallbackDays()
         {
-            if (_moMoSettings.PremiumDays > 0)
+            if (_payOSSettings.PremiumDays > 0)
             {
-                return _moMoSettings.PremiumDays;
+                return _payOSSettings.PremiumDays;
             }
 
             return 30;

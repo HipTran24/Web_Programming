@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <DefaultItemExcludes>$(DefaultItemExcludes);Wed_Project.Tests/**</DefaultItemExcludes>
+    <UserSecretsId>synaplearn-local-dev</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

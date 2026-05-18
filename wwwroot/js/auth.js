@@ -26,11 +26,25 @@
     "/premium/payment-failed.html",
   ]);
   const premiumBlockedPages = new Set([
-    "/home/premium-upgrade.html",
     "/premium/upgrade.html",
     "/premium/checkout.html",
     "/premium/payment-success.html",
     "/premium/payment-failed.html",
+  ]);
+  const premiumFeatureRedirects = new Map([
+    ["/", "/premium/dashboard.html"],
+    ["/home", "/premium/dashboard.html"],
+    ["/home/index.html", "/premium/dashboard.html"],
+    ["/dashboard", "/premium/dashboard.html"],
+    ["/home/dashboard.html", "/premium/dashboard.html"],
+    ["/home/upload.html", "/premium/study-workspace.html"],
+    ["/home/content-list.html", "/premium/content-library.html"],
+    ["/home/content-detail.html", "/premium/content-detail.html"],
+    ["/home/history.html", "/premium/content-library.html"],
+    ["/home/quiz.html", "/premium/quiz-experience.html"],
+    ["/home/quiz-result.html", "/premium/quiz-result.html"],
+    ["/home/analytics.html", "/premium/analytics.html"],
+    ["/home/learning-plan.html", "/premium/learning-plan.html"],
   ]);
   const protectedPageRoles = new Map([
     ["/admin", ["admin"]],
@@ -472,6 +486,20 @@
     return true;
   };
 
+  const redirectPremiumToPremiumFeature = (me, path) => {
+    if (!me?.isPremium) {
+      return false;
+    }
+
+    const target = premiumFeatureRedirects.get(path);
+    if (!target || target === path) {
+      return false;
+    }
+
+    window.location.replace(`${target}${window.location.search || ""}${window.location.hash || ""}`);
+    return true;
+  };
+
   const requireAuth = async (options) => {
     const opts = options || {};
     const requiredRoles = Array.isArray(opts.roles) ? opts.roles : [];
@@ -589,12 +617,24 @@
         return me;
       }
 
+      if (me && redirectPremiumToPremiumFeature(me, path)) {
+        return me;
+      }
+
       return me;
     }
 
     if (premiumBlockedPages.has(path)) {
       const me = await validateSession();
       if (me && redirectIfPremiumOnBlockedPage(me, path)) {
+        return me;
+      }
+      return me;
+    }
+
+    if (premiumFeatureRedirects.has(path)) {
+      const me = await validateSession();
+      if (me && redirectPremiumToPremiumFeature(me, path)) {
         return me;
       }
       return me;

@@ -812,6 +812,18 @@
   grid-column: 1 / -1;
 }
 
+.page-admin .premium-settings-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: flex-start;
+}
+
+.page-admin .premium-settings-actions .btn {
+  min-width: 104px;
+  padding: 9px 14px;
+}
+
 .page-admin .form-control,
 .page-admin .form-select,
 .page-admin textarea.form-control {

@@ -356,6 +356,24 @@ SynapLearn có thể chạy với:
 
 Nếu muốn trải nghiệm tốt hơn, nên cấu hình cả `GROQ_API_KEY` và `GEMINI_API_KEY`.
 
+### 11.4. Local secrets, JWT và PayOS
+
+Không lưu Gmail password, PayOS key hoặc JWT private key trong file commit lên GitHub. Khi chạy local, dùng user-secrets hoặc biến môi trường:
+
+```bash
+dotnet user-secrets set "Smtp:Username" "your-email@gmail.com"
+dotnet user-secrets set "Smtp:Password" "your-gmail-app-password"
+dotnet user-secrets set "Smtp:FromEmail" "your-email@gmail.com"
+dotnet user-secrets set "PayOS:ClientId" "your-client-id"
+dotnet user-secrets set "PayOS:ApiKey" "your-api-key"
+dotnet user-secrets set "PayOS:ChecksumKey" "your-checksum-key"
+dotnet user-secrets set "PayOS:PublicBaseUrl" "https://your-public-ngrok-or-domain"
+```
+
+Trong development, nếu chế độ JWT asymmetric không có key được cấu hình, app sẽ tự tạo cặp key cố định trong `.dotnet/jwt-dev/`. Thư mục này đã bị ignore nên token không bị mất sau mỗi lần restart app và key không bị đưa lên GitHub.
+
+Webhook URL cần đặt trong PayOS là `https://domain-cua-ban/api/payments/payos/webhook`. Nếu chạy local, dùng ngrok/cloudflared làm `PayOS:PublicBaseUrl` và đặt webhook theo public URL đó.
+
 ## 12. Database và migrations
 
 ### 12.1. Cơ chế hiện tại
