@@ -72,7 +72,7 @@ namespace Web_Project.Middleware
             if (path.Equals("/home/premium-upgrade.html", StringComparison.OrdinalIgnoreCase))
             {
                 var requestedReturnUrl = context.Request.Query["returnUrl"].ToString();
-                var target = string.IsNullOrWhiteSpace(requestedReturnUrl) ? "/premium/checkout.html" : $"/premium/checkout.html?returnUrl={Uri.EscapeDataString(requestedReturnUrl)}";
+                var target = string.IsNullOrWhiteSpace(requestedReturnUrl) ? "/premium/upgrade.html" : $"/premium/upgrade.html?returnUrl={Uri.EscapeDataString(requestedReturnUrl)}";
                 context.Response.Redirect(target);
                 return;
             }
@@ -188,6 +188,12 @@ namespace Web_Project.Middleware
         {
             var path = context.Request.Path;
 
+            if (IsPremiumCheckoutPage(path))
+            {
+                context.Response.Redirect(BuildPremiumUpgradeRedirectUrl(context, autoCheckout: true));
+                return;
+            }
+
             if (IsPremiumPublicPage(path))
             {
                 if (context.User.Identity?.IsAuthenticated == true && !IsAdmin(context.User))
@@ -199,7 +205,7 @@ namespace Web_Project.Middleware
                     }
                 }
 
-                await _next(context);
+                await SendPremiumHtmlAsync(context);
                 return;
             }
 
@@ -224,7 +230,7 @@ namespace Web_Project.Middleware
                     return;
                 }
 
-                await _next(context);
+                await SendPremiumHtmlAsync(context);
                 return;
             }
 
@@ -242,7 +248,21 @@ namespace Web_Project.Middleware
                 return;
             }
 
-            await _next(context);
+            await SendPremiumHtmlAsync(context);
+        }
+
+        private async Task SendPremiumHtmlAsync(HttpContext context)
+        {
+            var fileName = Path.GetFileName(context.Request.Path.Value ?? string.Empty);
+            if (string.IsNullOrWhiteSpace(fileName) ||
+                !fileName.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
+            {
+                context.Response.StatusCode = StatusCodes.Status404NotFound;
+                await context.Response.WriteAsync("Page not found.");
+                return;
+            }
+
+            await SendHtmlAsync(context, Path.Combine(_environment.ContentRootPath, "wwwroot", "premium", fileName));
         }
 
         private static async Task<bool> IsPremiumActiveAsync(HttpContext context, int? userId = null)
@@ -292,6 +312,7 @@ namespace Web_Project.Middleware
             return !value.Equals("/home/index.html", StringComparison.OrdinalIgnoreCase)
                    && !value.Equals("/home/about.html", StringComparison.OrdinalIgnoreCase)
                    && !value.Equals("/home/guide.html", StringComparison.OrdinalIgnoreCase)
+                   && !value.Equals("/home/upload.html", StringComparison.OrdinalIgnoreCase)
                    && !value.Equals("/home/login.html", StringComparison.OrdinalIgnoreCase)
                    && !value.Equals("/home/register.html", StringComparison.OrdinalIgnoreCase)
                    && !value.Equals("/home/otp.html", StringComparison.OrdinalIgnoreCase)
@@ -321,9 +342,30 @@ namespace Web_Project.Middleware
         private static bool IsPremiumAccountOrPaymentPage(PathString path)
         {
             var value = path.Value ?? string.Empty;
-            return value.Equals("/premium/checkout.html", StringComparison.OrdinalIgnoreCase) ||
-                   value.Equals("/premium/payment-success.html", StringComparison.OrdinalIgnoreCase) ||
+            return value.Equals("/premium/payment-success.html", StringComparison.OrdinalIgnoreCase) ||
                    value.Equals("/premium/payment-failed.html", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsPremiumCheckoutPage(PathString path)
+        {
+            var value = path.Value ?? string.Empty;
+            return value.Equals("/premium/checkout.html", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string BuildPremiumUpgradeRedirectUrl(HttpContext context, bool autoCheckout)
+        {
+            var query = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in context.Request.Query)
+            {
+                query[item.Key] = item.Value.ToString();
+            }
+
+            if (autoCheckout && !query.ContainsKey("payment"))
+            {
+                query["checkout"] = "payos";
+            }
+
+            return Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString("/premium/upgrade.html", query);
         }
 
         private static bool IsAdminPortalPath(PathString path)

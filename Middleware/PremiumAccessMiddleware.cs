@@ -61,7 +61,7 @@ namespace Web_Project.Middleware
                 }
 
                 var returnUrl = Uri.EscapeDataString($"{context.Request.Path}{context.Request.QueryString}");
-                context.Response.Redirect($"/premium/checkout.html?returnUrl={returnUrl}");
+                context.Response.Redirect($"/premium/upgrade.html?returnUrl={returnUrl}");
                 return;
             }
 

@@ -3,101 +3,24 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>SynapLearn Premium - Thanh toán</title>
+    <title>SynapLearn Premium</title>
     <link rel="icon" type="image/svg+xml" href="../images/favicon.svg" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="./assets/premium-experience.css?v=20260515-premium-ui" rel="stylesheet" />
+    <script>
+      (() => {
+        const params = new URLSearchParams(window.location.search);
+        const paymentState = String(params.get("payment") || "").trim();
+        if (!paymentState && !params.has("checkout")) {
+          params.set("checkout", "payos");
+        }
+
+        const query = params.toString();
+        window.location.replace(`/premium/upgrade.html${query ? `?${query}` : ""}${window.location.hash || ""}`);
+      })();
+    </script>
   </head>
-  <body class="premium-page" data-page="upgrade">
-    <header class="premium-topbar">
-      <div class="premium-topbar-inner">
-        <a class="premium-brand" href="upgrade.html">
-          <span class="premium-brand-mark"><img src="../images/favicon.svg" alt="SynapLearn" /></span>
-          <span class="premium-brand-copy">
-            <span class="premium-brand-title">SynapLearn Premium</span>
-          </span>
-        </a>
-        <nav class="premium-nav" aria-label="Premium navigation">
-          <ul class="premium-nav-list">
-            <li><a href="upgrade.html" data-page-link="upgrade">Nâng cấp</a></li>
-            <li><a href="account.html" data-page-link="account">Tài khoản</a></li>
-          </ul>
-        </nav>
-        <div class="premium-account">
-          <span class="premium-plan-pill" data-premium-tier>Đang tải gói</span>
-          <a class="premium-action premium-action-muted" href="upgrade.html">Quay lại</a>
-        </div>
-      </div>
-    </header>
-
-    <main class="premium-shell">
-      <section class="premium-ribbon">
-        <div class="premium-ribbon-copy">
-          <div>
-            <div class="premium-eyebrow">Checkout • Premium 30 ngày</div>
-            <h1 class="premium-title">Xác nhận gói Premium trước khi thanh toán.</h1>
-            <p class="premium-subtitle">
-              Giao dịch thành công sẽ nâng cấp tài khoản lên Premium, mở khóa dashboard premium và tăng giới hạn AI
-              từ 200k lên 500k token/ngày.
-            </p>
-          </div>
-          <div class="premium-action-row">
-            <button class="premium-action premium-action-primary" type="button" data-premium-checkout>Thanh toán qua PayOS</button>
-            <a class="premium-action premium-action-secondary" href="payment-failed.html">Hủy giao dịch</a>
-          </div>
-          <div class="premium-message" data-premium-message hidden></div>
-        </div>
-        <figure class="premium-ribbon-visual">
-          <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=1200&q=80" alt="Thanh toán trực tuyến trên laptop" />
-          <figcaption class="premium-visual-caption">Hệ thống sẽ tạo giao dịch ở backend và chuyển bạn tới đường dẫn checkout.</figcaption>
-        </figure>
-      </section>
-
-      <section class="premium-pricing-grid">
-        <article class="premium-plan-card is-featured">
-          <div class="premium-plan-card-head">
-            <div>
-              <div class="premium-eyebrow">Gói đang chọn</div>
-              <h2 class="premium-plan-name">SynapLearn Premium</h2>
-            </div>
-            <span class="premium-status-chip">500k token/ngày</span>
-          </div>
-          <div class="premium-plan-price"><span data-premium-price>99.000đ</span> <small>/ <span data-premium-days>30</span> ngày</small></div>
-          <ul class="premium-benefit-list">
-            <li>Premium dashboard, workspace, analytics và learning plan nâng cao.</li>
-            <li>500,000 token/ngày, reset theo ngày.</li>
-            <li>Quiz/review tốt hơn cho các tài liệu đã tóm tắt.</li>
-          </ul>
-        </article>
-
-        <article class="premium-surface">
-          <div class="premium-surface-head">
-            <div>
-              <h2 class="premium-surface-title">Tóm tắt thanh toán</h2>
-              <div class="premium-surface-subtitle">Giao dịch sẽ được ghi nhận ở backend trước khi kích hoạt gói.</div>
-            </div>
-          </div>
-          <div class="premium-payment-summary">
-            <div class="premium-payment-line"><span>Gói</span><strong data-premium-plan-label>Premium 30 ngày</strong></div>
-            <div class="premium-payment-line"><span>Token mỗi ngày</span><strong data-premium-token-limit-plan>500,000</strong></div>
-            <div class="premium-payment-line"><span>Giá</span><strong data-premium-price>99.000đ</strong></div>
-            <div class="premium-payment-line"><span>Phương thức</span><strong data-premium-selected-provider>PayOS</strong></div>
-            <div class="premium-payment-line"><span>Trạng thái</span><strong>Chờ thanh toán</strong></div>
-          </div>
-          <div class="premium-payment-methods" aria-label="Phương thức thanh toán">
-            <label class="premium-payment-method">
-              <input type="radio" name="premiumPaymentProvider" value="payos" checked />
-              <span>
-                <strong>PayOS</strong>
-                <small>Thanh toán qua PayOS.</small>
-              </span>
-            </label>
-          </div>
-        </article>
-      </section>
-    </main>
-
-    <script src="./assets/premium-experience.js?v=20260515-premium-ui"></script>
-    <script src="./assets/premium-billing.js?v=20260515-premium-ui"></script>
+  <body>
+    <noscript>
+      <a href="/premium/upgrade.html">Continue to Premium upgrade</a>
+    </noscript>
   </body>
 </html>

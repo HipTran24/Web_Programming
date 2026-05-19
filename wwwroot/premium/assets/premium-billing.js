@@ -145,11 +145,54 @@
 
   const getProviderLabel = () => "PayOS";
 
+  const buildCheckoutIntentUrl = () => {
+    const url = new URL(window.location.href);
+    if (url.pathname.toLowerCase() === "/premium/checkout.html") {
+      url.pathname = "/premium/upgrade.html";
+    }
+
+    url.searchParams.set("checkout", "payos");
+    return `${url.pathname}${url.search}${url.hash}`;
+  };
+
+  const redirectToLoginForCheckout = () => {
+    const query = new URLSearchParams({
+      returnUrl: buildCheckoutIntentUrl(),
+      message: "Vui lòng đăng nhập để thanh toán Premium.",
+    });
+    window.location.href = `/home/login.html?${query.toString()}`;
+  };
+
+  const ensureAuthenticatedForCheckout = async () => {
+    if (!window.AuthClient) {
+      return true;
+    }
+
+    await window.AuthClient.whenReady?.().catch(() => null);
+    let user = window.AuthClient.getCurrentUser?.();
+
+    if (!user && window.AuthClient.getAccessToken?.() && window.AuthClient.validateSession) {
+      user = await window.AuthClient.validateSession().catch(() => null);
+    }
+
+    if (user) {
+      return true;
+    }
+
+    redirectToLoginForCheckout();
+    return false;
+  };
+
   const syncCheckoutButtonLabels = () => {
     const provider = getSelectedProvider();
     const label = getProviderLabel(provider);
     document.querySelectorAll("[data-premium-checkout]").forEach((button) => {
       if (!button.classList.contains("is-loading")) {
+        if (button.dataset.premiumCheckoutLabel) {
+          button.textContent = button.dataset.premiumCheckoutLabel;
+          return;
+        }
+
         button.textContent = `Thanh toán qua ${label}`;
       }
     });
@@ -165,7 +208,12 @@
 
   const wireCheckout = () => {
     document.querySelectorAll("[data-premium-checkout]").forEach((button) => {
-      button.addEventListener("click", async () => {
+      button.addEventListener("click", async (event) => {
+        event.preventDefault();
+        if (!await ensureAuthenticatedForCheckout()) {
+          return;
+        }
+
         button.disabled = true;
         button.classList.add("is-loading");
         const original = button.textContent;
@@ -194,6 +242,30 @@
         }
       });
     });
+  };
+
+  const showPaymentQueryMessage = () => {
+    const params = new URLSearchParams(window.location.search);
+    const payment = String(params.get("payment") || "").toLowerCase();
+    if (payment === "cancelled") {
+      showMessage("Giao dịch PayOS đã bị hủy. Bạn có thể bấm nâng cấp để tạo link thanh toán mới.", "warning");
+    } else if (payment === "pending") {
+      showMessage("PayOS chưa xác nhận giao dịch. Nếu bạn đã thanh toán, vui lòng đợi vài phút rồi tải lại trang.", "info");
+    }
+  };
+
+  const maybeAutoCheckout = () => {
+    const params = new URLSearchParams(window.location.search);
+    if (String(params.get("checkout") || "").toLowerCase() !== "payos") {
+      return;
+    }
+
+    const button = document.querySelector("[data-premium-checkout]");
+    if (!button || button.disabled) {
+      return;
+    }
+
+    window.setTimeout(() => button.click(), 200);
   };
 
   const completePayment = async () => {
@@ -281,6 +353,8 @@
   loadStatus();
   wirePaymentProvider();
   wireCheckout();
+  showPaymentQueryMessage();
+  maybeAutoCheckout();
   completePayment();
   failPayment();
 })();

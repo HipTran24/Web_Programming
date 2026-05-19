@@ -36,10 +36,10 @@
   });
 
   const mountStandardShell = async () => {
-    ensureStylesheet("/css/app-shell.css");
+    ensureStylesheet("/css/app-shell.css?v=20260518-profile-card");
     try {
       await loadScriptOnce("/js/auth.js?v=20260511-1", () => Boolean(window.AuthClient));
-      await loadScriptOnce("/js/app-shell.js?v=20260515-smoothnav", () => Boolean(window.AppShell?.mount));
+      await loadScriptOnce("/js/app-shell.js?v=20260518-vn-premium-nav", () => Boolean(window.AppShell?.mount));
       await window.AppShell?.mount?.();
     } catch {
       // Premium content remains usable if the shared shell cannot be mounted.
@@ -480,6 +480,8 @@
     setText("[data-dashboard-chip=goal]", `Mục tiêu tuần: ${data.kpis?.weeklyGoalPercent ?? 0}%`);
     setText("[data-dashboard-chip=sessions]", `Quiz đã làm: ${data.kpis?.completedQuizzes ?? 0}`);
     setText("[data-dashboard-chip=weak]", `Chủ đề yếu: ${data.weakTopics?.length ?? 0}`);
+    setImage("[data-dashboard-image]", "./assets/premium-hero-dashboard.png", "Premium dashboard workspace");
+    setText("[data-dashboard-caption]", "Premium dashboard gom nhịp học, review và kế hoạch vào cùng một màn hình.");
 
     setText("[data-dashboard-metric=streak]", data.streakDays ?? "0");
     setText("[data-dashboard-metric-meta=streak]", `Tuần này +${data.streakDelta ?? 0} ngày`);

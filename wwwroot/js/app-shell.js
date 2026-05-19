@@ -28,10 +28,14 @@
   ];
 
   const NAV_LINKS_PREMIUM_CONTEXT = [
-    { section: "dashboard", href: "/premium/dashboard.html", label: "Trang chủ" },
-    { section: "workspace", href: "/premium/study-workspace.html", label: "Upload" },
-    { section: "guide", href: "/home/guide.html", label: "Hướng dẫn" },
-    { section: "about", href: "/home/about.html", label: "Giới thiệu" },
+    { section: "dashboard", href: "/premium/dashboard.html", label: "Tổng quan" },
+    { section: "workspace", href: "/premium/study-workspace.html", label: "Không gian học" },
+    { section: "library", href: "/premium/content-library.html", label: "Thư viện" },
+    { section: "detail", href: "/premium/content-detail.html", label: "Chi tiết" },
+    { section: "quiz", href: "/premium/quiz-experience.html", label: "Bài kiểm tra" },
+    { section: "result", href: "/premium/quiz-result.html", label: "Ôn tập" },
+    { section: "analytics", href: "/premium/analytics.html", label: "Phân tích" },
+    { section: "plan", href: "/premium/learning-plan.html", label: "Kế hoạch học" },
   ];
 
   const NAV_LINKS_ADMIN = [
@@ -58,7 +62,7 @@
         { section: "upload", href: "/home/upload.html", label: "Upload" },
         { section: "learning-plan", href: "/home/learning-plan.html", label: "Lộ trình" },
         { section: "analytics", href: "/home/analytics.html", label: "Phân tích" },
-        { section: "premium", href: "/premium/checkout.html", label: "Premium" },
+        { section: "premium", href: "/premium/upgrade.html", label: "Premium" },
       ],
     },
     {
@@ -304,7 +308,7 @@
       "/home/quiz.html": ["quiz", "cau hoi", "kiem tra", "trac nghiem"],
       "/home/analytics.html": ["phan tich", "analytics", "thong ke"],
       "/home/learning-plan.html": ["lo trinh", "ke hoach hoc", "learning plan"],
-      "/premium/checkout.html": ["premium", "payos", "thanh toan", "nang cap"],
+      "/premium/upgrade.html": ["premium", "payos", "thanh toan", "nang cap"],
       "/home/profile.html": ["ho so", "tai khoan", "trang ca nhan", "bao mat"],
       "/admin": ["admin", "quan tri"],
     };
@@ -853,11 +857,12 @@
 
     const normalizedRole = String(user?.role || "").trim().toLowerCase();
     const hasPrivateShell = Boolean(user) && normalizedRole !== "guest";
-    const hideSearch = !hasPrivateShell;
+    const hideSearch = !hasPrivateShell || premiumContext;
     const brandHref = premiumContext ? "/premium/dashboard.html" : "/home/index.html";
+    const brandLabel = premiumContext ? "SynapLearn Premium" : "SynapLearn";
     const progressHref = premiumContext ? "/premium/analytics.html" : "/home/analytics.html";
     const planHref = premiumContext ? "/premium/learning-plan.html" : "/home/learning-plan.html";
-    const menuToggleMarkup = hasPrivateShell
+    const menuToggleMarkup = hasPrivateShell && !premiumContext
       ? `<button
           type="button"
           class="app-shell-menu-toggle"
@@ -953,7 +958,7 @@
               <div class="app-shell-notify-modal-kicker">Tài khoản</div>
               <h3 class="app-shell-notify-modal-title" id="appShellProfileModalTitle">Hồ sơ người dùng</h3>
               <div class="app-shell-notify-modal-meta" id="appShellProfileModalMeta">Đang tải dữ liệu...</div>
-              <div class="app-shell-notify-modal-message">
+              <div class="app-shell-notify-modal-message app-shell-profile-modal-body">
                 <form id="appShellProfileForm">
                   <div class="mb-3">
                     <label class="form-label">Họ và tên</label>
@@ -1005,7 +1010,7 @@
                   <circle cx="12" cy="12" r="1.7" fill="#edf7f7"></circle>
                 </svg>
               </span>
-              <span class="app-shell-brand-text">SynapLearn</span>
+              <span class="app-shell-brand-text">${brandLabel}</span>
             </a>
           </div>
           <ul class="app-shell-links">${links}</ul>
@@ -1121,6 +1126,7 @@
 
     if (document.body.classList.contains("page-login") || document.body.classList.contains("page-register")) {
       document.body.removeAttribute("data-shell-page");
+      document.body.removeAttribute("data-shell-premium");
       removeShellArtifacts();
       applyNotificationBadge(0);
       return;
@@ -1128,6 +1134,7 @@
 
     if (document.body.classList.contains("page-admin")) {
       document.body.removeAttribute("data-shell-page");
+      document.body.removeAttribute("data-shell-premium");
       removeShellArtifacts();
       return;
     }
@@ -1143,6 +1150,7 @@
     const pageAccess = window.AuthClient?.getPageAccess?.() || { kind: "public", roles: [] };
     if (pageAccess.kind === "auth") {
       document.body.removeAttribute("data-shell-page");
+      document.body.removeAttribute("data-shell-premium");
       removeShellArtifacts();
       applyNotificationBadge(0);
       return;
@@ -1156,12 +1164,14 @@
     const premiumContext = isPremiumContext(user);
     if (pageAccess.kind === "protected" && !hasPrivateShell) {
       document.body.removeAttribute("data-shell-page");
+      document.body.removeAttribute("data-shell-premium");
       removeShellArtifacts();
       applyNotificationBadge(0);
       return;
     }
 
     document.body.setAttribute("data-shell-page", "true");
+    document.body.toggleAttribute("data-shell-premium", premiumContext);
     const nextShellStateKey = getShellStateKey(pageAccess.kind, hasPrivateShell, normalizedRole, user, premiumContext);
     const canReuseMountedShell = activeShellStateKey === nextShellStateKey && Boolean(document.getElementById(NAV_ID));
     if (canReuseMountedShell) {
@@ -1212,7 +1222,8 @@
 
     let sidebar = document.getElementById(SIDEBAR_ID);
     let backdrop = document.getElementById(BACKDROP_ID);
-    if (hasPrivateShell) {
+    const shouldRenderSidebar = hasPrivateShell && !premiumContext;
+    if (shouldRenderSidebar) {
       if (!sidebar) {
         sidebar = document.createElement("aside");
         sidebar.id = SIDEBAR_ID;
@@ -1228,10 +1239,12 @@
     } else {
       if (sidebar) {
         sidebar.remove();
+        sidebar = null;
       }
 
       if (backdrop) {
         backdrop.remove();
+        backdrop = null;
       }
     }
 

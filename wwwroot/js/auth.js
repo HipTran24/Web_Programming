@@ -14,6 +14,7 @@
     "/home/index.html",
     "/home/about.html",
     "/home/guide.html",
+    "/home/upload.html",
     "/home/unauthorized.html",
     "/premium/upgrade.html",
   ]);

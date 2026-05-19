@@ -148,6 +148,79 @@
   box-shadow: inset 0 0 0 1px rgba(145, 197, 255, 0.14);
 }
 
+body[data-shell-premium] #app-shell-navbar .app-shell-frame {
+  width: min(1320px, calc(100vw - 24px));
+  max-width: none;
+  padding: 0;
+}
+
+body[data-shell-premium] #app-shell-navbar .app-shell-inner {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  min-height: 66px;
+  padding: 0 14px;
+  border-radius: 18px;
+  border-color: rgba(111, 231, 214, 0.18);
+  background:
+    linear-gradient(135deg, rgba(8, 20, 29, 0.98), rgba(8, 32, 36, 0.94)),
+    rgba(255, 255, 255, 0.02);
+  box-shadow:
+    0 20px 46px rgba(1, 10, 18, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+body[data-shell-premium] #app-shell-navbar .app-shell-start {
+  gap: 10px;
+}
+
+body[data-shell-premium] #app-shell-navbar .app-shell-brand {
+  min-height: 46px;
+  gap: 10px;
+}
+
+body[data-shell-premium] #app-shell-navbar .app-shell-brand-text {
+  font-size: 1rem;
+}
+
+body[data-shell-premium] #app-shell-navbar .app-shell-logo-slot {
+  width: 32px;
+  height: 32px;
+  border-color: rgba(101, 217, 203, 0.36);
+  background:
+    linear-gradient(145deg, rgba(101, 217, 203, 0.18), rgba(240, 180, 90, 0.14)),
+    rgba(8, 25, 32, 0.86);
+}
+
+body[data-shell-premium] #app-shell-navbar .app-shell-links {
+  justify-self: center;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-color: rgba(111, 231, 214, 0.12);
+  background: rgba(7, 18, 24, 0.78);
+}
+
+body[data-shell-premium] #app-shell-navbar .app-shell-links::-webkit-scrollbar {
+  display: none;
+}
+
+body[data-shell-premium] #app-shell-navbar .app-shell-links a {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 0.84rem;
+}
+
+body[data-shell-premium] #app-shell-navbar .app-shell-links a:hover,
+body[data-shell-premium] #app-shell-navbar .app-shell-links a.active {
+  color: #f7fffc;
+  background: linear-gradient(135deg, rgba(56, 215, 176, 0.22), rgba(69, 169, 198, 0.18));
+  box-shadow: inset 0 0 0 1px rgba(101, 217, 203, 0.2);
+}
+
+body[data-shell-premium] #app-shell-navbar .app-shell-actions {
+  gap: 8px;
+}
+
 #app-shell-navbar .app-shell-search {
   position: relative;
   width: min(340px, 30vw);
@@ -833,6 +906,140 @@
   white-space: pre-wrap;
 }
 
+#app-shell-navbar #appShellProfileModal .app-shell-notify-modal-card {
+  width: min(92vw, 688px);
+  max-height: min(88vh, 760px);
+  border-radius: 22px;
+  border-color: rgba(132, 166, 205, 0.22);
+  background:
+    linear-gradient(180deg, rgba(7, 18, 34, 0.99), rgba(8, 30, 52, 0.985));
+  padding: 22px 24px 24px;
+  box-shadow:
+    0 34px 80px rgba(0, 0, 0, 0.44),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+#app-shell-navbar #appShellProfileModal .app-shell-notify-modal-close {
+  top: 8px;
+  right: 16px;
+  width: 52px;
+  height: 52px;
+  border-radius: 17px;
+  border-color: rgba(184, 204, 230, 0.18);
+  background: rgba(255, 255, 255, 0.045);
+  color: #f8fbff;
+  font-size: 1.8rem;
+  font-weight: 500;
+}
+
+#app-shell-navbar #appShellProfileModal .app-shell-notify-modal-title {
+  margin-top: 14px;
+  font-size: 1.72rem;
+  line-height: 1.18;
+  font-weight: 800;
+}
+
+#app-shell-navbar #appShellProfileModal .app-shell-notify-modal-meta {
+  margin-top: 14px;
+  color: rgba(204, 216, 233, 0.78);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+#app-shell-navbar #appShellProfileModal .app-shell-notify-modal-kicker {
+  padding-right: 64px;
+  color: #80e5d7;
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+}
+
+#app-shell-navbar #appShellProfileModal .app-shell-notify-modal-message,
+#app-shell-navbar .app-shell-profile-modal-body {
+  margin-top: 28px;
+  white-space: normal;
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+
+#app-shell-navbar #appShellProfileModal form,
+#app-shell-navbar .app-shell-profile-modal-body form {
+  display: grid;
+  gap: 22px;
+}
+
+#app-shell-navbar #appShellProfileModal .mb-3,
+#app-shell-navbar #appShellProfileModal .mb-0,
+#app-shell-navbar .app-shell-profile-modal-body .mb-3,
+#app-shell-navbar .app-shell-profile-modal-body .mb-0 {
+  margin: 0 !important;
+}
+
+#app-shell-navbar #appShellProfileModal .form-label,
+#app-shell-navbar .app-shell-profile-modal-body .form-label {
+  margin-bottom: 10px;
+  color: rgba(213, 224, 240, 0.82);
+  font-size: 0.98rem;
+  font-weight: 800;
+}
+
+#app-shell-navbar #appShellProfileModal .form-control,
+#app-shell-navbar .app-shell-profile-modal-body .form-control {
+  min-height: 56px;
+  border-radius: 16px;
+  border: 1px solid rgba(184, 204, 230, 0.22);
+  background: rgba(255, 255, 255, 0.052);
+  color: #f8fbff;
+  padding: 13px 16px;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+#app-shell-navbar #appShellProfileModal .form-control::placeholder {
+  color: rgba(210, 220, 235, 0.46);
+}
+
+#app-shell-navbar #appShellProfileModal textarea.form-control,
+#app-shell-navbar .app-shell-profile-modal-body textarea.form-control {
+  min-height: 116px;
+  resize: vertical;
+}
+
+#app-shell-navbar #appShellProfileModal .form-control:focus,
+#app-shell-navbar .app-shell-profile-modal-body .form-control:focus {
+  border-color: rgba(101, 217, 203, 0.52);
+  box-shadow: 0 0 0 4px rgba(101, 217, 203, 0.12);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+#app-shell-navbar #appShellProfileModal .app-shell-notify-modal-actions {
+  margin-top: 28px;
+  justify-content: flex-end;
+  gap: 14px;
+}
+
+#app-shell-navbar #appShellProfileModal .app-shell-notify-secondary,
+#app-shell-navbar #appShellProfileModal .app-shell-notify-primary {
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: 14px;
+  font-size: 0.92rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+#app-shell-navbar #appShellProfileModal .app-shell-notify-secondary {
+  background: rgba(255, 255, 255, 0.055);
+  border-color: rgba(184, 204, 230, 0.18);
+  color: rgba(238, 244, 252, 0.88);
+}
+
+#app-shell-navbar #appShellProfileModal .app-shell-notify-primary {
+  background: linear-gradient(135deg, #2785ff, #0d6efd);
+  border-color: rgba(77, 159, 255, 0.55);
+  color: #fff;
+}
+
 #app-shell-navbar .app-shell-notify-modal-actions {
   display: flex;
   justify-content: flex-end;
@@ -1012,6 +1219,19 @@ html.is-ajax-navigating [data-shell-page] .page-content.show {
     display: none;
   }
 
+  body[data-shell-premium] #app-shell-navbar .app-shell-inner {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    padding: 10px 12px;
+  }
+
+  body[data-shell-premium] #app-shell-navbar .app-shell-links {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-self: stretch;
+    width: 100%;
+  }
+
   #app-shell-navbar .app-shell-actions {
     gap: 8px;
   }
@@ -1047,6 +1267,14 @@ html.is-ajax-navigating [data-shell-page] .page-content.show {
 @media (max-width: 640px) {
   #app-shell-navbar .app-shell-inner {
     grid-template-columns: auto 1fr;
+  }
+
+  body[data-shell-premium] #app-shell-navbar .app-shell-inner {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  body[data-shell-premium] #app-shell-navbar .app-shell-links {
+    grid-column: 1 / -1;
   }
 
   #app-shell-navbar .app-shell-actions {
@@ -1122,6 +1350,17 @@ html.is-ajax-navigating [data-shell-page] .page-content.show {
     min-height: 58px;
     padding: 0 10px;
     border-radius: 20px;
+  }
+
+  body[data-shell-premium] #app-shell-navbar .app-shell-inner {
+    min-height: 0;
+    padding: 10px;
+    border-radius: 18px;
+  }
+
+  body[data-shell-premium] #app-shell-navbar .app-shell-links a {
+    min-height: 34px;
+    padding: 0 10px;
   }
 
   #app-shell-navbar .app-shell-brand-text {

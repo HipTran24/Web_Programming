@@ -78,7 +78,7 @@ namespace Web_Project.Controllers
         {
             if (cancel == true)
             {
-                return Redirect("/premium/checkout.html?payment=cancelled");
+                return Redirect("/premium/upgrade.html?payment=cancelled");
             }
 
             var result = await _payOSPaymentService.HandleReturnAsync(orderCode, id, cancellationToken);
@@ -93,7 +93,7 @@ namespace Web_Project.Controllers
                 id,
                 status,
                 result.Message);
-            return Redirect("/premium/checkout.html?payment=pending");
+            return Redirect("/premium/upgrade.html?payment=pending");
         }
 
         [AllowAnonymous]
@@ -102,7 +102,7 @@ namespace Web_Project.Controllers
             [FromQuery] string? orderCode,
             [FromQuery] string? id)
         {
-            return Redirect("/premium/checkout.html?payment=cancelled");
+            return Redirect("/premium/upgrade.html?payment=cancelled");
         }
 
         [AllowAnonymous]
